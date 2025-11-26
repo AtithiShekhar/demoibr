@@ -1,0 +1,17 @@
+{
+  "patient": {
+    "age": 65,
+    "gender": "Male",
+    "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
+    "smoking_alcohol": "Not reported",
+    "date_of_assessment": "2025-09-17"
+  },
+  "prescription": [
+    "Meropenem",
+    "Zavicefta",
+    "Fluconazole",
+    "Valacyclovir",
+    "Cyclosporine"
+  ],
+  "notes": "Sample run. resource_pdf: /mnt/data/e39d8ecd-19e3-4b4f-adb0-216d777c3bfd.pdf"
+}
