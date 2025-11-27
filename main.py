@@ -1,226 +1,237 @@
 
-# main.py - COMPLETE REWRITE FOR Q&A MODE
+# main.py - COMPLETE REWRITE FOR JSON REPORT GENERATION
 import sys
+import json
 from pathlib import Path
+from datetime import datetime
+from typing import Dict, List
 from core.llm import GeminiLLM
-from utils.db_query import ask_question, query_and_format
+from utils.db_query import ask_question
 from utils.processpdfs import process_all_pdfs, list_available_medicines
 
-def print_banner():
-    """Print welcome banner."""
-    print("\n" + "="*70)
-    print("🏥  MEDICATION Q&A SYSTEM - Powered by ChromaDB + Gemini LLM")
-    print("="*70)
-    print("\n📚 This system can answer questions about medications using")
-    print("   information from your PDF database.\n")
-    print("💡 Example questions:")
-    print("   • What is the dosage of metformin?")
-    print("   • What are the side effects of atorvastatin?")
-    print("   • Can I take aspirin with ibuprofen?")
-    print("   • What should I monitor when taking warfarin?")
-    print("\n" + "="*70 + "\n")
+def load_patient_input(input_path: str = "patient_input.json") -> dict:
+    """Load patient data from JSON file."""
+    input_file = Path(input_path)
+    if not input_file.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+    
+    with open(input_file, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
-def print_help():
-    """Print help information."""
-    print("\n" + "="*70)
-    print("📖 AVAILABLE COMMANDS:")
-    print("="*70)
-    print("  help     - Show this help message")
-    print("  list     - List all available medicines in database")
-    print("  clear    - Clear screen")
-    print("  exit     - Exit the program (or use 'quit', 'q')")
-    print("\n💬 Or simply ask any question about medications!")
-    print("="*70 + "\n")
-
-
-def process_user_question(question: str, llm: GeminiLLM, verbose: bool = True) -> dict:
+def fetch_medication_contexts(medications: List[str], n_results: int = 5) -> Dict[str, str]:
     """
-    Process a user question: query ChromaDB -> send to LLM -> return answer.
+    Fetch ChromaDB context for each medication.
     
     Returns:
-        dict with keys: question, context, answer, sources_found
+        Dict mapping medication names to their database context
     """
-    # Step 1: Query ChromaDB
-    if verbose:
-        print("🔍 Searching database...")
+    contexts = {}
     
-    chromadb_results = ask_question(question, n_results=5)
+    for med in medications:
+        print(f"🔍 Querying database for: {med}")
+        
+        # Build comprehensive query
+        query = f"clinical information for {med} including indication, dosage, side effects, interactions, contraindications, monitoring requirements"
+        
+        # Query ChromaDB
+        result = ask_question(query, n_results=n_results, specific_medicine=med)
+        
+        if result["found"]:
+            contexts[med] = result["context_for_llm"]
+            print(f"   ✅ Found {len(result['documents'])} relevant sources")
+        else:
+            contexts[med] = "No information found in database for this medication."
+            print(f"   ❌ No information found")
     
-    if not chromadb_results["found"]:
-        return {
-            "question": question,
-            "context": "",
-            "answer": "❌ I couldn't find any relevant information in the database for your question. Please try rephrasing or ask about a different medication.",
-            "sources_found": False
-        }
-    
-    context = chromadb_results["context_for_llm"]
-    
-    # Step 2: Show sources (optional)
-    if verbose:
-        print(f"✅ Found {len(chromadb_results['documents'])} relevant sources\n")
-    
-    # Step 3: Send to LLM
-    if verbose:
-        print("🤖 Generating answer with LLM...")
-    
-    answer = llm.answer_question(question, context)
-    
-    return {
-        "question": question,
-        "context": context,
-        "answer": answer,
-        "sources_found": True,
-        "sources": chromadb_results["documents"],
-        "metadatas": chromadb_results["metadatas"]
-    }
+    return contexts
 
 
-def show_sources(result: dict):
-    """Display source information."""
-    if not result.get("sources_found") or not result.get("sources"):
-        return
+def generate_fitmed_report(input_path: str = "patient_input.json", 
+                           output_path: str = "fitmed_report.json") -> dict:
+    """
+    Main function to generate Fit-Med clinical assessment report.
     
-    print("\n" + "─"*70)
-    print("📚 SOURCES USED:")
-    print("─"*70)
+    Args:
+        input_path: Path to patient input JSON
+        output_path: Path to save output JSON report
+        
+    Returns:
+        dict: Generated report
+    """
+    print("\n" + "="*80)
+    print("🏥  FIT-MED CLINICAL MEDICATION ASSESSMENT GENERATOR")
+    print("="*80 + "\n")
     
-    for i, (doc, meta) in enumerate(zip(result["sources"], result["metadatas"]), 1):
-        medicine = meta.get("medicine", "Unknown")
-        print(f"\n[{i}] Medicine: {medicine.upper()}")
-        print(f"    Preview: {doc[:200]}...")
+    # Step 1: Load patient data
+    print("📋 Step 1: Loading patient data...")
+    try:
+        patient_data = load_patient_input(input_path)
+        print(f"   Patient: {patient_data['patient'].get('age')}yo {patient_data['patient'].get('gender')}")
+        print(f"   Diagnosis: {patient_data['patient'].get('diagnosis')}")
+        print(f"   Medications: {', '.join(patient_data['prescription'])}")
+    except Exception as e:
+        print(f"❌ Error loading patient data: {e}")
+        return {}
     
-    print("─"*70 + "\n")
-
-
-def interactive_mode():
-    """Main interactive Q&A loop."""
-    # Initialize
-    print("🔧 Initializing system...")
+    # Step 2: Query ChromaDB for each medication
+    print("\n📚 Step 2: Querying medication database...")
+    medications_context = fetch_medication_contexts(patient_data['prescription'])
     
-    # Process PDFs
-    data_dir = Path("./data")
-    if data_dir.exists():
-        print(f"📂 Processing PDFs from {data_dir}...")
-        process_all_pdfs(str(data_dir))
-    else:
-        print(f"⚠️  Warning: Data directory not found at {data_dir}")
-        print("   Please ensure your PDF files are in the ./data directory")
-    
-    # Initialize LLM
+    # Step 3: Initialize LLM
+    print("\n🤖 Step 3: Initializing Gemini LLM...")
     llm = GeminiLLM(
         model_name="gemini-2.0-flash",
-        temperature=0.2,
-        max_output_tokens=2000
+        temperature=0.1,  # Low temperature for consistent clinical output
+        max_output_tokens=8192
     )
     
-    # Show available medicines
-    try:
-        medicines = list_available_medicines()
-        print(f"\n✅ Database ready! Found {len(medicines)} medicines:")
-        print(f"   {', '.join(sorted(medicines)[:10])}" + 
-              (f" and {len(medicines)-10} more..." if len(medicines) > 10 else ""))
-    except Exception as e:
-        print(f"⚠️  Could not list medicines: {e}")
+    # Step 4: Generate clinical assessment
+    print("\n⚕️  Step 4: Generating clinical assessment...")
+    print("   (This may take 30-60 seconds...)")
     
-    print_banner()
-    print_help()
+    report = llm.generate_clinical_json(patient_data, medications_context)
     
-    # Main loop
-    conversation_history = []
+    if "error" in report:
+        print(f"\n❌ Error generating report: {report['error']}")
+        return report
+    
+    # Step 5: Save report
+    print("\n💾 Step 5: Saving report...")
+    output_file = Path(output_path)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+    
+    print(f"   ✅ Report saved to: {output_file.absolute()}")
+    
+    # Print summary
+    print("\n" + "="*80)
+    print("📊 REPORT SUMMARY")
+    print("="*80)
+    print(f"Patient: {report['patient_details']['age']}yo {report['patient_details']['gender']}")
+    print(f"Medications Assessed: {len(report['medication_assessments'])}")
+    print("\nFit-Med Outcomes:")
+    
+    for assessment in report['medication_assessments']:
+        outcome = assessment['fit_med_outcome']
+        emoji = "✅" if outcome == "Favorable" else "⚠️" if outcome == "Conditional" else "❌"
+        print(f"  {emoji} {assessment['medication']}: {outcome}")
+    
+    print("="*80 + "\n")
+    
+    return report
+
+
+def interactive_qa_mode():
+    """Interactive Q&A mode for quick medication queries."""
+    print("\n" + "="*80)
+    print("💬  INTERACTIVE Q&A MODE")
+    print("="*80)
+    print("\nAsk questions about medications (e.g., 'What is the dosage of metformin?')")
+    print("Type 'report' to generate a full clinical assessment")
+    print("Type 'exit' to quit\n")
+    
+    # Initialize
+    llm = GeminiLLM(model_name="gemini-2.0-flash", temperature=0.2, max_output_tokens=2000)
     
     while True:
         try:
-            # Get user input
-            user_input = input("💬 Your question: ").strip()
+            user_input = input("💬 Question: ").strip()
             
             if not user_input:
                 continue
             
-            # Handle commands
             if user_input.lower() in ['exit', 'quit', 'q']:
-                print("\n👋 Thank you for using the Medication Q&A System. Goodbye!\n")
+                print("\n👋 Goodbye!\n")
                 break
             
-            if user_input.lower() == 'help':
-                print_help()
+            if user_input.lower() == 'report':
+                print("\n📋 Generating full clinical report...\n")
+                generate_fitmed_report()
                 continue
             
-            if user_input.lower() == 'list':
-                try:
-                    medicines = list_available_medicines()
-                    print(f"\n📋 Available medicines ({len(medicines)}):")
-                    for i, med in enumerate(sorted(medicines), 1):
-                        print(f"   {i}. {med}")
-                    print()
-                except Exception as e:
-                    print(f"❌ Error listing medicines: {e}\n")
+            # Query ChromaDB
+            print("🔍 Searching database...")
+            result = ask_question(user_input, n_results=3)
+            
+            if not result["found"]:
+                print("❌ No relevant information found.\n")
                 continue
             
-            if user_input.lower() == 'clear':
-                print("\033[H\033[J", end="")  # Clear screen
-                print_banner()
-                continue
+            # Get LLM answer
+            print("🤖 Generating answer...\n")
+            answer = llm.answer_question(user_input, result["context_for_llm"])
             
-            # Process the question
-            print()  # Blank line for readability
-            result = process_user_question(user_input, llm, verbose=True)
-            
-            # Display answer
-            print("\n" + "="*70)
+            print("="*80)
             print("💡 ANSWER:")
-            print("="*70)
-            print(result["answer"])
-            print("="*70 + "\n")
-            
-            # Optionally show sources
-            show_sources_prompt = input("📚 Show source documents? (y/n): ").strip().lower()
-            if show_sources_prompt == 'y':
-                show_sources(result)
-            
-            # Save to history
-            conversation_history.append(result)
+            print("="*80)
+            print(answer)
+            print("="*80 + "\n")
             
         except KeyboardInterrupt:
             print("\n\n👋 Interrupted. Goodbye!\n")
             break
         except Exception as e:
             print(f"\n❌ Error: {e}\n")
-            import traceback
-            traceback.print_exc()
 
 
-def single_question_mode(question: str):
-    """
-    Process a single question non-interactively.
-    Useful for API or batch processing.
-    """
-    print(f"Processing question: {question}\n")
+def main():
+    """Main entry point."""
+    # Process PDFs first
+    print("🔧 Initializing system...")
+    data_dir = Path("./data")
+    if data_dir.exists():
+        print("📂 Processing medication PDFs...")
+        process_all_pdfs(str(data_dir))
+        medicines = list_available_medicines()
+        print(f"✅ Database ready with {len(medicines)} medications\n")
     
-    # Initialize
-    process_all_pdfs("./data")
-    llm = GeminiLLM(model_name="gemini-2.0-flash", temperature=0.2, max_output_tokens=2000)
-    
-    # Process question
-    result = process_user_question(question, llm, verbose=True)
-    
-    # Display result
-    print("\n" + "="*70)
-    print("ANSWER:")
-    print("="*70)
-    print(result["answer"])
-    print("="*70 + "\n")
-    
-    return result
+    # Check command line arguments
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
+        
+        if command == "qa":
+            # Interactive Q&A mode
+            interactive_qa_mode()
+        elif command == "report":
+            # Generate report mode
+            input_file = sys.argv[2] if len(sys.argv) > 2 else "patient_input.json"
+            output_file = sys.argv[3] if len(sys.argv) > 3 else "fitmed_report.json"
+            generate_fitmed_report(input_file, output_file)
+        else:
+            print("Usage:")
+            print("  python main.py report [input.json] [output.json]  - Generate clinical report")
+            print("  python main.py qa                                  - Interactive Q&A mode")
+    else:
+        # Default: Generate report
+        generate_fitmed_report()
 
 
 if __name__ == "__main__":
-    # Check for command line arguments
-    if len(sys.argv) > 1:
-        # Single question mode
-        question = " ".join(sys.argv[1:])
-        single_question_mode(question)
-    else:
-        # Interactive mode
-        interactive_mode()
+    main()
+
+
+# utils/db_query.py - KEEP AS IS, NO CHANGES NEEDED
+# (Your existing implementation is fine)
+
+
+# Example patient_input.json structure:
+"""
+{
+  "patient": {
+    "age": 65,
+    "gender": "Male",
+    "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
+    "smoking_alcohol": "Not reported",
+    "date_of_assessment": "2025-09-17"
+  },
+  "prescription": [
+    "Meropenem",
+    "Zavicefta",
+    "Fluconazole",
+    "Valacyclovir",
+    "Cyclosporine"
+  ],
+  "notes": "Sample run. resource_pdf: /mnt/data/example.pdf"
+}
+"""

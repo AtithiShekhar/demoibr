@@ -1,0 +1,18 @@
+
+
+
+{
+  "patient": {
+    "age": 65,
+    "gender": "Male",
+    "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
+    "smoking_alcohol": "Not reported",
+    "date_of_assessment": "2025-09-17"
+  },
+  "prescription": [
+    "Aceclofenac USPI",
+    "Thyroxine USPI",
+    "Sitagliptin USPI"
+  ],
+  "notes": "Sample run. resource_pdf: /mnt/data/example.pdf"
+}

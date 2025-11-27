@@ -1,0 +1,105 @@
+{
+  "patient_details": {
+    "age": 65,
+    "gender": "Male",
+    "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
+    "smoking_alcohol": "Not reported",
+    "date_of_assessment": "2025-09-17"
+  },
+  "medication_assessments": [
+    {
+      "medication": "Aceclofenac USPI",
+      "indication": [
+        "Information not found in database"
+      ],
+      "benefits_specific_to_patient": "Information not found in database",
+      "risks_and_interactions": "Risk of serious cardiovascular and gastrointestinal events. Risk of gastrointestinal bleeding, ulceration, and perforation. Hepatotoxicity with meaningful elevations of ALT and/or AST. Potential interaction with low-dose aspirin for cardiac prophylaxis, increasing GI bleeding risk.",
+      "strength_of_evidence": "Information not found in database",
+      "risk_minimisation_measures": [
+        "Monitor for cardiovascular thrombotic events",
+        "Monitor for gastrointestinal bleeding, ulceration, and perforation",
+        "Monitor liver function (ALT and AST)",
+        "Monitor patients closely for evidence of GI bleeding if used concomitantly with low-dose aspirin"
+      ],
+      "fit_med_outcome": "Unfavorable",
+      "recommendation": "Given the patient's post-stem cell transplant status and potential for complications, consider alternative pain management strategies with lower risk profiles. Aceclofenac carries significant risks of cardiovascular, gastrointestinal, and hepatic complications."
+    },
+    {
+      "medication": "Thyroxine USPI",
+      "indication": [
+        "Hypothyroidism",
+        "Pituitary Thyrotropin (Thyroid-Stimulating Hormone, TSH) Suppression"
+      ],
+      "benefits_specific_to_patient": "Information not found in database",
+      "risks_and_interactions": "Cardiac adverse reactions in the elderly and in patients with underlying cardiovascular disease. Risk of hyperthyroidism or incomplete treatment of hypothyroidism. Potential worsening of diabetic control. Decreased bone mineral density associated with thyroid hormone over-replacement. Several drug interactions are possible.",
+      "strength_of_evidence": "Information not found in database",
+      "risk_minimisation_measures": [
+        "Monitor TSH and/or Thyroxine (T4) levels",
+        "Assess for cardiac adverse reactions, especially in elderly patients",
+        "Monitor for signs of hyperthyroidism or incomplete treatment of hypothyroidism",
+        "Monitor diabetic control",
+        "Assess bone mineral density with long-term use"
+      ],
+      "fit_med_outcome": "Conditional",
+      "recommendation": "Continue thyroxine therapy if indicated, but monitor TSH and T4 levels regularly. Be vigilant for potential cardiac adverse reactions and drug interactions. Adjust dosage as needed based on lab results and clinical evaluation."
+    },
+    {
+      "medication": "Sitagliptin USPI",
+      "indication": [
+        "Information not found in database"
+      ],
+      "benefits_specific_to_patient": "Information not found in database",
+      "risks_and_interactions": "Adverse reactions reported in combination with metformin. Low propensity for clinically meaningful drug-drug interactions mediated by plasma protein binding displacement.",
+      "strength_of_evidence": "Information not found in database",
+      "risk_minimisation_measures": [
+        "Monitor for adverse reactions, especially when used in combination with metformin"
+      ],
+      "fit_med_outcome": "Conditional",
+      "recommendation": "Continue sitagliptin therapy if indicated, monitor for adverse reactions, especially if used with metformin. Consider renal function when prescribing."
+    }
+  ],
+  "monitoring_protocol": [
+    {
+      "medication": "Aceclofenac USPI",
+      "monitoring_parameters": [
+        "ALT",
+        "AST",
+        "Signs and symptoms of GI bleeding",
+        "Blood pressure",
+        "Edema"
+      ],
+      "frequency": "Regularly"
+    },
+    {
+      "medication": "Thyroxine USPI",
+      "monitoring_parameters": [
+        "TSH",
+        "Free T4"
+      ],
+      "frequency": "Regularly"
+    },
+    {
+      "medication": "Sitagliptin USPI",
+      "monitoring_parameters": [
+        "HbA1c",
+        "Renal function",
+        "Adverse reactions"
+      ],
+      "frequency": "Regularly"
+    }
+  ],
+  "summary": [
+    {
+      "medication": "Aceclofenac USPI",
+      "recommendation": "Consider alternative pain management due to high risk profile."
+    },
+    {
+      "medication": "Thyroxine USPI",
+      "recommendation": "Continue with close monitoring of thyroid function and cardiac status."
+    },
+    {
+      "medication": "Sitagliptin USPI",
+      "recommendation": "Continue with monitoring for adverse effects and renal function."
+    }
+  ]
+}
