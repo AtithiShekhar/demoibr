@@ -1,4 +1,5 @@
 import re
+# ye sirf chunking ke liye h output se koi lena dena nhi
 
 def semantic_chunk(text, max_chunk_size=500):
     """Split text into semantic chunks based on sentences."""

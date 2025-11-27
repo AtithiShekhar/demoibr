@@ -1,3 +1,4 @@
+# ye function sirf pdf process krega aur kuch kaam nhi h iska
 import pymupdf
 import os
 from utils.chunking import semantic_chunk

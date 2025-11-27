@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 import chromadb
 
+# ye bas global variables h aur kuch nhi
 # Shared global objects
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
