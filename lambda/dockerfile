@@ -1,0 +1,39 @@
+# Stage 1: Builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023 AS builder
+
+WORKDIR /build
+
+RUN dnf install -y \
+    python3.11 \
+    python3.11-pip \
+    python3.11-devel \
+    gcc \
+    gcc-c++ \
+    && dnf clean all
+
+RUN python3.11 -m pip install --upgrade pip
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies from requirements.txt
+RUN python3.11 -m pip install --no-cache-dir \
+    -r requirements.txt \
+    --target /build/packages
+
+# Pre-download model
+RUN cd /build/packages && \
+    PYTHONPATH=/build/packages python3.11 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/build/model_cache')"
+
+# Stage 2: Runtime
+FROM public.ecr.aws/lambda/python:3.11
+
+COPY --from=builder /build/packages/ ${LAMBDA_TASK_ROOT}/
+COPY --from=builder /build/model_cache/ /opt/ml/model/
+
+ENV SENTENCE_TRANSFORMERS_HOME=/opt/ml/model
+ENV TRANSFORMERS_CACHE=/opt/ml/model
+
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
+
+CMD [ "lambda_handler.handler" ]

@@ -48,11 +48,11 @@ jsonpointer
 jsonschema
 jsonschema-specifications
 kubernetes
-langchain
-langchain-community
-langchain-core
-langchain-text-splitters
-langsmith
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-core==0.1.52
+langchain-text-splitters==0.0.2
+langsmith==0.1.58
 markdown-it-py
 MarkupSafe
 marshmallow

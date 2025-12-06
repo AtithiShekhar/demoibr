@@ -1,0 +1,38 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments (just in case)
+venv/
+env/
+.new_env/
+new_env/
+*/venv/
+*/env/
+
+# Git
+.git/
+.gitignore
+.gitignore.local_backup
+
+# Local backups
+requirements.local_backup.txt
+
+# OS/System junk
+.DS_Store
+
+# Logs / temp files / generated outputs
+*.log
+generated_report.txt
+fitmed_report.json
+sample_input.json
+patient_input.json
+
+# Data directories (if large)
+data/
+
+# Docker files to exclude from context
+dockerfile.old
+*.bak

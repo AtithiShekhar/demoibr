@@ -8,21 +8,18 @@
   },
   "medication_assessments": [
     {
-      "medication": "Aceclofenac USPI",
+      "medication": "Paracetamol",
       "indication": [
         "Information not found in database"
       ],
       "benefits_specific_to_patient": "Information not found in database",
-      "risks_and_interactions": "Risk of serious cardiovascular and gastrointestinal events. Risk of gastrointestinal bleeding, ulceration, and perforation. Hepatotoxicity with meaningful elevations of ALT and/or AST. Potential interaction with low-dose aspirin for cardiac prophylaxis, increasing GI bleeding risk.",
+      "risks_and_interactions": "Information not found in database",
       "strength_of_evidence": "Information not found in database",
       "risk_minimisation_measures": [
-        "Monitor for cardiovascular thrombotic events",
-        "Monitor for gastrointestinal bleeding, ulceration, and perforation",
-        "Monitor liver function (ALT and AST)",
-        "Monitor patients closely for evidence of GI bleeding if used concomitantly with low-dose aspirin"
+        "Information not found in database"
       ],
-      "fit_med_outcome": "Unfavorable",
-      "recommendation": "Given the patient's post-stem cell transplant status and potential for complications, consider alternative pain management strategies with lower risk profiles. Aceclofenac carries significant risks of cardiovascular, gastrointestinal, and hepatic complications."
+      "fit_med_outcome": "Conditional",
+      "recommendation": "Monitor for efficacy and adverse effects. Consider alternative if no response."
     },
     {
       "medication": "Thyroxine USPI",
@@ -30,76 +27,64 @@
         "Hypothyroidism",
         "Pituitary Thyrotropin (Thyroid-Stimulating Hormone, TSH) Suppression"
       ],
-      "benefits_specific_to_patient": "Information not found in database",
-      "risks_and_interactions": "Cardiac adverse reactions in the elderly and in patients with underlying cardiovascular disease. Risk of hyperthyroidism or incomplete treatment of hypothyroidism. Potential worsening of diabetic control. Decreased bone mineral density associated with thyroid hormone over-replacement. Several drug interactions are possible.",
-      "strength_of_evidence": "Information not found in database",
+      "benefits_specific_to_patient": "Replacement therapy for hypothyroidism, adjunct to surgery and radioiodine therapy in the management of thyrotropin-dependent well-differentiated thyroid cancer.",
+      "risks_and_interactions": "Cardiac adverse reactions in the elderly and in patients with underlying cardiovascular disease, myxedema coma, acute adrenal crisis in patients with concomitant adrenal insufficiency, prevention of hyperthyroidism or incomplete treatment of hypothyroidism, worsening of diabetic control, decreased bone mineral density associated with thyroid hormone over-replacement, drug interactions affecting thyroid hormone pharmacokinetics and metabolism.",
+      "strength_of_evidence": "Available prescribing information",
       "risk_minimisation_measures": [
         "Monitor TSH and/or Thyroxine (T4) levels",
         "Assess for cardiac adverse reactions, especially in elderly patients",
-        "Monitor for signs of hyperthyroidism or incomplete treatment of hypothyroidism",
-        "Monitor diabetic control",
-        "Assess bone mineral density with long-term use"
+        "Monitor for drug interactions"
       ],
       "fit_med_outcome": "Conditional",
-      "recommendation": "Continue thyroxine therapy if indicated, but monitor TSH and T4 levels regularly. Be vigilant for potential cardiac adverse reactions and drug interactions. Adjust dosage as needed based on lab results and clinical evaluation."
+      "recommendation": "Monitor TSH and T4 levels regularly. Assess for potential drug interactions and cardiac adverse reactions, especially given the patient's age. Ensure adequate absorption and compliance."
     },
     {
       "medication": "Sitagliptin USPI",
       "indication": [
-        "Information not found in database"
+        "Treatment of diabetes"
       ],
-      "benefits_specific_to_patient": "Information not found in database",
-      "risks_and_interactions": "Adverse reactions reported in combination with metformin. Low propensity for clinically meaningful drug-drug interactions mediated by plasma protein binding displacement.",
-      "strength_of_evidence": "Information not found in database",
+      "benefits_specific_to_patient": "May help manage blood sugar levels.",
+      "risks_and_interactions": "Potential adverse reactions, although sitagliptin has a low propensity for clinically meaningful drug-drug interactions mediated by plasma protein binding displacement.",
+      "strength_of_evidence": "Available prescribing information",
       "risk_minimisation_measures": [
-        "Monitor for adverse reactions, especially when used in combination with metformin"
+        "Monitor for adverse reactions",
+        "Consider potential drug interactions"
       ],
       "fit_med_outcome": "Conditional",
-      "recommendation": "Continue sitagliptin therapy if indicated, monitor for adverse reactions, especially if used with metformin. Consider renal function when prescribing."
+      "recommendation": "Monitor for adverse reactions and drug interactions. Assess blood glucose levels regularly."
     }
   ],
   "monitoring_protocol": [
     {
-      "medication": "Aceclofenac USPI",
-      "monitoring_parameters": [
-        "ALT",
-        "AST",
-        "Signs and symptoms of GI bleeding",
-        "Blood pressure",
-        "Edema"
-      ],
-      "frequency": "Regularly"
-    },
-    {
       "medication": "Thyroxine USPI",
       "monitoring_parameters": [
-        "TSH",
-        "Free T4"
+        "TSH levels",
+        "Thyroxine (T4) levels",
+        "Cardiac function"
       ],
-      "frequency": "Regularly"
+      "frequency": "Regularly, as clinically indicated"
     },
     {
       "medication": "Sitagliptin USPI",
       "monitoring_parameters": [
-        "HbA1c",
-        "Renal function",
+        "Blood glucose levels",
         "Adverse reactions"
       ],
-      "frequency": "Regularly"
+      "frequency": "Regularly, as clinically indicated"
     }
   ],
   "summary": [
     {
-      "medication": "Aceclofenac USPI",
-      "recommendation": "Consider alternative pain management due to high risk profile."
+      "medication": "Paracetamol",
+      "recommendation": "Monitor for efficacy and adverse effects."
     },
     {
       "medication": "Thyroxine USPI",
-      "recommendation": "Continue with close monitoring of thyroid function and cardiac status."
+      "recommendation": "Monitor TSH and T4 levels, assess for drug interactions and cardiac adverse reactions."
     },
     {
       "medication": "Sitagliptin USPI",
-      "recommendation": "Continue with monitoring for adverse effects and renal function."
+      "recommendation": "Monitor blood glucose levels and adverse reactions."
     }
   ]
 }
