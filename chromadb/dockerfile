@@ -1,0 +1,22 @@
+# Start from the official ChromaDB image
+# Using a specific tag (e.g., 0.6.3) is recommended for production stability
+FROM chromadb/chroma:latest
+
+# --- Configuration ---
+# Set the default port where the server will listen
+EXPOSE 8000
+
+# Set environment variables for persistence
+# IS_PERSISTENT=TRUE tells ChromaDB to save data to disk.
+ENV IS_PERSISTENT=TRUE
+# PERSIST_DIRECTORY must match the mount point you define in your ECS Task Definition
+# (which should also match your EFS Access Point's root directory).
+ENV PERSIST_DIRECTORY=/app/chroma
+
+# Optional: Disable anonymous telemetry (good practice for production)
+ENV ANONYMIZED_TELEMETRY=FALSE
+
+# The default entry point and command for the official image is usually correct, 
+# starting the server and respecting the environment variables.
+# You can explicitly redefine the command if needed, but it's often redundant:
+# CMD ["chroma", "run", "--path", "/app/chroma", "--host", "0.0.0.0", "--port", "8000"]
