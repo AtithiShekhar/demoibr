@@ -1,0 +1,1 @@
+<Desease Name> is described in <Medicine Name>?: <Yes/No>
