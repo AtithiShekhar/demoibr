@@ -1,361 +1,569 @@
 import json
-import boto3
-import google.generativeai as genai
-from typing import Dict, List, Any
+import requests
+from typing import Dict, List, Any, Optional
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+import time
+import re
 
 # Load environment variables
 load_dotenv()
 
-class ContraindicationAnalyzer:
+class SimpleFDAAnalyzer:
     """
-    Analyzes patient prescriptions against medicine knowledge base
-    for contraindication detection using AWS Bedrock and Gemini AI
+    Two-part approach:
+    Part 1: Extract contraindications data (pure extraction, no interpretation)
+    Part 2: Simple matching of patient conditions to contraindications
     """
     
     def __init__(self):
-        """Initialize the analyzer with credentials from .env file"""
-        self.kb_id = os.getenv("KB_ID")
-        self.aws_region = os.getenv("AWS_REGION")
-        gemini_api_key = os.getenv("GEMINI_API_KEY")
-        
-        if not all([self.kb_id, self.aws_region, gemini_api_key]):
-            raise ValueError("Missing required environment variables. Check .env file.")
-        
-        # Initialize AWS Bedrock client
-        aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-        
-        if aws_access_key and aws_secret_key:
-            self.bedrock_agent = boto3.client(
-                'bedrock-agent-runtime',
-                region_name=self.aws_region,
-                aws_access_key_id=aws_access_key,
-                aws_secret_access_key=aws_secret_key
-            )
-        else:
-            # Use default credentials (from aws configure or IAM role)
-            self.bedrock_agent = boto3.client(
-                'bedrock-agent-runtime',
-                region_name=self.aws_region
-            )
-        
-        # Initialize Gemini
-        genai.configure(api_key=gemini_api_key)
-        self.gemini_model = genai.GenerativeModel('models/gemini-2.0-flash')
-        
-    def build_patient_context(self, patient_data: Dict[str, Any]) -> str:
-        """Build comprehensive patient context from input JSON"""
-
-        patient = patient_data.get('patient', {})
-        prescription = patient_data.get('prescription', [])
-
-        age = patient.get('age', 'unknown')
-        gender = patient.get('gender', 'unknown')
-        diagnosis = patient.get('diagnosis', 'unknown')
-        condition = patient.get('condition', 'none reported')
-
-        # Normalize condition text for clinical clarity
-        condition_text = condition if condition else "none reported"
-
-        prescription_text = (
-            ", ".join(prescription) if prescription else "no medications listed"
-        )
-
-        context = f"""
-        PATIENT PROFILE:
-        - Age: {age}
-        - Gender: {gender}
-
-        CLINICAL DIAGNOSIS:
-        - {diagnosis}
-
-        RELEVANT MEDICAL CONDITION(S):
-        - {condition_text}
-
-        CURRENT PRESCRIPTION:
-        - {prescription_text}
-
-        INSTRUCTIONS:
-        Evaluate contraindications STRICTLY based on FDA USPI labeling.
-        Give priority to ABSOLUTE contraindications explicitly listed under the
-        'CONTRAINDICATIONS' section of the USPI.
+        """Initialize with FDA API key"""
+        self.fda_api_key = os.getenv("FDA_API_KEY", "")
+        self.fda_base_url = "https://api.fda.gov/drug/label.json"
+    
+    # ============================================================================
+    # PART 1: PURE DATA EXTRACTION (No AI, no interpretation)
+    # ============================================================================
+    
+    def extract_fda_sections(self, medicine_name: str) -> Optional[Dict[str, Any]]:
         """
-
-        return context.strip()
-
-    
-    def query_bedrock_kb(self, medicine_name: str) -> str:
-        """Query Amazon Bedrock Knowledge Base for medicine information"""
+        Part 1: Extract relevant FDA sections for a medicine
+        Returns raw text from FDA API, no interpretation
+        """
         try:
-            query = f"What are the contraindications for {medicine_name}? Provide complete contraindication section from the USPI label."
+            # Query FDA API
+            search_query = f'openfda.generic_name:"{medicine_name}" OR openfda.brand_name:"{medicine_name}"'
+            params = {
+                'search': search_query,
+                'limit': 1
+            }
+            if self.fda_api_key:
+                params['api_key'] = self.fda_api_key
             
-            response = self.bedrock_agent.retrieve_and_generate(
-                input={
-                    'text': query
-                },
-                retrieveAndGenerateConfiguration={
-                    'type': 'KNOWLEDGE_BASE',
-                    'knowledgeBaseConfiguration': {
-                        'knowledgeBaseId': self.kb_id,
-                        'modelArn': f'arn:aws:bedrock:{self.aws_region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0'
-                    }
-                }
-            )
+            response = requests.get(self.fda_base_url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
             
-            return response['output']['text']
+            if 'results' not in data or len(data['results']) == 0:
+                # Try alternative search
+                params['search'] = f'"{medicine_name}"'
+                response = requests.get(self.fda_base_url, params=params, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                
+                if 'results' not in data or len(data['results']) == 0:
+                    return None
+            
+            label_data = data['results'][0]
+            
+            # Extract all relevant sections (raw text only)
+            sections = {
+                'drug_name': medicine_name,
+                'contraindications': self._extract_text(label_data, 'contraindications'),
+                'boxed_warning': self._extract_text(label_data, 'boxed_warning'),
+                'warnings': self._extract_text(label_data, 'warnings_and_cautions') or 
+                           self._extract_text(label_data, 'warnings'),
+                'pregnancy': self._extract_text(label_data, 'pregnancy') or
+                            self._extract_text(label_data, 'teratogenic_effects'),
+                'precautions': self._extract_text(label_data, 'precautions')
+            }
+            
+            return sections
             
         except Exception as e:
-            print(f"Error querying Bedrock for {medicine_name}: {str(e)}")
-            return ""
+            print(f"Error extracting data for {medicine_name}: {str(e)}")
+            return None
     
-    def analyze_contraindication(
-        self, 
-        patient_context: str, 
-        medicine_name: str, 
-        medicine_info: str
-    ) -> Dict[str, Any]:
-        """Use Gemini to analyze contraindications based on patient context"""
-        prompt = f"""You are a clinical pharmacology expert analyzing contraindications.
-
-PATIENT CONTEXT:
-{patient_context}
-
-MEDICINE INFORMATION FOR {medicine_name}:
-{medicine_info}
-
-ANALYSIS TASK:
-Analyze if the patient has any contraindications for {medicine_name} based on:
-1. Patient's age
-2. Patient's gender
-3. Patient's medical conditions/diagnosis
-4. Patient's condition
-5. Any other medications they're taking
-
-CHECK SPECIFICALLY:
-- Is there an ABSOLUTE contraindication mentioned in the CONTRAINDICATIONS section?
-- Are there any warnings or precautions related to patient's specific conditions?
-
-SCORING RULES:
-- Absolute contraindication (completely restricted): Score = 500
-- Warning/precaution (restricted use): Score = 10
-- No contraindication: Score = 0
-
-Return your analysis in the following JSON format:
-{{
-    "medicine_name": "{medicine_name}",
-    "contraindication_found": true/false,
-    "contraindication_type": "absolute" or "warning" or "none",
-    "risk_score": 500 or 10 or 0,
-    "risk_factor": "specific condition or factor identified",
-    "output_text": "formatted output as per guidelines"
-}}
-
-IMPORTANT OUTPUT TEXT FORMATTING:
-If absolute contraindication (score 500):
-"Use of this {medicine_name} in patients having [specific risk factor], will cause more risks than benefits, which is not beneficial for the patient. Hence, use of this medicine is restricted as per scientific evidence and documentation in regulatory label."
-
-If warning/precaution (score 10):
-"Use of this {medicine_name} in patients with [specific condition] requires careful monitoring and may need dose adjustments. Caution is advised as per regulatory label."
-
-If no contraindication (score 0):
-"No specific contraindications identified for this patient with {medicine_name} based on available information."
-
-Provide only valid JSON response, no additional text."""
-
-        try:
-            response = self.gemini_model.generate_content(prompt)
-            result_text = response.text.strip()
-            
-            # Clean up response if it has markdown code blocks
-            if result_text.startswith('```json'):
-                result_text = result_text.replace('```json', '').replace('```', '').strip()
-            elif result_text.startswith('```'):
-                result_text = result_text.replace('```', '').strip()
-            
-            result = json.loads(result_text)
-            return result
-            
-        except json.JSONDecodeError as e:
-            print(f"Error parsing Gemini response for {medicine_name}: {str(e)}")
-            return {
-                "medicine_name": medicine_name,
-                "contraindication_found": False,
-                "contraindication_type": "error",
-                "risk_score": 0,
-                "risk_factor": "Analysis error",
-                "output_text": f"Error analyzing {medicine_name}. Please review manually."
-            }
-        except Exception as e:
-            print(f"Error in Gemini analysis for {medicine_name}: {str(e)}")
-            return {
-                "medicine_name": medicine_name,
-                "contraindication_found": False,
-                "contraindication_type": "error",
-                "risk_score": 0,
-                "risk_factor": "Analysis error",
-                "output_text": f"Error analyzing {medicine_name}. Please review manually."
-            }
+    def _extract_text(self, label_data: Dict[str, Any], field_name: str) -> Optional[str]:
+        """Helper to extract text from FDA label field"""
+        field_data = label_data.get(field_name, [])
+        if field_data and len(field_data) > 0:
+            return "\n\n".join(field_data)
+        return None
     
-    def generate_report(
+    def extract_all_medicines(self, medicine_list: List[str]) -> Dict[str, Any]:
+        """
+        Part 1: Extract FDA data for all medicines
+        Returns: Dictionary mapping medicine name to extracted sections
+        """
+        print("\n" + "=" * 80)
+        print("PART 1: EXTRACTING FDA DATA")
+        print("=" * 80 + "\n")
+        
+        extracted_data = {}
+        
+        for i, medicine in enumerate(medicine_list, 1):
+            print(f"[{i}/{len(medicine_list)}] Extracting: {medicine}...")
+            sections = self.extract_fda_sections(medicine)
+            
+            if sections:
+                # Count what we found
+                found = []
+                if sections['contraindications']: found.append("contraindications")
+                if sections['boxed_warning']: found.append("boxed_warning")
+                if sections['warnings']: found.append("warnings")
+                if sections['pregnancy']: found.append("pregnancy")
+                
+                print(f"  ✓ Found: {', '.join(found) if found else 'no sections'}")
+                extracted_data[medicine] = sections
+            else:
+                print(f"  ✗ No FDA data found")
+                extracted_data[medicine] = None
+            
+            time.sleep(0.3)  # Rate limiting
+        
+        print("\n" + "=" * 80)
+        print(f"Extraction complete: {len(extracted_data)} medicines")
+        print("=" * 80 + "\n")
+        
+        return extracted_data
+    
+    # ============================================================================
+    # PART 2: SIMPLE MATCHING (Direct text matching, minimal logic)
+    # ============================================================================
+    
+    def match_contraindications(
         self, 
         patient_data: Dict[str, Any], 
-        analysis_results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """Generate final contraindication report"""
+        extracted_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """
+        Part 2: Simple matching of patient conditions to contraindications
+        Uses direct text matching, no complex AI interpretation
+        """
+        print("\n" + "=" * 80)
+        print("PART 2: MATCHING PATIENT TO CONTRAINDICATIONS")
+        print("=" * 80 + "\n")
+        
         patient = patient_data.get('patient', {})
         
+        # Build patient condition list (lowercase for matching)
+        patient_conditions = []
+        if patient.get('condition'):
+            # Split multiple conditions
+            conditions = patient['condition'].lower().split(',')
+            patient_conditions.extend([c.strip() for c in conditions])
+        
+        if patient.get('diagnosis'):
+            patient_conditions.append(patient['diagnosis'].lower())
+        
+        # Patient allergies
+        patient_allergies = [a.lower() for a in patient.get('allergies', [])]
+        
+        # Patient medications (for DDI checking)
+        patient_meds = [m.lower() for m in patient_data.get('prescription', [])]
+        
+        print(f"Patient conditions: {patient_conditions}")
+        print(f"Patient allergies: {patient_allergies if patient_allergies else 'None'}")
+        print(f"Patient medications: {patient_meds}")
+        print()
+        
+        results = []
+        
+        for medicine, sections in extracted_data.items():
+            print(f"Checking: {medicine}")
+            
+            if sections is None:
+                results.append({
+                    'medicine': medicine,
+                    'contraindicated': False,
+                    'status': 'no_data',
+                    'reason': 'No FDA data available'
+                })
+                print(f"  → No data\n")
+                continue
+            
+            # Check contraindications
+            match_result = self._simple_match(
+                medicine,
+                sections,
+                patient_conditions,
+                patient_allergies,
+                patient_meds
+            )
+            
+            results.append(match_result)
+            
+            # Print result
+            if match_result['contraindicated']:
+                print(f"  🚨 CONTRAINDICATED: {match_result['reason']}")
+            else:
+                print(f"  ✓ Safe: {match_result['reason']}")
+            print()
+        
+        return results
+    
+    def _simple_match(
+        self,
+        medicine: str,
+        sections: Dict[str, Any],
+        patient_conditions: List[str],
+        patient_allergies: List[str],
+        patient_meds: List[str]
+    ) -> Dict[str, Any]:
+        """
+        Simple direct matching logic
+        Returns: {medicine, contraindicated, status, reason, fda_quote}
+        """
+        
+        # Combine all relevant sections for checking
+        contraindications_text = sections.get('contraindications', '') or ''
+        boxed_warning_text = sections.get('boxed_warning', '') or ''
+        pregnancy_text = sections.get('pregnancy', '') or ''
+        warnings_text = sections.get('warnings', '') or ''
+        
+        # Convert to lowercase for matching
+        contra_lower = contraindications_text.lower()
+        boxed_lower = boxed_warning_text.lower()
+        pregnancy_lower = pregnancy_text.lower()
+        warnings_lower = warnings_text.lower()
+        
+        # Priority 1: Check CONTRAINDICATIONS section
+        if contraindications_text:
+            # Check patient conditions
+            for condition in patient_conditions:
+                if condition in contra_lower:
+                    # Extract relevant quote
+                    quote = self._extract_quote(contraindications_text, condition)
+                    return {
+                        'medicine': medicine,
+                        'contraindicated': True,
+                        'status': 'absolute',
+                        'reason': f"Patient has {condition}",
+                        'fda_quote': quote
+                    }
+            
+            # Check allergies (hypersensitivity)
+            if patient_allergies:
+                medicine_lower = medicine.lower()
+                for allergy in patient_allergies:
+                    if medicine_lower in allergy or allergy in medicine_lower:
+                        quote = self._extract_quote(contraindications_text, 'hypersensitivity')
+                        return {
+                            'medicine': medicine,
+                            'contraindicated': True,
+                            'status': 'absolute',
+                            'reason': f"Patient allergic to {medicine}",
+                            'fda_quote': quote
+                        }
+            
+            # Check drug-drug interactions
+            ddi_result = self._check_ddi(medicine, contraindications_text, patient_meds)
+            if ddi_result:
+                return ddi_result
+        
+        # Priority 2: CONSERVATIVE PREGNANCY CHECKING (very important!)
+        # Check if patient is pregnant (look for pregnancy in any condition)
+        is_pregnant = any('pregnan' in cond for cond in patient_conditions)
+        
+        if is_pregnant:
+            # CONSERVATIVE APPROACH: Check ALL sections for pregnancy concerns
+            # Pregnancy is too critical to miss - if ANY section mentions pregnancy
+            # with cautionary language, we flag it
+            
+            # Expanded pregnancy warning keywords (conservative)
+            pregnancy_warning_keywords = [
+                'contraindicated',
+                'should not be used',
+                'must not be used',
+                'do not use',
+                'not recommended',
+                'may cause fetal harm',
+                'fetal harm',
+                'category x',
+                'category d',
+                'avoid in pregnan',
+                'avoid during pregnan',
+                'teratogenic',
+                'birth defects',
+                'fetal abnormalities',
+                'use only if',
+                'potential risk',
+                'can cause harm',
+                'should be avoided'
+            ]
+            
+            # Check 1: CONTRAINDICATIONS section (highest priority)
+            if 'pregnan' in contra_lower:
+                quote = self._extract_quote(contraindications_text, 'pregnan')
+                return {
+                    'medicine': medicine,
+                    'contraindicated': True,
+                    'status': 'absolute',
+                    'reason': 'Patient is pregnant - contraindicated',
+                    'fda_quote': quote
+                }
+            
+            # Check 2: BOXED WARNING section
+            if 'pregnan' in boxed_lower:
+                # If pregnancy mentioned in boxed warning, it's serious
+                for keyword in pregnancy_warning_keywords:
+                    if keyword in boxed_lower:
+                        quote = self._extract_quote(boxed_warning_text, 'pregnan')
+                        return {
+                            'medicine': medicine,
+                            'contraindicated': True,
+                            'status': 'absolute',
+                            'reason': 'Patient is pregnant - boxed warning',
+                            'fda_quote': quote
+                        }
+            
+            # Check 3: PREGNANCY section (8.1)
+            if pregnancy_text and 'pregnan' in pregnancy_lower:
+                # Look for ANY cautionary language
+                for keyword in pregnancy_warning_keywords:
+                    if keyword in pregnancy_lower:
+                        quote = self._extract_quote(pregnancy_text, keyword, chars=200)
+                        return {
+                            'medicine': medicine,
+                            'contraindicated': True,
+                            'status': 'pregnancy_warning',
+                            'reason': 'Patient is pregnant - pregnancy warning found',
+                            'fda_quote': quote
+                        }
+            
+            # Check 4: WARNINGS section (if pregnancy mentioned with cautionary language)
+            if 'pregnan' in warnings_lower:
+                for keyword in pregnancy_warning_keywords:
+                    if keyword in warnings_lower:
+                        quote = self._extract_quote(warnings_text, 'pregnan', chars=200)
+                        return {
+                            'medicine': medicine,
+                            'contraindicated': True,
+                            'status': 'pregnancy_warning',
+                            'reason': 'Patient is pregnant - warning in label',
+                            'fda_quote': quote
+                        }
+            
+            # If patient is pregnant and drug has ANY pregnancy information at all
+            # but we couldn't find clear warnings, still flag for clinical review
+            if pregnancy_text:
+                quote = self._extract_quote(pregnancy_text, 'pregnan', chars=150)
+                return {
+                    'medicine': medicine,
+                    'contraindicated': True,
+                    'status': 'pregnancy_needs_review',
+                    'reason': 'Patient is pregnant - requires clinical review',
+                    'fda_quote': quote or 'Pregnancy information found in FDA label - verify safety'
+                }
+        
+        # Priority 3: Check BOXED WARNING
+        if boxed_warning_text:
+            for condition in patient_conditions:
+                if condition in boxed_lower:
+                    quote = self._extract_quote(boxed_warning_text, condition)
+                    return {
+                        'medicine': medicine,
+                        'contraindicated': True,
+                        'status': 'boxed_warning',
+                        'reason': f"Patient has {condition} (Boxed Warning)",
+                        'fda_quote': quote
+                    }
+        
+        # No contraindications found
+        return {
+            'medicine': medicine,
+            'contraindicated': False,
+            'status': 'safe',
+            'reason': 'No matching contraindications found',
+            'fda_quote': ''
+        }
+    
+    def _check_ddi(self, medicine: str, contra_text: str, patient_meds: List[str]) -> Optional[Dict]:
+        """Check for drug-drug interactions"""
+        contra_lower = contra_text.lower()
+        
+        # Common DDI phrases
+        ddi_phrases = [
+            'do not coadminister',
+            'do not use with',
+            'concomitant use',
+            'concurrent use',
+            'combination with'
+        ]
+        
+        # Check if there's a DDI warning
+        has_ddi = any(phrase in contra_lower for phrase in ddi_phrases)
+        
+        if not has_ddi:
+            return None
+        
+        # Extract mentioned drug names and check if patient is on them
+        # Simple approach: check if any patient med appears after DDI phrase
+        for med in patient_meds:
+            if med.lower() != medicine.lower():  # Don't match the drug to itself
+                if med.lower() in contra_lower:
+                    # Found a potential DDI
+                    quote = self._extract_quote(contra_text, med, chars=150)
+                    return {
+                        'medicine': medicine,
+                        'contraindicated': True,
+                        'status': 'drug_interaction',
+                        'reason': f"Patient taking both {medicine} and {med}",
+                        'fda_quote': quote
+                    }
+        
+        return None
+    
+    def _extract_quote(self, text: str, keyword: str, chars: int = 200) -> str:
+        """Extract a relevant quote from text around a keyword"""
+        if not text:
+            return ""
+        
+        text_lower = text.lower()
+        keyword_lower = keyword.lower()
+        
+        # Find keyword position
+        pos = text_lower.find(keyword_lower)
+        if pos == -1:
+            return text[:chars]  # Return beginning if keyword not found
+        
+        # Extract surrounding text
+        start = max(0, pos - chars//2)
+        end = min(len(text), pos + chars//2)
+        
+        quote = text[start:end].strip()
+        
+        # Clean up
+        if start > 0:
+            quote = "..." + quote
+        if end < len(text):
+            quote = quote + "..."
+        
+        return quote
+    
+    # ============================================================================
+    # SIMPLE OUTPUT GENERATION
+    # ============================================================================
+    
+    def generate_simple_report(
+        self,
+        patient_data: Dict[str, Any],
+        results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Generate simple, clear report"""
+        
+        contraindicated = [r for r in results if r['contraindicated']]
+        safe = [r for r in results if not r['contraindicated']]
+        
+        # Simple summary
+        if contraindicated:
+            summary = f"⚠️ STOP {len(contraindicated)} medication(s) immediately"
+        else:
+            summary = f"✓ All {len(safe)} medications are safe to continue"
+        
         report = {
-            "assessment_date": datetime.now().strftime("%Y-%m-%d"),
-            "patient_info": {
-                "age": patient.get('age'),
-                "gender": patient.get('gender'),
-                "diagnosis": patient.get('diagnosis')
+            'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'patient': {
+                'age': patient_data['patient'].get('age'),
+                'gender': patient_data['patient'].get('gender'),
+                'conditions': patient_data['patient'].get('condition'),
+                'allergies': patient_data['patient'].get('allergies', [])
             },
-            "prescribed_medicines": patient_data.get('prescription', []),
-            "contraindication_analysis": analysis_results,
-            "total_risk_score": sum(r['risk_score'] for r in analysis_results),
-            "critical_contraindications": [
-                r for r in analysis_results 
-                if r['contraindication_type'] == 'absolute'
-            ],
-            "warnings": [
-                r for r in analysis_results 
-                if r['contraindication_type'] == 'warning'
-            ],
-            "summary": self._generate_summary(analysis_results)
+            'summary': summary,
+            'contraindicated_medications': contraindicated,
+            'safe_medications': safe,
+            'total_medications': len(results)
         }
         
         return report
     
-    def _generate_summary(self, analysis_results: List[Dict[str, Any]]) -> str:
-        """Generate executive summary of findings"""
-        critical_count = sum(
-            1 for r in analysis_results 
-            if r['contraindication_type'] == 'absolute'
-        )
-        warning_count = sum(
-            1 for r in analysis_results 
-            if r['contraindication_type'] == 'warning'
-        )
-        safe_count = sum(
-            1 for r in analysis_results 
-            if r['contraindication_type'] == 'none'
-        )
-        
-        summary = f"Contraindication Assessment Summary:\n"
-        summary += f"- Critical Contraindications: {critical_count}\n"
-        summary += f"- Warnings/Precautions: {warning_count}\n"
-        summary += f"- Safe to Use: {safe_count}\n"
-        
-        if critical_count > 0:
-            summary += "\n⚠️ IMMEDIATE ACTION REQUIRED: Critical contraindications detected. Review alternatives."
-        elif warning_count > 0:
-            summary += "\n⚠️ CAUTION: Warnings identified. Monitor patient closely."
-        else:
-            summary += "\n✓ No contraindications identified for prescribed medications."
-        
-        return summary
-    
-    def analyze_prescription(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Main method to analyze entire prescription"""
-        print("Starting contraindication analysis...")
-        print(f"Patient: {patient_data['patient']['age']}y {patient_data['patient']['gender']}")
-        print(f"Medicines to analyze: {len(patient_data['prescription'])}")
-        print("-" * 80)
-        
-        patient_context = self.build_patient_context(patient_data)
-        analysis_results = []
-        
-        for medicine in patient_data['prescription']:
-            print(f"\nAnalyzing: {medicine}")
-            
-            print(f"  → Querying Bedrock Knowledge Base...")
-            medicine_info = self.query_bedrock_kb(medicine)
-            
-            if not medicine_info:
-                print(f"  ⚠️ No information found in knowledge base")
-                analysis_results.append({
-                    "medicine_name": medicine,
-                    "contraindication_found": False,
-                    "contraindication_type": "no_data",
-                    "risk_score": 0,
-                    "risk_factor": "No data available",
-                    "output_text": f"No contraindication data available for {medicine} in knowledge base."
-                })
-                continue
-            
-            print(f"  → Analyzing with Gemini AI...")
-            result = self.analyze_contraindication(
-                patient_context, 
-                medicine, 
-                medicine_info
-            )
-            analysis_results.append(result)
-            
-            if result['contraindication_type'] == 'absolute':
-                print(f"  ⚠️ CRITICAL: Absolute contraindication found!")
-            elif result['contraindication_type'] == 'warning':
-                print(f"  ⚠️ WARNING: Precaution required")
-            else:
-                print(f"  ✓ No contraindication")
-        
+    def print_simple_report(self, report: Dict[str, Any]):
+        """Print simple, readable report"""
         print("\n" + "=" * 80)
-        print("Analysis complete. Generating report...")
+        print("CONTRAINDICATION REPORT")
+        print("=" * 80)
+        print(f"\nPatient: {report['patient']['age']}y {report['patient']['gender']}")
+        print(f"Conditions: {report['patient']['conditions']}")
+        if report['patient']['allergies']:
+            print(f"Allergies: {', '.join(report['patient']['allergies'])}")
         
-        report = self.generate_report(patient_data, analysis_results)
+        print(f"\n{report['summary']}")
+        print("=" * 80)
+        
+        # Show contraindicated medications
+        if report['contraindicated_medications']:
+            print("\n🚨 CONTRAINDICATED MEDICATIONS - STOP IMMEDIATELY:\n")
+            for med in report['contraindicated_medications']:
+                print(f"  ❌ {med['medicine']}")
+                print(f"     Reason: {med['reason']}")
+                
+                # Show status if it's pregnancy-related
+                if med.get('status') in ['pregnancy_warning', 'pregnancy_needs_review']:
+                    print(f"     ⚠️  PREGNANCY DETECTED - Requires clinical review")
+                
+                if med.get('fda_quote'):
+                    quote = med['fda_quote'][:200] if len(med['fda_quote']) > 200 else med['fda_quote']
+                    print(f"     FDA: \"{quote}...\"")
+                print()
+        
+        # Show safe medications
+        if report['safe_medications']:
+            print("\n✓ SAFE TO CONTINUE:\n")
+            for med in report['safe_medications']:
+                print(f"  ✓ {med['medicine']}")
+                if med['status'] == 'no_data':
+                    print(f"     Note: {med['reason']}")
+            print()
+        
+        print("=" * 80 + "\n")
+    
+    # ============================================================================
+    # MAIN WORKFLOW
+    # ============================================================================
+    
+    def analyze(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main workflow: Two-part analysis
+        """
+        medicines = patient_data.get('prescription', [])
+        
+        # PART 1: Extract FDA data (pure extraction)
+        extracted_data = self.extract_all_medicines(medicines)
+        
+        # PART 2: Match patient to contraindications (simple matching)
+        results = self.match_contraindications(patient_data, extracted_data)
+        
+        # Generate simple report
+        report = self.generate_simple_report(patient_data, results)
+        
         return report
 
 
 def main():
-    """Main execution function"""
-    # Load patient input from JSON file
+    """Main execution"""
+    print("\n" + "=" * 80)
+    print("SIMPLE FDA CONTRAINDICATION ANALYZER")
+    print("Two-Part Approach: Extract → Match → Report")
+    print("=" * 80)
+    
+    # Load patient input
     try:
         with open('patient_input.json', 'r') as f:
             patient_input = json.load(f)
     except FileNotFoundError:
-        print("Error: patient_input.json file not found!")
-        print("Please create patient_input.json in the same directory.")
+        print("\n❌ Error: patient_input.json not found!")
         return
     except json.JSONDecodeError:
-        print("Error: Invalid JSON in patient_input.json")
+        print("\n❌ Error: Invalid JSON in patient_input.json")
         return
     
     # Initialize analyzer
-    try:
-        analyzer = ContraindicationAnalyzer()
-    except ValueError as e:
-        print(f"Configuration Error: {e}")
-        return
+    analyzer = SimpleFDAAnalyzer()
     
     # Run analysis
-    report = analyzer.analyze_prescription(patient_input)
+    report = analyzer.analyze(patient_input)
     
-    # Print formatted report
-    print("\n" + "=" * 80)
-    print("CONTRAINDICATION ANALYSIS REPORT")
-    print("=" * 80)
-    print(json.dumps(report, indent=2))
+    # Print simple report
+    analyzer.print_simple_report(report)
     
-    # Save to file
-    output_filename = f"contraindication_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(output_filename, 'w') as f:
+    # Save detailed report
+    output_file = f"contraindication_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(output_file, 'w') as f:
         json.dump(report, f, indent=2)
     
-    print(f"\n✓ Report saved to: {output_filename}")
-    
-    # Print detailed output for each medicine
-    print("\n" + "=" * 80)
-    print("DETAILED FINDINGS")
-    print("=" * 80)
-    
-    for result in report['contraindication_analysis']:
-        print(f"\n{result['medicine_name']}:")
-        print(f"  Type: {result['contraindication_type']}")
-        print(f"  Risk Score: {result['risk_score']}")
-        print(f"  Finding: {result['output_text']}")
+    print(f"Detailed report saved to: {output_file}\n")
 
 
 if __name__ == "__main__":
