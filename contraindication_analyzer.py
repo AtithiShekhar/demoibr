@@ -15,6 +15,7 @@ class SimpleFDAAnalyzer:
     Two-part approach:
     Part 1: Extract contraindications data (pure extraction, no interpretation)
     Part 2: Simple matching of patient conditions to contraindications
+    Part 3: Calculate weighted scores based on iBR criteria
     """
     
     def __init__(self):
@@ -169,7 +170,8 @@ class SimpleFDAAnalyzer:
                     'medicine': medicine,
                     'contraindicated': False,
                     'status': 'no_data',
-                    'reason': 'No FDA data available'
+                    'reason': 'No FDA data available',
+                    'weighted_score': 0
                 })
                 print(f"  → No data\n")
                 continue
@@ -183,13 +185,18 @@ class SimpleFDAAnalyzer:
                 patient_meds
             )
             
+            # Calculate weighted score
+            match_result['weighted_score'] = self._calculate_weighted_score(match_result)
+            
             results.append(match_result)
             
             # Print result
             if match_result['contraindicated']:
                 print(f"  🚨 CONTRAINDICATED: {match_result['reason']}")
+                print(f"  📊 Weighted Score: {match_result['weighted_score']}")
             else:
                 print(f"  ✓ Safe: {match_result['reason']}")
+                print(f"  📊 Weighted Score: {match_result['weighted_score']}")
             print()
         
         return results
@@ -231,7 +238,8 @@ class SimpleFDAAnalyzer:
                         'contraindicated': True,
                         'status': 'absolute',
                         'reason': f"Patient has {condition}",
-                        'fda_quote': quote
+                        'fda_quote': quote,
+                        'risk_factor': condition
                     }
             
             # Check allergies (hypersensitivity)
@@ -245,7 +253,8 @@ class SimpleFDAAnalyzer:
                             'contraindicated': True,
                             'status': 'absolute',
                             'reason': f"Patient allergic to {medicine}",
-                            'fda_quote': quote
+                            'fda_quote': quote,
+                            'risk_factor': f"allergy to {medicine}"
                         }
             
             # Check drug-drug interactions
@@ -292,7 +301,8 @@ class SimpleFDAAnalyzer:
                     'contraindicated': True,
                     'status': 'absolute',
                     'reason': 'Patient is pregnant - contraindicated',
-                    'fda_quote': quote
+                    'fda_quote': quote,
+                    'risk_factor': 'pregnancy'
                 }
             
             # Check 2: BOXED WARNING section
@@ -306,7 +316,8 @@ class SimpleFDAAnalyzer:
                             'contraindicated': True,
                             'status': 'absolute',
                             'reason': 'Patient is pregnant - boxed warning',
-                            'fda_quote': quote
+                            'fda_quote': quote,
+                            'risk_factor': 'pregnancy'
                         }
             
             # Check 3: PREGNANCY section (8.1)
@@ -320,7 +331,8 @@ class SimpleFDAAnalyzer:
                             'contraindicated': True,
                             'status': 'pregnancy_warning',
                             'reason': 'Patient is pregnant - pregnancy warning found',
-                            'fda_quote': quote
+                            'fda_quote': quote,
+                            'risk_factor': 'pregnancy'
                         }
             
             # Check 4: WARNINGS section (if pregnancy mentioned with cautionary language)
@@ -333,7 +345,8 @@ class SimpleFDAAnalyzer:
                             'contraindicated': True,
                             'status': 'pregnancy_warning',
                             'reason': 'Patient is pregnant - warning in label',
-                            'fda_quote': quote
+                            'fda_quote': quote,
+                            'risk_factor': 'pregnancy'
                         }
             
             # If patient is pregnant and drug has ANY pregnancy information at all
@@ -345,7 +358,8 @@ class SimpleFDAAnalyzer:
                     'contraindicated': True,
                     'status': 'pregnancy_needs_review',
                     'reason': 'Patient is pregnant - requires clinical review',
-                    'fda_quote': quote or 'Pregnancy information found in FDA label - verify safety'
+                    'fda_quote': quote or 'Pregnancy information found in FDA label - verify safety',
+                    'risk_factor': 'pregnancy'
                 }
         
         # Priority 3: Check BOXED WARNING
@@ -358,7 +372,8 @@ class SimpleFDAAnalyzer:
                         'contraindicated': True,
                         'status': 'boxed_warning',
                         'reason': f"Patient has {condition} (Boxed Warning)",
-                        'fda_quote': quote
+                        'fda_quote': quote,
+                        'risk_factor': condition
                     }
         
         # No contraindications found
@@ -367,7 +382,8 @@ class SimpleFDAAnalyzer:
             'contraindicated': False,
             'status': 'safe',
             'reason': 'No matching contraindications found',
-            'fda_quote': ''
+            'fda_quote': '',
+            'risk_factor': None
         }
     
     def _check_ddi(self, medicine: str, contra_text: str, patient_meds: List[str]) -> Optional[Dict]:
@@ -401,7 +417,8 @@ class SimpleFDAAnalyzer:
                         'contraindicated': True,
                         'status': 'drug_interaction',
                         'reason': f"Patient taking both {medicine} and {med}",
-                        'fda_quote': quote
+                        'fda_quote': quote,
+                        'risk_factor': f"drug interaction with {med}"
                     }
         
         return None
@@ -434,6 +451,34 @@ class SimpleFDAAnalyzer:
         return quote
     
     # ============================================================================
+    # PART 3: WEIGHTED SCORE CALCULATION
+    # ============================================================================
+    
+    def _calculate_weighted_score(self, result: Dict[str, Any]) -> int:
+        """
+        Calculate weighted score based on iBR criteria (Factor 3.1)
+        
+        Scoring:
+        - 500: Absolute contraindication (found in Contraindications section)
+        - 10: No absolute contraindication, but with warning/precaution
+        - 0: No data or safe
+        """
+        if not result['contraindicated']:
+            # Safe medication
+            return 0
+        
+        status = result.get('status', '')
+        
+        # Absolute contraindication = 500 points
+        if status in ['absolute', 'boxed_warning', 'drug_interaction', 
+                      'pregnancy_warning', 'pregnancy_needs_review']:
+            return 500
+        
+        # Warning/precaution = 10 points
+        # (This would apply if we had warnings that aren't absolute contraindications)
+        return 10
+    
+    # ============================================================================
     # SIMPLE OUTPUT GENERATION
     # ============================================================================
     
@@ -446,6 +491,9 @@ class SimpleFDAAnalyzer:
         
         contraindicated = [r for r in results if r['contraindicated']]
         safe = [r for r in results if not r['contraindicated']]
+        
+        # Calculate total score
+        total_score = sum(r.get('weighted_score', 0) for r in results)
         
         # Simple summary
         if contraindicated:
@@ -462,6 +510,7 @@ class SimpleFDAAnalyzer:
                 'allergies': patient_data['patient'].get('allergies', [])
             },
             'summary': summary,
+            'total_contraindication_score': total_score,
             'contraindicated_medications': contraindicated,
             'safe_medications': safe,
             'total_medications': len(results)
@@ -480,6 +529,7 @@ class SimpleFDAAnalyzer:
             print(f"Allergies: {', '.join(report['patient']['allergies'])}")
         
         print(f"\n{report['summary']}")
+        print(f"Total Contraindication Score: {report['total_contraindication_score']}")
         print("=" * 80)
         
         # Show contraindicated medications
@@ -488,6 +538,7 @@ class SimpleFDAAnalyzer:
             for med in report['contraindicated_medications']:
                 print(f"  ❌ {med['medicine']}")
                 print(f"     Reason: {med['reason']}")
+                print(f"     Weighted Score: {med.get('weighted_score', 0)}")
                 
                 # Show status if it's pregnancy-related
                 if med.get('status') in ['pregnancy_warning', 'pregnancy_needs_review']:
@@ -496,6 +547,12 @@ class SimpleFDAAnalyzer:
                 if med.get('fda_quote'):
                     quote = med['fda_quote'][:200] if len(med['fda_quote']) > 200 else med['fda_quote']
                     print(f"     FDA: \"{quote}...\"")
+                
+                # Generate iBR output text
+                if med.get('risk_factor'):
+                    ibr_text = self._generate_ibr_output(med['medicine'], med['risk_factor'])
+                    print(f"     iBR Output: {ibr_text}")
+                
                 print()
         
         # Show safe medications
@@ -503,11 +560,21 @@ class SimpleFDAAnalyzer:
             print("\n✓ SAFE TO CONTINUE:\n")
             for med in report['safe_medications']:
                 print(f"  ✓ {med['medicine']}")
+                print(f"     Weighted Score: {med.get('weighted_score', 0)}")
                 if med['status'] == 'no_data':
                     print(f"     Note: {med['reason']}")
             print()
         
         print("=" * 80 + "\n")
+    
+    def _generate_ibr_output(self, medicine_name: str, risk_factor: str) -> str:
+        """
+        Generate iBR output text for contraindication (Section 3.1.1)
+        """
+        return (f"Use of this {medicine_name} in patients having {risk_factor}, "
+                f"will cause more risks than benefits, which is not beneficial/favorable "
+                f"for the patient. Hence, use of this medicine is restricted as per "
+                f"scientific evidence and documentation in regulatory label.")
     
     # ============================================================================
     # MAIN WORKFLOW
@@ -515,7 +582,7 @@ class SimpleFDAAnalyzer:
     
     def analyze(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Main workflow: Two-part analysis
+        Main workflow: Two-part analysis with scoring
         """
         medicines = patient_data.get('prescription', [])
         
@@ -525,7 +592,7 @@ class SimpleFDAAnalyzer:
         # PART 2: Match patient to contraindications (simple matching)
         results = self.match_contraindications(patient_data, extracted_data)
         
-        # Generate simple report
+        # Generate simple report with scores
         report = self.generate_simple_report(patient_data, results)
         
         return report
@@ -534,8 +601,8 @@ class SimpleFDAAnalyzer:
 def main():
     """Main execution"""
     print("\n" + "=" * 80)
-    print("SIMPLE FDA CONTRAINDICATION ANALYZER")
-    print("Two-Part Approach: Extract → Match → Report")
+    print("SIMPLE FDA CONTRAINDICATION ANALYZER WITH WEIGHTED SCORING")
+    print("Two-Part Approach: Extract → Match → Score → Report")
     print("=" * 80)
     
     # Load patient input
