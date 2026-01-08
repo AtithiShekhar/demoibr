@@ -1,0 +1,78 @@
+{
+  "analysis_timestamp": "2026-01-09T03:11:02.426144",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Approved Use (USFDA only)",
+      "weight": 50,
+      "score": 3,
+      "weighted_score": 150,
+      "cdsco_approved": false,
+      "usfda_approved": true
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "weight": 90,
+      "score": 5,
+      "weighted_score": 450,
+      "years_in_market": 29
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "rct_count": 86
+    },
+    "raw_data": {
+      "drug": "Atorvastatin",
+      "diagnosis": "Hyperlipidemia",
+      "patient_info": {
+        "age": 60,
+        "gender": "Male",
+        "diagnosis": "Hyperlipidemia, Chronic Liver Disease",
+        "condition": "decompensated cirrhosis",
+        "allergies": [],
+        "date_of_assessment": "2026-01-06"
+      },
+      "regulatory": {
+        "drug": "Atorvastatin",
+        "condition": "Hyperlipidemia",
+        "cdsco_approved": false,
+        "usfda_approved": true,
+        "output": "Atorvastatin is approved for use in Hyperlipidemia as per USFDA's USPI (United States Prescriber information) but not as per the CDSCO (Indian health regulatory body)."
+      },
+      "market_experience": {
+        "found": true,
+        "generic_name": "ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM",
+        "approval_date": "17-Dec-1996",
+        "years": 29,
+        "output": "ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM is first approved by USFDA on 17-Dec-1996 and first approved by CDSCO on [CDSCO approval date not available]. ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM is in the market for more than 29 years of post-market experience."
+      },
+      "pubmed_evidence": {
+        "rct_count": 86,
+        "top_conclusions": [
+          {
+            "title": "Frameshift variation in the HMG-CoA reductase gene and unresponsiveness to cholesterol-lowering drugs in type 2 diabetes mellitus patients.",
+            "conclusion": "Dyslipidemia, an imbalance in blood lipid levels, is a frequent complication of type 2 diabetes mellitus (DM2) and heightens the risk of cardiovascular diseases (CVDs). Statins, which inhibit 3-hydroxy-3-methylglutaryl-CoA reductase, are potent competitive inhibitors that reduce plasma cholesterol levels. However, individual responses to statins can vary markedly, possibly due to genetic variations in the 3-hydroxy-3-methylglutaryl-CoA reductase (HMGCR) gene. This study aimed to investigate the pharmacogenetic relationship between the HMGCR gene and hypercholesterolemia in type 2 diabetes mellitus patients who respond differently to atorvastatin, as well as in healthy individuals. Ninety participants were involved, including sixty with type 2 diabetes mellitus and hypercholesterolemia, and thirty healthy individuals. They were randomly assigned to three groups: responsive (received atorvastatin 40\u00a0mg), non-responsive (also received atorvastatin 40\u00a0mg), and control. Both responsive and non-responsive groups underwent fasting. Biochemical tests were conducted, followed by genetic analysis to identify mutations in the HMGCR gene. The effects of statins in each group were assessed using analysis of variance (ANOVA) and post hoc Tukey's Honestly Significant Difference (HSD) analysis. Atorvastatin 40\u00a0mg was administered to assess its efficacy in reducing cholesterol levels in patients with hypercholesterolemia and type 2 diabetes mellitus. The control group exhibited similar cholesterol levels to the responsive group (cholesterol\u2009<\u2009200\u00a0mg/dl). However, both control and responsive groups significantly differed from the non-responsive group, which had markedly elevated cholesterol levels (>\u2009240\u00a0mg/dl). Genetic analysis revealed a cytosine nucleotide insertion in the catalytic domain of the HMGCR gene in only two non-responsive participants to atorvastatin 40\u00a0mg therapy. These two patients showed non-responsiveness to atorvastatin 40\u00a0mg due to a genetic mutation in the HMGCR gene. This mutation altered the amino acid sequence in the flap domain, replacing isoleucine with a stop codon. As a result, translation was prematurely terminated, leading to the production of truncated proteins."
+          },
+          {
+            "title": "Probiotics combined with atorvastatin administration in the treatment of hyperlipidemia: A randomized, double-blind, placebo-controlled clinical trial.",
+            "conclusion": "Probiotics optimize the gut microbiota structure and decrease the amount of harmful bacteria in patients with hyperlipidemia. Probiotics can influence the composition of gut microorganisms and increase their diversity and abundance in vivo. It is recommended to use probiotics combined with atorvastatin to treat patients with hyperlipidemia."
+          },
+          {
+            "title": "Appropriateness of Intensive Statin Treatment in People with Type Two Diabetes and Mild Hypercholesterolemia: A Randomized Clinical Trial.",
+            "conclusion": "Despite the general conception, moderate-intensity statins are not adequate for the majority of patients with T2DM and mild hyperlipidemia and greater numbers of patients could reach the LDL cholesterol target with high-intensity statin therapy."
+          },
+          {
+            "title": "Differential effect of atorvastatin and pravastatin on thoracic spine attenuation: A sub-analysis of a randomized clinical trial.",
+            "conclusion": "These findings support the hypothesis that there is an interaction between bone and cardiometabolic health and that intensive lipid lowering has a beneficial effect on bone health."
+          },
+          {
+            "title": "N-3 fatty acid supplementation mediates lipid profile, including small dense LDL, when combined with statins: a randomized double blind placebo controlled trial.",
+            "conclusion": "In this group of hyperlipidemic patients on a stable statin prescription, OM3 plus atorvastatin improved small dense LDL concentrations, non-HDL-C, VLDL-C and TG to a greater extent than atorvastatin alone. Further studies are warranted in this area."
+          }
+        ]
+      }
+    }
+  }
+}

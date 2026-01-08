@@ -1,6 +1,12 @@
+"""
+fda/mme_checker.py
+FDA Market Experience Checker Module
+"""
+
 import requests
 from datetime import datetime
 from typing import Optional, Dict
+
 
 class FDADrugChecker:
     BASE_URL = "https://api.fda.gov/drug/drugsfda.json"
@@ -62,7 +68,42 @@ class FDADrugChecker:
             "years": years
         }
 
+
 def format_fda_output(drug: str, approval_date: str, years: int) -> str:
     return (f"{drug} is first approved by USFDA on {approval_date} and first "
             f"approved by CDSCO on [CDSCO approval date not available]. {drug} "
             f"is in the market for more than {years} years of post-market experience.")
+
+
+def start(drug: str, scoring_system=None) -> dict:
+    """
+    Main entry point for FDA market experience checking
+    
+    Args:
+        drug: Medicine name
+        scoring_system: Optional scoring system to add results to
+        
+    Returns:
+        Dictionary with FDA data and formatted output
+    """
+    fda = FDADrugChecker()
+    fda_data = fda.search(drug)
+    
+    if fda_data:
+        output_text = format_fda_output(
+            fda_data["generic_name"], 
+            fda_data["approval_date"], 
+            fda_data["years"]
+        )
+        return {
+            'found': True,
+            'generic_name': fda_data["generic_name"],
+            'approval_date': fda_data["approval_date"],
+            'years': fda_data["years"],
+            'output': output_text
+        }
+    else:
+        return {
+            'found': False,
+            'output': f"No USFDA approval data found for {drug}."
+        }

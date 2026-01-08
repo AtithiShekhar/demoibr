@@ -1,5 +1,11 @@
+"""
+pubmed/searcher.py
+PubMed Evidence Searcher Module
+"""
+
 import requests
 import xml.etree.ElementTree as ET
+
 
 class PubMedSearcher:
     SEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
@@ -23,13 +29,8 @@ class PubMedSearcher:
         try:
             search_res = requests.get(self.SEARCH_URL, params=params)
             search_root = ET.fromstring(search_res.content)
-            # print("the content of entire page\n")
-            # print(search_res.content)
             count = int(search_root.find(".//Count").text)
             id_list = [id_node.text for id_node in search_root.findall(".//IdList/Id")]
-            # print("the id list of articles is \n")
-            # print(id_list)
-            # 2. Fetch Conclusions for the found IDs
             conclusions = self.fetch_conclusions(id_list) if id_list else []
             
             return count, conclusions
@@ -62,7 +63,6 @@ class PubMedSearcher:
                         conclusion_text = part.text
                         break
                 
-       
                 if not conclusion_text and abstract_parts:
                     conclusion_text = abstract_parts[-1].text
                 
@@ -72,6 +72,7 @@ class PubMedSearcher:
             return results
         except Exception:
             return []
+
 
 def format_pubmed_output(drug, condition, rct_count, conclusions):
     base_text = (f"There are {rct_count} RCTs conducted for the evaluation of "
@@ -83,3 +84,28 @@ def format_pubmed_output(drug, condition, rct_count, conclusions):
             base_text += f"{i}. {study['title']}\n   Conclusion: {study['conclusion'][:300]}...\n"
     
     return base_text
+
+
+def start(drug: str, condition: str, email: str = None, scoring_system=None) -> dict:
+    """
+    Main entry point for PubMed evidence searching
+    
+    Args:
+        drug: Medicine name
+        condition: Diagnosis condition
+        email: Optional email for NCBI API
+        scoring_system: Optional scoring system to add results to
+        
+    Returns:
+        Dictionary with RCT count, conclusions, and formatted output
+    """
+    pubmed = PubMedSearcher(email=email)
+    rct_count, top_conclusions = pubmed.search(drug, condition)
+    
+    output_text = format_pubmed_output(drug, condition, rct_count, top_conclusions)
+    
+    return {
+        'rct_count': rct_count,
+        'conclusions': top_conclusions,
+        'output': output_text
+    }

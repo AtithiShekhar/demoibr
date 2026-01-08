@@ -1,0 +1,36 @@
+{
+  "date": "2026-01-09 01:35:28",
+  "patient": {
+    "age": 60,
+    "gender": "Male",
+    "conditions": "decompensated cirrhosis",
+    "allergies": []
+  },
+  "summary": "\u26a0\ufe0f STOP 1 medication(s) immediately",
+  "contraindicated_medications": [
+    {
+      "medicine": "Atorvastatin",
+      "contraindicated": true,
+      "status": "absolute",
+      "reason": "Patient has decompensated cirrhosis",
+      "fda_quote": "4 CONTRAINDICATIONS Acute liver failure or decompensated cirrhosis [see Warnings and Precautions (5.3) ] Hypersensitivity to atorvastatin or an..."
+    }
+  ],
+  "safe_medications": [
+    {
+      "medicine": "Spironolactone",
+      "contraindicated": false,
+      "status": "safe",
+      "reason": "No matching contraindications found",
+      "fda_quote": ""
+    },
+    {
+      "medicine": "Furosemide",
+      "contraindicated": false,
+      "status": "safe",
+      "reason": "No matching contraindications found",
+      "fda_quote": ""
+    }
+  ],
+  "total_medications": 3
+}

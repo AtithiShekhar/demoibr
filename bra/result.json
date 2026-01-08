@@ -1,0 +1,27 @@
+{
+  "analysis_timestamp": "2026-01-09T02:39:22.627560",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Off label",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "cdsco_approved": false,
+      "usfda_approved": false
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "weight": 90,
+      "score": 5,
+      "weighted_score": 450,
+      "years_in_market": 13
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "rct_count": 0
+    }
+  }
+}

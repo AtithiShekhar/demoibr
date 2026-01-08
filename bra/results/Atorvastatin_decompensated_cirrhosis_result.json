@@ -1,0 +1,57 @@
+{
+  "analysis_timestamp": "2026-01-09T03:11:21.394986",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Off label",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "cdsco_approved": false,
+      "usfda_approved": false
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "weight": 90,
+      "score": 5,
+      "weighted_score": 450,
+      "years_in_market": 29
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "rct_count": 0
+    },
+    "raw_data": {
+      "drug": "Atorvastatin",
+      "diagnosis": "decompensated cirrhosis",
+      "patient_info": {
+        "age": 60,
+        "gender": "Male",
+        "diagnosis": "Hyperlipidemia, Chronic Liver Disease",
+        "condition": "decompensated cirrhosis",
+        "allergies": [],
+        "date_of_assessment": "2026-01-06"
+      },
+      "regulatory": {
+        "drug": "Atorvastatin",
+        "condition": "decompensated cirrhosis",
+        "cdsco_approved": false,
+        "usfda_approved": false,
+        "output": "Atorvastatin is not approved for use in decompensated cirrhosis as per the CDSCO (Indian health regulatory body) and also as per USFDA's USPI (United States Prescriber information). Please review the iBR score and consider alternative medications that are approved by regulatory bodies for treating decompensated cirrhosis."
+      },
+      "market_experience": {
+        "found": true,
+        "generic_name": "ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM",
+        "approval_date": "17-Dec-1996",
+        "years": 29,
+        "output": "ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM is first approved by USFDA on 17-Dec-1996 and first approved by CDSCO on [CDSCO approval date not available]. ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM, ATORVASTATIN CALCIUM is in the market for more than 29 years of post-market experience."
+      },
+      "pubmed_evidence": {
+        "rct_count": 0,
+        "top_conclusions": []
+      }
+    }
+  }
+}

@@ -1,3 +1,7 @@
+"""
+bedrock/query_handler.py
+Regulatory approval checker combining CDSCO (Bedrock) and USFDA (OpenFDA)
+"""
 
 import json
 import boto3
@@ -190,3 +194,51 @@ def format_bedrock_output(cdsco_approved: bool, usfda_approved: bool, drug: str,
                f"(United States Prescriber information). Please review the iBR score "
                f"and consider alternative medications that are approved by regulatory "
                f"bodies for treating {condition}.")
+def start(drug: str, condition: str, scoring_system=None) -> dict:
+    """
+    Main entry point for regulatory approval checking (CDSCO + USFDA)
+
+    Args:
+        drug: Generic name of medicine
+        condition: Indication / disease
+        scoring_system: Optional scoring system to attach results
+
+    Returns:
+        Dictionary with approval flags and formatted output
+    """
+    checker = BedrockDrugChecker()
+
+    # Retrieve CDSCO documents
+    context = checker.retrieve_docs(drug, condition)
+
+    # Generate approval decisions
+    cdsco_approved, usfda_approved = checker.generate_answer(
+        drug=drug,
+        condition=condition,
+        context=context
+    )
+
+    # Format final user-facing output
+    output_text = format_bedrock_output(
+        cdsco_approved=cdsco_approved,
+        usfda_approved=usfda_approved,
+        drug=drug,
+        condition=condition
+    )
+
+    result = {
+        "drug": drug,
+        "condition": condition,
+        "cdsco_approved": cdsco_approved,
+        "usfda_approved": usfda_approved,
+        "output": output_text
+    }
+
+    # Optional scoring system hook
+    if scoring_system is not None:
+        try:
+            scoring_system.add_regulatory_check(result)
+        except Exception:
+            pass
+
+    return result

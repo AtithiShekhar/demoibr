@@ -1,0 +1,32 @@
+{
+  "date": "2026-01-09 01:30:40",
+  "patient": {
+    "age": 65,
+    "gender": "Male",
+    "conditions": null,
+    "allergies": []
+  },
+  "summary": "\u2713 All 3 medications are safe to continue",
+  "contraindicated_medications": [],
+  "safe_medications": [
+    {
+      "medicine": "Paracetamol",
+      "contraindicated": false,
+      "status": "no_data",
+      "reason": "No FDA data available"
+    },
+    {
+      "medicine": "Thyroxine USPI",
+      "contraindicated": false,
+      "status": "no_data",
+      "reason": "No FDA data available"
+    },
+    {
+      "medicine": "Sitagliptin USPI",
+      "contraindicated": false,
+      "status": "no_data",
+      "reason": "No FDA data available"
+    }
+  ],
+  "total_medications": 3
+}

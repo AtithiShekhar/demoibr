@@ -1,0 +1,62 @@
+{
+  "analysis_timestamp": "2026-01-09T03:11:35.296035",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Approved Use (USFDA only)",
+      "weight": 50,
+      "score": 3,
+      "weighted_score": 150,
+      "cdsco_approved": false,
+      "usfda_approved": true
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "weight": 90,
+      "score": 5,
+      "weighted_score": 450,
+      "years_in_market": 65
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "rct_count": 1
+    },
+    "raw_data": {
+      "drug": "Spironolactone",
+      "diagnosis": "Chronic Liver Disease",
+      "patient_info": {
+        "age": 60,
+        "gender": "Male",
+        "diagnosis": "Hyperlipidemia, Chronic Liver Disease",
+        "condition": "decompensated cirrhosis",
+        "allergies": [],
+        "date_of_assessment": "2026-01-06"
+      },
+      "regulatory": {
+        "drug": "Spironolactone",
+        "condition": "Chronic Liver Disease",
+        "cdsco_approved": false,
+        "usfda_approved": true,
+        "output": "Spironolactone is approved for use in Chronic Liver Disease as per USFDA's USPI (United States Prescriber information) but not as per the CDSCO (Indian health regulatory body)."
+      },
+      "market_experience": {
+        "found": true,
+        "generic_name": "SPIRONOLACTONE, SPIRONOLACTONE, SPIRONOLACTONE",
+        "approval_date": "21-Jan-1960",
+        "years": 65,
+        "output": "SPIRONOLACTONE, SPIRONOLACTONE, SPIRONOLACTONE is first approved by USFDA on 21-Jan-1960 and first approved by CDSCO on [CDSCO approval date not available]. SPIRONOLACTONE, SPIRONOLACTONE, SPIRONOLACTONE is in the market for more than 65 years of post-market experience."
+      },
+      "pubmed_evidence": {
+        "rct_count": 1,
+        "top_conclusions": [
+          {
+            "title": "Improved bioavailability and clinical response in patients with chronic liver disease following the administration of a spironolactone: beta-cyclodextrin complex.",
+            "conclusion": "Better absorption of spironolactone from the spironolactone: beta-cyclodextrin complex formulation should lead to a reduction in dosage and perhaps a more consistent effect in patients with chronic liver disease."
+          }
+        ]
+      }
+    }
+  }
+}

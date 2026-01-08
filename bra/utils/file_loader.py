@@ -23,8 +23,7 @@ def load_input(filename: str = "input.json") -> dict:
             print(f"Error: Input file '{filename}' not found.")
             print(f"\nPlease create {filename} with the following format:")
             sample_data = {
-                "Drug": "Amoxicillin",
-                "Condition": "Bacterial Infection",
+                "patient": {"diagnosis": "Amoxicillin", "condition": "Bacterial Infection",},
                 "PubMed": {
                     "email": "your_email@example.com"
                 }
@@ -45,7 +44,7 @@ def load_input(filename: str = "input.json") -> dict:
             data = json.load(f)
         
         # Validate required fields
-        required_fields = ["Drug", "Condition"]
+        required_fields = ["patient","prescription"]
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -53,7 +52,7 @@ def load_input(filename: str = "input.json") -> dict:
             return None
         
         # Validate data
-        if not data["Drug"] or not data["Condition"]:
+        if not data["patient"] or not data["prescription"]:
             print("Error: Drug and Condition cannot be empty")
             return None
         
