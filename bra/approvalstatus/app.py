@@ -1,5 +1,5 @@
 """
-bedrock/query_handler.py
+approvalstatus/app.py
 Regulatory approval checker combining CDSCO (Bedrock) and USFDA (OpenFDA)
 """
 
@@ -201,24 +201,24 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
     Args:
         drug: Generic name of medicine
         condition: Indication / disease
-        scoring_system: Optional scoring system to attach results
+        scoring_system: Optional scoring system to add results to
 
     Returns:
-        Dictionary with approval flags and formatted output
+        Dictionary with approval status, formatted output, and benefit factor score
     """
     checker = BedrockDrugChecker()
 
-    # Retrieve CDSCO documents
+    # -------------------------------
+    # Regulatory approval check
+    # -------------------------------
     context = checker.retrieve_docs(drug, condition)
 
-    # Generate approval decisions
     cdsco_approved, usfda_approved = checker.generate_answer(
         drug=drug,
         condition=condition,
         context=context
     )
 
-    # Format final user-facing output
     output_text = format_bedrock_output(
         cdsco_approved=cdsco_approved,
         usfda_approved=usfda_approved,
@@ -226,19 +226,25 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
         condition=condition
     )
 
-    result = {
+    # -------------------------------
+    # Benefit factor scoring
+    # -------------------------------
+    if scoring_system:
+        from scoring.benefit_factor import get_benefit_factor_data
+
+        evidence_score = get_benefit_factor_data(
+            cdsco_approved=cdsco_approved,
+            usfda_approved=usfda_approved,
+            scoring_system=scoring_system
+        )
+    else:
+        evidence_score = None
+
+    return {
         "drug": drug,
         "condition": condition,
         "cdsco_approved": cdsco_approved,
         "usfda_approved": usfda_approved,
-        "output": output_text
+        "output": output_text,
+        "evidence_score": evidence_score
     }
-
-    # Optional scoring system hook
-    if scoring_system is not None:
-        try:
-            scoring_system.add_regulatory_check(result)
-        except Exception:
-            pass
-
-    return result

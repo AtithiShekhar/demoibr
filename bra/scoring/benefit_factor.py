@@ -34,7 +34,6 @@ class ScoringSystem:
         
         with open(self.output_file, 'w') as f:
             json.dump(output_data, f, indent=2)
-        
         return self.output_file
 
 
@@ -217,12 +216,34 @@ class PubMedEvidenceScorer:
         output.append(f"{evidence_type}\t{weight}\t\t{score}\t\t{weighted_score}")
         
         return "\n".join(output)
+# scoring/scoring_system.py (CHANGE ONLY THIS PART)
+class ContraindicationScorer:
+    """Calculates weighted scores based on iBR criteria (Factor 3.1)"""
+    
+    # 500 = Absolute Risk, 10 = Warning/Precaution, 0 = Safe
+    STATUS_WEIGHTS = {
+        'absolute': 500,
+        'boxed_warning': 500,
+        'pregnancy_warning': 500,
+        'safe': 0,
+        'no_data': 0
+    }
 
+    def calculate_score(self, status: str) -> Dict[str, Any]:
+        weighted_score = self.STATUS_WEIGHTS.get(status, 10)
+        return {
+            'weighted_score': weighted_score,
+            'status': status,
+            'weight': 100 if weighted_score >= 500 else 10,
+            'score': 5 if weighted_score >= 500 else 1
+        }
 
-# ============================================================
-# MAIN FUNCTIONS FOR USAGE
-# ============================================================
-
+def get_contraindication_data(status: str, scoring_system=None) -> Dict:
+    scorer = ContraindicationScorer()
+    result = scorer.calculate_score(status)
+    if scoring_system:
+        scoring_system.add_analysis("contraindication", result)
+    return result
 def get_benefit_factor_data(cdsco_approved: bool, usfda_approved: bool, 
                            scoring_system: ScoringSystem = None) -> Dict:
     """

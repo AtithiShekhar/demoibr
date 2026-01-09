@@ -104,8 +104,16 @@ def start(drug: str, condition: str, email: str = None, scoring_system=None) -> 
     
     output_text = format_pubmed_output(drug, condition, rct_count, top_conclusions)
     
+    # Calculate and add PubMed evidence score if scoring system provided
+    if scoring_system:
+        from scoring.benefit_factor import get_pubmed_evidence_data
+        evidence_score = get_pubmed_evidence_data(rct_count, scoring_system)
+    else:
+        evidence_score = None
+    
     return {
         'rct_count': rct_count,
         'conclusions': top_conclusions,
-        'output': output_text
+        'output': output_text,
+        'evidence_score': evidence_score
     }

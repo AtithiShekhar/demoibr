@@ -74,36 +74,52 @@ def format_fda_output(drug: str, approval_date: str, years: int) -> str:
             f"approved by CDSCO on [CDSCO approval date not available]. {drug} "
             f"is in the market for more than {years} years of post-market experience.")
 
-
 def start(drug: str, scoring_system=None) -> dict:
     """
     Main entry point for FDA market experience checking
-    
+
     Args:
         drug: Medicine name
         scoring_system: Optional scoring system to add results to
-        
+
     Returns:
-        Dictionary with FDA data and formatted output
+        Dictionary with FDA data, formatted output, and market experience score
     """
     fda = FDADrugChecker()
     fda_data = fda.search(drug)
-    
+
     if fda_data:
         output_text = format_fda_output(
-            fda_data["generic_name"], 
-            fda_data["approval_date"], 
+            fda_data["generic_name"],
+            fda_data["approval_date"],
             fda_data["years"]
         )
+
+        # -------------------------------
+        # Market experience scoring
+        # -------------------------------
+        if scoring_system:
+            from scoring.benefit_factor import get_market_experience_data
+
+            evidence_score = get_market_experience_data(
+                years_in_market=fda_data["years"],
+                scoring_system=scoring_system
+            )
+        else:
+            evidence_score = None
+
         return {
-            'found': True,
-            'generic_name': fda_data["generic_name"],
-            'approval_date': fda_data["approval_date"],
-            'years': fda_data["years"],
-            'output': output_text
+            "found": True,
+            "generic_name": fda_data["generic_name"],
+            "approval_date": fda_data["approval_date"],
+            "years": fda_data["years"],
+            "output": output_text,
+            "evidence_score": evidence_score
         }
+
     else:
         return {
-            'found': False,
-            'output': f"No USFDA approval data found for {drug}."
+            "found": False,
+            "output": f"No USFDA approval data found for {drug}.",
+            "evidence_score": None
         }
