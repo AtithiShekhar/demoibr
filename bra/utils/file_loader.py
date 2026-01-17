@@ -1,11 +1,24 @@
 """
 utils/file_loader.py
-Utility to load input.json file
+Utility to load input.json file and helper functions
 """
 
 import json
 import os
 import sys
+
+
+def parse_diagnoses(diagnosis_str: str) -> list:
+    """
+    Parse comma-separated diagnosis string into list
+    
+    Args:
+        diagnosis_str: Comma-separated diagnosis string
+        
+    Returns:
+        List of individual diagnoses
+    """
+    return [d.strip() for d in diagnosis_str.split(',')]
 
 
 def load_input(filename: str = "input.json") -> dict:
@@ -21,42 +34,51 @@ def load_input(filename: str = "input.json") -> dict:
     try:
         if not os.path.exists(filename):
             print(f"Error: Input file '{filename}' not found.")
-            print(f"\nPlease create {filename} with the following format:")
-            sample_data = {
-                "patient": {"diagnosis": "Amoxicillin", "condition": "Bacterial Infection",},
-                "PubMed": {
-                    "email": "your_email@example.com"
-                }
-            }
-            print(json.dumps(sample_data, indent=2))
-            
-            # Create sample file
-            try:
-                with open(filename, 'w') as f:
-                    json.dump(sample_data, f, indent=2)
-                print(f"\nCreated sample {filename}. Please edit it with your data.")
-            except Exception as e:
-                print(f"Could not create sample file: {e}")
-            
             return None
         
         with open(filename, 'r') as f:
             data = json.load(f)
         
-        # Validate required fields
-        required_fields = ["patient","prescription"]
-        missing_fields = [field for field in required_fields if field not in data]
+        # Validate structure - support both old and new format
+        # New format: {"patient": {...}, "prescription": [...]}
+        # Old format: {"Drug": "...", "Condition": "..."}
         
-        if missing_fields:
-            print(f"Error: Missing required fields in {filename}: {', '.join(missing_fields)}")
+        # Check for new format (API format)
+        if "patient" in data and "prescription" in data:
+            # Validate patient structure
+            patient = data.get("patient", {})
+            if not isinstance(patient, dict):
+                print("Error: 'patient' must be a dictionary")
+                return None
+            
+            # Validate prescription structure
+            prescription = data.get("prescription", [])
+            if not isinstance(prescription, list) or len(prescription) == 0:
+                print("Error: 'prescription' must be a non-empty list")
+                return None
+            
+            return data
+        
+        # Check for old format (direct CLI usage)
+        elif "Drug" in data and "Condition" in data:
+            # Convert old format to new format
+            return {
+                "patient": {
+                    "age": data.get("age"),
+                    "gender": data.get("gender"),
+                    "diagnosis": data.get("Condition", ""),
+                    "condition": data.get("Condition", ""),
+                    "date_of_assessment": data.get("date_of_assessment")
+                },
+                "prescription": [data.get("Drug")],
+                "PubMed": data.get("PubMed", {})
+            }
+        
+        else:
+            print("Error: Input JSON must contain either:")
+            print("  - New format: 'patient' and 'prescription' fields")
+            print("  - Old format: 'Drug' and 'Condition' fields")
             return None
-        
-        # Validate data
-        if not data["patient"] or not data["prescription"]:
-            print("Error: Drug and Condition cannot be empty")
-            return None
-        
-        return data
     
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in {filename}: {e}")
