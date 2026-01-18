@@ -3,3 +3,4 @@ botocore>=1.34.0
 requests
 python-dotenv
 flask
+dotenv

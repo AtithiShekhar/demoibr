@@ -13,7 +13,8 @@ from utils.analysis.analysis_worker import analyze_drug_diagnosis
 def execute_parallel_analysis(
     tasks: List[Tuple[str, str]], 
     patient: dict, 
-    email: str
+    email: str,
+    full_patient_data: dict = None
 ) -> Tuple[List[dict], float]:
     """
     Execute all drug-diagnosis analyses in parallel
@@ -44,7 +45,8 @@ def execute_parallel_analysis(
                 diagnosis, 
                 patient, 
                 email, 
-                idx + 1
+                idx + 1,
+                full_patient_data
             ): (drug, diagnosis)
             for idx, (drug, diagnosis) in enumerate(tasks)
         }

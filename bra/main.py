@@ -56,19 +56,19 @@ def main(verbose: bool = True):
                 print("ERROR: No diagnoses found in input data")
             return False
         
-        # # Print initial summary
-        # if verbose:
-        #     print(f"\n{'='*80}")
-        #     print(f"PATIENT ANALYSIS - MULTITHREADED MODE")
-        #     print(f"{'='*80}")
-        #     print(f"Age: {patient.get('age')}")
-        #     print(f"Gender: {patient.get('gender')}")
-        #     print(f"Diagnoses: {', '.join(diagnoses)}")
-        #     print(f"Prescriptions: {', '.join(prescription)}")
-        #     print(f"Date: {patient.get('date_of_assessment')}")
-        #     print(f"{'='*80}")
-        #     print(f"Total analyses to perform: {len(prescription) * len(diagnoses)}")
-        #     print(f"{'='*80}\n")
+        # Print initial summary
+        if verbose:
+            print(f"\n{'='*80}")
+            print(f"PATIENT ANALYSIS - MULTITHREADED MODE")
+            print(f"{'='*80}")
+            print(f"Age: {patient.get('age')}")
+            print(f"Gender: {patient.get('gender')}")
+            print(f"Diagnoses: {', '.join(diagnoses)}")
+            print(f"Prescriptions: {', '.join(prescription)}")
+            print(f"Date: {patient.get('date_of_assessment')}")
+            print(f"{'='*80}")
+            print(f"Total analyses to perform: {len(prescription) * len(diagnoses)}")
+            print(f"{'='*80}\n")
         
         # Create results directory
         os.makedirs("results", exist_ok=True)

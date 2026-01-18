@@ -1,0 +1,13 @@
+{
+  "patient": {
+    "age": 74,
+    "gender": "Female",
+    "diagnosis": "Chronic Kidney Disease, Anemia",
+    "condition": "stage 3 CKD",
+    "allergies": [],
+    "date_of_assessment": "2026-01-10"
+  },
+  "prescription": [
+    "lisinopril"
+  ]
+}

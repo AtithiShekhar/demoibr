@@ -7,10 +7,11 @@ from approvalstatus.app import start as bedrock_start
 from mme.mme_checker import start as fda_start
 from pubmed.searcher import start as pubmed_start
 from contraindication.app import start as contra_start
+from duplication.checker import start as duplication_start
 from scoring.benefit_factor import ScoringSystem
 
 
-def analyze_drug_diagnosis(drug: str, diagnosis: str, patient: dict, email: str, thread_id: int) -> dict:
+def analyze_drug_diagnosis(drug: str, diagnosis: str, patient: dict, email: str, thread_id: int, full_patient_data: dict = None) -> dict:
     """
     Analyze a single drug-diagnosis combination
     
@@ -63,7 +64,20 @@ def analyze_drug_diagnosis(drug: str, diagnosis: str, patient: dict, email: str,
             print(f"[Thread {thread_id}] iBR: {contra_res['ibr_text']}")
         
         # ============================================================
-        # 5. CALCULATE TOTAL WEIGHTED SCORE
+        # 5. THERAPEUTIC DUPLICATION CHECK (runs once per patient, not per drug)
+        # ============================================================
+        duplication_res = None
+        if ( full_patient_data
+            # and isinstance(full_patient_data, dict)
+            # and isinstance(full_patient_data.get("prescription"), list)
+            # and len(full_patient_data["prescription"]) > 1
+            ):
+            print(f"[Thread {thread_id}] === THERAPEUTIC DUPLICATION CHECK ===")
+            duplication_res = duplication_start(full_patient_data, scoring)
+            print(f"[Thread {thread_id}] {duplication_res['output']}")
+        
+        # ============================================================
+        # 6. CALCULATE TOTAL WEIGHTED SCORE
         # ============================================================
         total_weighted_score = 0
         score_breakdown = {}
@@ -91,6 +105,12 @@ def analyze_drug_diagnosis(drug: str, diagnosis: str, patient: dict, email: str,
             w = contra_res['contra_score']['weighted_score']
             total_weighted_score += w
             score_breakdown['contraindication_risk'] = contra_res['contra_score']
+        
+        # 5. Therapeutic Duplication
+        if duplication_res and duplication_res.get('duplication_score'):
+            w = duplication_res['duplication_score']['weighted_score']
+            total_weighted_score += w
+            score_breakdown['therapeutic_duplication'] = duplication_res['duplication_score']
         
         # Add summary to scoring system
         scoring.add_analysis("summary", {
