@@ -1,0 +1,28 @@
+{
+  "patient": {
+    "age": 68,
+    "gender": "Male",
+    "diagnosis": "tuberculosis, chronic kidney disease, hypertension, type 2 diabetes mellitus, anemia",
+    "condition": "persistent vomiting, fatigue, weight loss",
+    "allergies": ["penicillin"],
+    "date_of_assessment": "2026-01-06"
+  },
+  "prescription": [
+    "acetaminophen",
+    "ibuprofen",
+    "naproxen",
+    "lisinopril",
+    "enalapril",
+    "metoprolol",
+    "atenolol",
+    "atorvastatin",
+    "simvastatin",
+    "metformin",
+    "glipizide",
+    "aspirin"
+  ],
+  "PubMed": {
+    "email": "your_email@example.com"
+  },
+  "notes": "Heavy-load performance test. Expect high duplication complexity and many parallel tasks."
+}

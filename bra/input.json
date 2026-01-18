@@ -1,0 +1,18 @@
+{
+  "patient": {
+    "age": 60,
+    "gender": "Male",
+    "diagnosis": "tuberclosis",
+    "condition": "vomitting",
+    "allergies": [],
+    "date_of_assessment": "2026-01-06"
+  },
+  "prescription": [
+    "acetaminophen",
+    "amoxicillin"
+  ],
+  "PubMed": {
+    "email": "your_email@example.com"
+  },
+  "notes": "Sample run. resource_pdf: /mnt/data/example.pdf"
+}
