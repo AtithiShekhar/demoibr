@@ -1,0 +1,75 @@
+{
+  "analysis_timestamp": "2026-01-28T02:37:05.091869",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Off label",
+      "description": "Off label",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "benefit",
+      "cdsco_approved": false,
+      "usfda_approved": false
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "description": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "score_type": "benefit",
+      "rct_count": 5
+    },
+    "contraindication": {
+      "description": "Safe - no contraindication",
+      "weight": 0,
+      "score": 0,
+      "weighted_score": 0,
+      "score_type": "risk",
+      "status": "safe"
+    },
+    "therapeutic_duplication": {
+      "status": "not_applicable",
+      "reason": "Single medication for this condition - no duplication check needed"
+    },
+    "summary": {
+      "drug": "Prenatal Vitamins",
+      "diagnosis": "Pregnancy",
+      "total_weighted_score": 40,
+      "total_benefit_score": 40,
+      "total_risk_score": 0,
+      "brr": "Infinity",
+      "brr_interpretation": "No Risk Detected",
+      "score_breakdown": {
+        "pubmed_evidence": {
+          "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+          "description": "Low evidence (limited data, uncertain)",
+          "weight": 30,
+          "score": 1,
+          "weighted_score": 30,
+          "score_type": "benefit",
+          "rct_count": 5
+        },
+        "contraindication_risk": {
+          "description": "Safe - no contraindication",
+          "weight": 0,
+          "score": 0,
+          "weighted_score": 0,
+          "score_type": "risk",
+          "status": "safe"
+        }
+      },
+      "therapeutic_duplication_performed": false,
+      "rct_count": 5,
+      "has_contraindication": false
+    }
+  },
+  "benefit_risk_ratio": {
+    "total_benefit_score": 40,
+    "total_risk_score": 0,
+    "brr": "Infinity",
+    "interpretation": "No Risk Detected",
+    "benefit_components": 2,
+    "risk_components": 1
+  }
+}

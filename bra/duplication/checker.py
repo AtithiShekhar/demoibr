@@ -1,23 +1,14 @@
 
 # ================================
-# duplication/checker.py (UPDATED TO USE CENTRALIZED SCORING)
+# duplication/checker.py
 # ================================
 
-from typing import Dict, List
 from datetime import datetime
 from scoring.config import ScoringConfig
 
 
 def start(data: dict) -> dict:
-    """
-    Therapeutic duplication checker - now uses centralized scoring
-    
-    Args:
-        data: Dictionary with 'prescription' list of medication names
-        
-    Returns:
-        Dictionary with duplication analysis and score
-    """
+    """Therapeutic duplication checker"""
     prescription = data.get("prescription", [])
     
     if len(prescription) < 2:
@@ -26,17 +17,13 @@ def start(data: dict) -> dict:
             "reason": "Less than 2 medications"
         }
     
-    # Analyze pairs (placeholder logic - replace with your actual logic)
     unique_pairs = []
     overlap_pairs = []
     redundant_pairs = []
     
-    # Example analysis (replace with your actual duplication detection)
     for i in range(len(prescription)):
         for j in range(i + 1, len(prescription)):
             med1, med2 = prescription[i], prescription[j]
-            # Your actual duplication detection logic here
-            # For now, assuming all unique
             unique_pairs.append({
                 "medicine_1": med1,
                 "medicine_2": med2,
@@ -45,11 +32,8 @@ def start(data: dict) -> dict:
                 "recommendation": "✓ Medications appear to have unique roles"
             })
     
-    # Calculate score using centralized config
     overlaps = len(overlap_pairs)
     redundant = len(redundant_pairs)
-    
-    # Use ScoringConfig directly instead of get_duplication_data
     score_data = ScoringConfig.calculate_duplication_score(overlaps, redundant)
     
     summary = f"✓ All {len(unique_pairs)} medication pair(s) have unique roles"

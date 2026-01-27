@@ -8,11 +8,11 @@ server.py
 Flask API server with queue-based job processing
 Updated for centralized scoring system v2.0
 """
-from utils.queue_manager.queue_manager import job_queue
+
 from flask import Flask, request, jsonify
 import os
 import time
-
+from utils.queue_manager.queue_manager import job_queue
 app = Flask(__name__)
 
 

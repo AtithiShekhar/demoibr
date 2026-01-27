@@ -1,0 +1,66 @@
+{
+  "patientInfo": {
+    "fullName": "Sarah Johnson",
+    "age": 32,
+    "gender": "Female",
+    "mrn": "MRN-2026-00456"
+  },
+  "chiefComplaints": [
+    {
+      "complaint": "Severe headache",
+      "duration": "3 days",
+      "severity": "Severe"
+    },
+    {
+      "complaint": "Nausea",
+      "duration": "2 days",
+      "severity": "Moderate"
+    }
+  ],
+  "currentDiagnoses": [
+    {
+      "diagnosisName": "Migraine",
+      "diagnosisDate": "2026-01-25",
+      "severity": "Moderate",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Ergotamine",
+            "dosage": "2 mg",
+            "route": "Oral",
+            "frequency": "As needed",
+            "timing": "During migraine attack",
+            "startDate": "2026-01-25",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Pregnancy",
+      "diagnosisDate": "2026-01-15",
+      "severity": "Normal",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "prenatal care",
+        "medications": [
+          {
+            "name": "Prenatal Vitamins",
+            "dosage": "1 tablet",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Morning",
+            "startDate": "2026-01-15",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "clinicalNotes": {
+    "physicianNotes": "Patient is 8 weeks pregnant. Reviewing medication safety during pregnancy. Ergotamine is contraindicated in pregnancy.",
+    "followUpDate": "2026-02-15"
+  }
+}

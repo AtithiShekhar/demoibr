@@ -139,7 +139,8 @@ def main(verbose=True, input_file="input.json", output_summary=True):
         tasks=tasks,
         patient=patient,
         email=email,
-        condition_duplication_results=condition_duplication_results
+        condition_duplication_results=condition_duplication_results,
+        full_input_data=data  # Pass full input data for contraindication checking
     )
 
     # ================================================

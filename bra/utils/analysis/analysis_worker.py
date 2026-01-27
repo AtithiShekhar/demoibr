@@ -1,7 +1,8 @@
-
-# ================================
-# utils/analysis/analysis_worker.py (UPDATED)
-# ================================
+"""
+utils/analysis/analysis_worker.py
+Worker functions for drug-diagnosis analysis
+UPDATED to support full alternative analysis on contraindication detection
+"""
 
 from approvalstatus.app import start as bedrock_start
 from mme.mme_checker import start as fda_start
@@ -9,10 +10,153 @@ from pubmed.searcher import start as pubmed_start
 from contraindication.app import start as contra_start
 from scoring.scoring_sytem import ScoringSystem
 from alternatives.fda_finder import FDAAlternativesFinder
-from alternatives.analyzer import analyze_alternatives_rct
+from typing import Dict, List
 
-# RCT threshold for triggering alternative search
-LOW_RCT_THRESHOLD = 100
+
+def analyze_single_drug(
+    drug: str,
+    diagnosis: str,
+    patient: dict,
+    email: str,
+    thread_id: int,
+    duplication_result: dict | None = None,
+    has_duplication_check: bool = False,
+    is_alternative: bool = False,
+    full_patient_data: dict = None
+) -> Dict:
+    """
+    Perform complete analysis for a single drug-diagnosis pair
+    
+    Args:
+        drug: Medication name
+        diagnosis: Diagnosis name
+        patient: Patient information (patientInfo)
+        email: Email for PubMed
+        thread_id: Thread ID for logging
+        duplication_result: Pre-computed duplication result
+        has_duplication_check: Whether duplication was checked
+        is_alternative: Whether this is an alternative medication
+        full_patient_data: Full patient data including currentDiagnoses, chiefComplaints
+        
+    Returns:
+        Complete analysis result dictionary
+    """
+    prefix = "ALT" if is_alternative else "Thread"
+    print(f"\n[{prefix} {thread_id}] {'='*60}")
+    print(f"[{prefix} {thread_id}] Drug: {drug}")
+    print(f"[{prefix} {thread_id}] Diagnosis: {diagnosis}")
+    print(f"[{prefix} {thread_id}] {'='*60}")
+
+    # Create result filename - mark alternatives clearly
+    if is_alternative:
+        # Extract the parent drug and alternative number from thread_id
+        # thread_id format: "1-ALT1", "1-ALT2", etc.
+        result_file = f"results/ALT_{drug}_{diagnosis.replace(' ', '_').replace('/', '_')}_result.json"
+    else:
+        result_file = f"results/{drug}_{diagnosis.replace(' ', '_').replace('/', '_')}_result.json"
+    
+    scoring = ScoringSystem(result_file)
+
+    try:
+        # 1. Regulatory indication (Benefit Factor)
+        print(f"[{prefix} {thread_id}] → Regulatory analysis...")
+        regulatory_result = bedrock_start(drug, diagnosis, scoring)
+
+        # 2. Market experience
+        print(f"[{prefix} {thread_id}] → Market experience analysis...")
+        fda_result = fda_start(drug, scoring)
+
+        # 3. PubMed evidence
+        print(f"[{prefix} {thread_id}] → PubMed analysis...")
+        pubmed_result = pubmed_start(drug, diagnosis, email, scoring)
+        rct_count = pubmed_result.get("rct_count", 0)
+
+        # 4. Contraindications - Pass full patient data
+        print(f"[{prefix} {thread_id}] → Contraindication analysis...")
+        # Use full_patient_data if available, otherwise wrap patient dict
+        contra_patient_data = full_patient_data if full_patient_data else {"patient": patient}
+        contra_res = contra_start(drug, contra_patient_data, scoring)
+        has_contraindication = contra_res.get("has_contraindication", False)
+        
+        print(f"[{prefix} {thread_id}] → Contraindication detected: {has_contraindication}")
+
+        # 5. Therapeutic Duplication
+        if has_duplication_check and duplication_result:
+            print(f"[{prefix} {thread_id}] → Adding therapeutic duplication result")
+            scoring.add_analysis("therapeutic_duplication", duplication_result)
+        else:
+            scoring.add_analysis(
+                "therapeutic_duplication",
+                {
+                    "status": "not_applicable",
+                    "reason": "Single medication for this condition - no duplication check needed"
+                }
+            )
+
+        # 6. Calculate BRR
+        brr_data = scoring.calculate_brr()
+        
+        # 7. Score aggregation
+        total_weighted_score = sum(scoring.benefit_scores) + sum(scoring.risk_scores)
+        
+        score_breakdown = {}
+        for key, src in [
+            ("benefit_factor", regulatory_result.get("benefit_score")),
+            ("market_experience", fda_result.get("mme_score")),
+            ("pubmed_evidence", pubmed_result.get("evidence_score")),
+            ("contraindication_risk", contra_res.get("contra_score")),
+        ]:
+            if src and isinstance(src, dict) and "weighted_score" in src:
+                score_breakdown[key] = src
+
+        if has_duplication_check and duplication_result:
+            dup_score = duplication_result.get("duplication_score")
+            if dup_score and isinstance(dup_score, dict) and "weighted_score" in dup_score:
+                score_breakdown["therapeutic_duplication"] = dup_score
+
+        scoring.add_analysis("summary", {
+            "drug": drug,
+            "diagnosis": diagnosis,
+            "total_weighted_score": total_weighted_score,
+            "total_benefit_score": brr_data['total_benefit_score'],
+            "total_risk_score": brr_data['total_risk_score'],
+            "brr": brr_data['brr'],
+            "brr_interpretation": brr_data['interpretation'],
+            "score_breakdown": score_breakdown,
+            "therapeutic_duplication_performed": has_duplication_check,
+            "rct_count": rct_count,
+            "has_contraindication": has_contraindication
+        })
+
+        output_file = scoring.save_to_json()
+        
+        print(f"[{prefix} {thread_id}] ✓ Complete - BRR: {brr_data['brr']} ({brr_data['interpretation']})")
+
+        return {
+            "success": True,
+            "drug": drug,
+            "diagnosis": diagnosis,
+            "total_score": total_weighted_score,
+            "total_benefit_score": brr_data['total_benefit_score'],
+            "total_risk_score": brr_data['total_risk_score'],
+            "brr": brr_data['brr'],
+            "brr_interpretation": brr_data['interpretation'],
+            "output_file": output_file,
+            "duplication_checked": has_duplication_check,
+            "rct_count": rct_count,
+            "has_contraindication": has_contraindication
+        }
+
+    except Exception as e:
+        print(f"[{prefix} {thread_id}] ✗ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "drug": drug,
+            "diagnosis": diagnosis,
+            "error": str(e)
+        }
 
 
 def analyze_drug_diagnosis(
@@ -22,151 +166,102 @@ def analyze_drug_diagnosis(
     email: str,
     thread_id: int,
     duplication_result: dict | None = None,
-    has_duplication_check: bool = False
+    has_duplication_check: bool = False,
+    full_patient_data: dict = None
 ) -> dict:
     """
-    Analyze a single drug-diagnosis combination
-    Now uses centralized scoring configuration
+    Main analysis function - analyzes drug and finds alternatives if contraindicated
+    
+    Args:
+        drug: Medication name
+        diagnosis: Diagnosis name
+        patient: Patient information (patientInfo)
+        email: Email for PubMed
+        thread_id: Thread identifier
+        duplication_result: Pre-computed duplication result
+        has_duplication_check: Whether duplication was checked
+        full_patient_data: Full patient data including currentDiagnoses, chiefComplaints
+    
+    Returns:
+        Dictionary with primary analysis and alternative analyses (if applicable)
     """
-
-    print(f"\n[Thread {thread_id}] {'='*60}")
-    print(f"[Thread {thread_id}] Drug: {drug}")
-    print(f"[Thread {thread_id}] Diagnosis: {diagnosis}")
-    print(f"[Thread {thread_id}] {'='*60}")
-
-    result_file = f"results/{drug}_{diagnosis.replace(' ', '_').replace('/', '_')}_result.json"
-    scoring = ScoringSystem(result_file)
-
-    try:
-        # 1. Regulatory indication (Benefit Factor)
-        print(f"[Thread {thread_id}] → Regulatory analysis...")
-        regulatory_result = bedrock_start(drug, diagnosis, scoring)
-
-        # 2. Market experience
-        print(f"[Thread {thread_id}] → Market experience analysis...")
-        fda_result = fda_start(drug, scoring)
-
-        # 3. PubMed evidence
-        print(f"[Thread {thread_id}] → PubMed analysis...")
-        pubmed_result = pubmed_start(drug, diagnosis, email, scoring)
-
-        # Get RCT count from pubmed_result
-        rct_count = pubmed_result.get("rct_count", 0)
+    
+    # Analyze the primary drug
+    primary_result = analyze_single_drug(
+        drug=drug,
+        diagnosis=diagnosis,
+        patient=patient,
+        email=email,
+        thread_id=thread_id,
+        duplication_result=duplication_result,
+        has_duplication_check=has_duplication_check,
+        is_alternative=False,
+        full_patient_data=full_patient_data
+    )
+    
+    # Check if we need to find alternatives
+    if not primary_result.get("success"):
+        return primary_result
+    
+    has_contraindication = primary_result.get("has_contraindication", False)
+    
+    alternative_analyses = []
+    
+    if has_contraindication:
+        print(f"\n[Thread {thread_id}] ⚠️  CONTRAINDICATION DETECTED - Searching for alternatives...")
         
-        # 4. Check if we need to find alternatives (low RCT count)
-        alternatives_data = None
-        if rct_count < LOW_RCT_THRESHOLD:
-            print(f"[Thread {thread_id}] ⚠️  Low RCT count ({rct_count}) - searching for alternatives...")
+        try:
+            # Find alternatives using FDA API
+            finder = FDAAlternativesFinder()
+            alternatives = finder.get_top_alternatives(drug, diagnosis, top_n=3)
             
-            try:
-                # Find top 3 alternatives
-                finder = FDAAlternativesFinder()
-                alternatives = finder.get_top_alternatives(drug, diagnosis, top_n=3)
+            if alternatives:
+                print(f"[Thread {thread_id}] ✓ Found {len(alternatives)} alternatives - Running full analysis...")
                 
-                if alternatives:
-                    # Analyze RCT counts for alternatives
-                    alternative_results = analyze_alternatives_rct(alternatives, diagnosis, email)
+                # Perform FULL analysis on each alternative
+                for idx, alt in enumerate(alternatives, 1):
+                    alt_name = alt['Active_Moiety']
+                    print(f"\n[Thread {thread_id}] Analyzing Alternative {idx}/{len(alternatives)}: {alt_name}")
                     
-                    # Structure the alternatives data
-                    alternatives_data = {
-                        "trigger_reason": f"Low RCT count ({rct_count} < {LOW_RCT_THRESHOLD})",
-                        "original_medicine": {
-                            "name": drug,
-                            "rct_count": rct_count
-                        },
-                        "alternatives_found": len(alternative_results),
-                        "alternatives": alternative_results,
-                        "summary": {
-                            "best_alternative": max(alternative_results, key=lambda x: x['rct_count']) if alternative_results else None,
-                            "alternatives_with_higher_rct": len([a for a in alternative_results if a['rct_count'] > rct_count])
+                    # Run complete analysis for alternative
+                    alt_result = analyze_single_drug(
+                        drug=alt_name,
+                        diagnosis=diagnosis,
+                        patient=patient,
+                        email=email,
+                        thread_id=f"{thread_id}-ALT{idx}",
+                        duplication_result=None,
+                        has_duplication_check=False,
+                        is_alternative=True,
+                        full_patient_data=full_patient_data
+                    )
+                    
+                    # Add alternative metadata and link to primary drug
+                    if alt_result.get("success"):
+                        alt_result['alternative_info'] = {
+                            'brand_name': alt.get('Brand_Name', 'Unknown'),
+                            'generic_name': alt.get('Generic_Name', 'Unknown'),
+                            'manufacturer': alt.get('Manufacturer', 'Unknown'),
+                            'route': alt.get('Route', 'Unknown'),
+                            'alternative_rank': idx,
+                            'primary_drug': drug,  # NEW: Link to primary
+                            'primary_diagnosis': diagnosis  # NEW: Link to diagnosis
                         }
-                    }
-                    
-                    # Add to scoring system
-                    scoring.add_analysis("alternative_medications", alternatives_data)
-                    
-                    print(f"[Thread {thread_id}] ✓ Found {len(alternatives)} alternatives")
-                    print(f"[Thread {thread_id}]   {alternatives_data['summary']['alternatives_with_higher_rct']} have higher RCT counts")
-                else:
-                    print(f"[Thread {thread_id}] ⚠️  No alternatives found in FDA database")
-                    
-            except Exception as e:
-                print(f"[Thread {thread_id}] ✗ Error finding alternatives: {e}")
-                import traceback
-                traceback.print_exc()
-
-        # 5. Contraindications
-        print(f"[Thread {thread_id}] → Contraindication analysis...")
-        contra_res = contra_start(drug, {"patient": patient}, scoring)
-
-        # 6. Therapeutic Duplication
-        if has_duplication_check and duplication_result:
-            print(f"[Thread {thread_id}] → Adding therapeutic duplication result")
-            scoring.add_analysis("therapeutic_duplication", duplication_result)
-        else:
-            print(f"[Thread {thread_id}] → Skipping therapeutic duplication (N/A)")
-            scoring.add_analysis(
-                "therapeutic_duplication",
-                {
-                    "status": "not_applicable",
-                    "reason": "Single medication for this condition - no duplication check needed"
-                }
-            )
-
-        # 7. Score aggregation
-        total_weighted_score = 0
-        score_breakdown = {}
-
-        for key, src in [
-            ("benefit_factor", regulatory_result.get("benefit_score")),
-            ("market_experience", fda_result.get("mme_score")),
-            ("pubmed_evidence", pubmed_result.get("evidence_score")),
-            ("contraindication_risk", contra_res.get("contra_score")),
-        ]:
-            if src and isinstance(src, dict) and "weighted_score" in src:
-                total_weighted_score += src["weighted_score"]
-                score_breakdown[key] = src
-
-        # Add duplication score if applicable
-        if has_duplication_check and duplication_result:
-            dup_score = duplication_result.get("duplication_score")
-            if dup_score and isinstance(dup_score, dict) and "weighted_score" in dup_score:
-                total_weighted_score += dup_score["weighted_score"]
-                score_breakdown["therapeutic_duplication"] = dup_score
-
-        scoring.add_analysis("summary", {
-            "drug": drug,
-            "diagnosis": diagnosis,
-            "total_weighted_score": total_weighted_score,
-            "score_breakdown": score_breakdown,
-            "therapeutic_duplication_performed": has_duplication_check,
-            "alternatives_analyzed": alternatives_data is not None,
-            "rct_count": rct_count
-        })
-
-        output_file = scoring.save_to_json()
-        
-        print(f"[Thread {thread_id}] ✓ Complete - Score: {total_weighted_score}")
-
-        return {
-            "success": True,
-            "drug": drug,
-            "diagnosis": diagnosis,
-            "total_score": total_weighted_score,
-            "output_file": output_file,
-            "duplication_checked": has_duplication_check,
-            "rct_count": rct_count,
-            "alternatives_found": alternatives_data is not None,
-            "alternatives_data": alternatives_data
-        }
-
-    except Exception as e:
-        print(f"[Thread {thread_id}] ✗ Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return {
-            "success": False,
-            "drug": drug,
-            "diagnosis": diagnosis,
-            "error": str(e)
-        }
+                        alternative_analyses.append(alt_result)
+                
+                print(f"[Thread {thread_id}] ✓ Completed analysis for {len(alternative_analyses)} alternatives")
+            else:
+                print(f"[Thread {thread_id}] ⚠️  No alternatives found in FDA database")
+                
+        except Exception as e:
+            print(f"[Thread {thread_id}] ✗ Error finding/analyzing alternatives: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # Return comprehensive result with alternatives attached
+    return {
+        **primary_result,
+        "alternatives_analyzed": len(alternative_analyses) > 0,
+        "alternatives_count": len(alternative_analyses),
+        "alternative_analyses": alternative_analyses
+    }

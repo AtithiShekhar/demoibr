@@ -279,71 +279,109 @@ class JobQueue:
             except Exception as e:
                 print(f"⚠ Cleanup error for job {job_id_short}...: {e}")
     
+    
     def _collect_results(self, results_dir: str, workspace_dir: str) -> Dict:
         """
-        Collect results from results directory
+        Collect and format results from results directory
         
         Args:
             results_dir: Path to results directory
             workspace_dir: Path to workspace directory
             
         Returns:
-            Dictionary with collected results
+            Dictionary with formatted results
         """
-        results_payload = []
-        summary_data = None
+        from utils.response_formatter import format_complete_response
+        import json
+        import os
+        
+        raw_results = []
         
         if not os.path.exists(results_dir):
             return None
         
         # Collect individual result files
         for filename in sorted(os.listdir(results_dir)):
-            if filename.endswith(".json"):
+            if filename.endswith(".json") and not filename.startswith("analysis_summary_"):
                 file_path = os.path.join(results_dir, filename)
                 
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
                         data = json.load(f)
                     
-                    # Check if this is a summary file
-                    if filename.startswith("analysis_summary_"):
-                        summary_data = data
-                        continue
-                    
-                    # Parse filename to extract drug and condition
-                    # Format: DrugName_Condition_Name_result.json
+                    # Parse filename
                     base_name = filename.replace("_result.json", "")
                     parts = base_name.split("_")
                     
                     if len(parts) >= 2:
                         medicine_name = parts[0]
-                        condition = "_".join(parts[1:])
+                        condition = "_".join(parts[1:]).replace("_", " ")
                     else:
                         medicine_name = "Unknown"
                         condition = "Unknown"
                     
-                    # Extract summary from result
+                    # Extract key data from analyses
                     analyses = data.get("analyses", {})
                     summary = analyses.get("summary", {})
+                    brr_data = data.get("benefit_risk_ratio", {})
                     
-                    results_payload.append({
-                        "medicine_name": medicine_name,
-                        "condition": condition,
-                        "total_score": summary.get("total_weighted_score", 0),
+                    # Check for alternatives in the same directory
+                    alt_results = []
+                    alt_prefix = f"{medicine_name}_ALT"
+                    for alt_file in os.listdir(results_dir):
+                        if alt_file.startswith(alt_prefix) and alt_file.endswith("_result.json"):
+                            try:
+                                alt_path = os.path.join(results_dir, alt_file)
+                                with open(alt_path, "r") as af:
+                                    alt_data = json.load(af)
+                                
+                                alt_summary = alt_data.get("analyses", {}).get("summary", {})
+                                alt_brr = alt_data.get("benefit_risk_ratio", {})
+                                
+                                # Extract alt name from filename
+                                alt_base = alt_file.replace("_result.json", "")
+                                alt_drug_name = alt_base.split("_ALT")[1].split("_")[0] if "_ALT" in alt_base else "Unknown"
+                                
+                                alt_results.append({
+                                    "success": True,
+                                    "drug": alt_drug_name,
+                                    "total_benefit_score": brr_data.get("total_benefit_score", 0),
+                                    "total_risk_score": brr_data.get("total_risk_score", 0),
+                                    "brr": brr_data.get("brr"),
+                                    "brr_interpretation": brr_data.get("interpretation"),
+                                    "rct_count": alt_summary.get("rct_count", 0),
+                                    "has_contraindication": alt_summary.get("has_contraindication", False),
+                                    "alternative_info": {
+                                        "brand_name": alt_drug_name,
+                                        "alternative_rank": len(alt_results) + 1
+                                    }
+                                })
+                            except Exception as e:
+                                print(f"Error reading alternative {alt_file}: {e}")
+                    
+                    raw_results.append({
+                        "success": True,
+                        "drug": medicine_name,
+                        "diagnosis": condition,
+                        "total_benefit_score": brr_data.get("total_benefit_score", 0),
+                        "total_risk_score": brr_data.get("total_risk_score", 0),
+                        "brr": brr_data.get("brr"),
+                        "brr_interpretation": brr_data.get("interpretation"),
                         "rct_count": summary.get("rct_count", 0),
-                        "alternatives_analyzed": summary.get("alternatives_analyzed", False),
-                        "result": data
+                        "has_contraindication": summary.get("has_contraindication", False),
+                        "duplication_checked": summary.get("therapeutic_duplication_performed", False),
+                        "alternatives_count": len(alt_results),
+                        "alternative_analyses": alt_results
                     })
                 
                 except Exception as e:
                     print(f"⚠ Error reading {filename}: {e}")
                     continue
         
-        return {
-            "result_count": len(results_payload),
-            "results": results_payload,
-            "summary": summary_data
-        }
+        # Format response using formatter
+        return format_complete_response(raw_results)
+
+
     
     def get_queue_stats(self) -> Dict:
         """Get statistics about the queue"""
@@ -393,3 +431,5 @@ class JobQueue:
 # Global queue instance
 job_queue = JobQueue()
 
+
+# ======
