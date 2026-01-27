@@ -1,12 +1,17 @@
+
+# ================================
+# server.py (COMPLETE VERSION)
+# ================================
+
 """
 server.py
 Flask API server with queue-based job processing
-Keeps main thread free for handling concurrent requests
+Updated for centralized scoring system v2.0
 """
-
+from utils.queue_manager.queue_manager import job_queue
 from flask import Flask, request, jsonify
 import os
-from utils.queue_manager.queue_manager import job_queue
+import time
 
 app = Flask(__name__)
 
@@ -15,36 +20,30 @@ app = Flask(__name__)
 def analyze():
     """
     Submit an analysis job to the queue (non-blocking)
-    
     Returns immediately with job_id for status polling
-    
-    Expected JSON input:
-    {
-        "patient": {...},
-        "prescription": [...]
-    }
-    
-    Returns:
-    {
-        "status": "accepted",
-        "job_id": "uuid",
-        "message": "Job queued for processing",
-        "poll_url": "/status/<job_id>"
-    }
     """
-    
-    # Validate request
     if not request.is_json:
         return jsonify({"error": "Request body must be JSON"}), 400
     
     request_data = request.get_json()
     
-    # Validate required fields
-    if "patient" not in request_data:
-        return jsonify({"error": "Missing 'patient' field in request"}), 400
+    # Validate required fields for NEW EMR schema
+    if "patientInfo" not in request_data:
+        return jsonify({"error": "Missing 'patientInfo' field"}), 400
     
-    if "prescription" not in request_data or not request_data["prescription"]:
-        return jsonify({"error": "Missing or empty 'prescription' field"}), 400
+    if "currentDiagnoses" not in request_data or not request_data["currentDiagnoses"]:
+        return jsonify({"error": "Missing or empty 'currentDiagnoses' field"}), 400
+    
+    # Validate at least one diagnosis has medications
+    has_medications = False
+    for diagnosis in request_data["currentDiagnoses"]:
+        meds = diagnosis.get("treatment", {}).get("medications", [])
+        if meds:
+            has_medications = True
+            break
+    
+    if not has_medications:
+        return jsonify({"error": "No medications found in any diagnosis"}), 400
     
     # Submit job to queue
     try:
@@ -56,67 +55,45 @@ def analyze():
             "message": "Job queued for processing",
             "poll_url": f"/status/{job_id}",
             "queue_stats": job_queue.get_queue_stats()
-        }), 202  # 202 Accepted
+        }), 202
     
     except Exception as e:
-        return jsonify({
-            "error": f"Failed to submit job: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Failed to submit job: {str(e)}"}), 500
 
 
 @app.route("/status/<job_id>", methods=["GET"])
 def get_status(job_id):
-    """
-    Get status of a specific job
-    
-    Returns:
-    - If queued: {"status": "queued", "queue_position": 3}
-    - If processing: {"status": "processing", "started_at": "..."}
-    - If completed: {"status": "completed", "result": {...}}
-    - If failed: {"status": "failed", "error": "..."}
-    """
-    
+    """Get status of a specific job"""
     job_status = job_queue.get_job_status(job_id)
     
     if not job_status:
-        return jsonify({
-            "error": "Job not found",
-            "job_id": job_id
-        }), 404
+        return jsonify({"error": "Job not found", "job_id": job_id}), 404
     
     return jsonify(job_status), 200
 
 
 @app.route("/analyze/sync", methods=["POST"])
 def analyze_sync():
-    """
-    Synchronous analysis endpoint (blocks until complete)
-    
-    Use this for immediate results, but server can only handle one at a time
-    Use /analyze (async) for concurrent requests
-    """
-    
-    # Validate request
+    """Synchronous analysis endpoint (blocks until complete)"""
     if not request.is_json:
         return jsonify({"error": "Request body must be JSON"}), 400
     
     request_data = request.get_json()
     
-    # Validate required fields
-    if "patient" not in request_data:
-        return jsonify({"error": "Missing 'patient' field in request"}), 400
+    # Validate
+    if "patientInfo" not in request_data:
+        return jsonify({"error": "Missing 'patientInfo' field"}), 400
     
-    if "prescription" not in request_data or not request_data["prescription"]:
-        return jsonify({"error": "Missing or empty 'prescription' field"}), 400
+    if "currentDiagnoses" not in request_data or not request_data["currentDiagnoses"]:
+        return jsonify({"error": "Missing or empty 'currentDiagnoses' field"}), 400
     
-    # Submit job and wait for completion
     try:
         job_id = job_queue.submit_job(request_data)
         
-        # Poll for completion (blocking)
-        import time
-        max_wait = 600  # 10 minutes timeout
+        # Poll for completion
+        max_wait = 600  # 10 minutes
         start_time = time.time()
+        poll_interval = 2
         
         while time.time() - start_time < max_wait:
             job_status = job_queue.get_job_status(job_id)
@@ -126,7 +103,7 @@ def analyze_sync():
                     "status": "completed",
                     "job_id": job_id,
                     "execution_time": job_status["execution_time"],
-                    **job_status["result"]
+                    "result": job_status["result"]
                 }), 200
             
             elif job_status["status"] == "failed":
@@ -136,110 +113,123 @@ def analyze_sync():
                     "error": job_status["error"]
                 }), 500
             
-            # Wait before next poll
-            time.sleep(2)
+            time.sleep(poll_interval)
         
-        # Timeout
         return jsonify({
             "error": "Request timeout",
             "job_id": job_id,
-            "message": "Job is still processing. Use /status/<job_id> to check status"
+            "message": f"Job still processing after {max_wait}s. Use /status/{job_id}"
         }), 504
     
     except Exception as e:
-        return jsonify({
-            "error": f"Analysis error: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Analysis error: {str(e)}"}), 500
 
 
 @app.route("/queue/stats", methods=["GET"])
 def queue_stats():
     """Get queue statistics"""
-    stats = job_queue.get_queue_stats()
-    return jsonify(stats), 200
+    return jsonify(job_queue.get_queue_stats()), 200
+
+
+@app.route("/queue/cleanup", methods=["POST"])
+def queue_cleanup():
+    """Clean up old completed jobs"""
+    max_age = request.json.get("max_age_hours", 24) if request.is_json else 24
+    removed = job_queue.clear_completed_jobs(max_age)
+    return jsonify({"removed_jobs": removed, "max_age_hours": max_age}), 200
+
+
+@app.route("/scoring/config", methods=["GET"])
+def scoring_config():
+    """Get current scoring configuration"""
+    from scoring.config import ScoringConfig
+    
+    config_data = {
+        "version": "2.0",
+        "benefit_factors": {
+            "indication_strength": {
+                key: {
+                    "description": entry.description,
+                    "weight": entry.weight,
+                    "score": entry.score,
+                    "weighted_score": entry.weighted_score
+                }
+                for key, entry in ScoringConfig.INDICATION_STRENGTH.items()
+            },
+            "evidence_strength": {
+                key: {
+                    "description": entry.description,
+                    "weight": entry.weight,
+                    "score": entry.score,
+                    "weighted_score": entry.weighted_score
+                }
+                for key, entry in ScoringConfig.EVIDENCE_STRENGTH.items()
+            }
+        },
+        "risk_factors": {
+            "contraindication": {
+                key: {
+                    "description": entry.description,
+                    "weight": entry.weight,
+                    "score": entry.score,
+                    "weighted_score": entry.weighted_score
+                }
+                for key, entry in ScoringConfig.CONTRAINDICATION.items()
+            }
+        }
+    }
+    
+    return jsonify(config_data), 200
 
 
 @app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint"""
-    stats = job_queue.get_queue_stats()
+    """Health check"""
     return jsonify({
         "status": "healthy",
         "service": "Drug Analysis API",
         "version": "2.0.0",
-        "queue_enabled": True,
-        "queue_stats": stats
+        "scoring_system": "Centralized Configuration",
+        "queue_stats": job_queue.get_queue_stats()
     }), 200
 
 
 @app.route("/", methods=["GET"])
 def index():
-    """API information endpoint"""
+    """API information"""
     return jsonify({
-        "service": "Drug Analysis API (Queue-Based)",
+        "service": "Drug Analysis API",
         "version": "2.0.0",
+        "scoring_system": "Centralized Configuration",
         "endpoints": {
-            "/analyze": "POST - Submit async analysis job (recommended)",
-            "/analyze/sync": "POST - Submit sync analysis (blocks until complete)",
+            "/analyze": "POST - Submit async job",
+            "/analyze/sync": "POST - Submit sync job",
             "/status/<job_id>": "GET - Get job status",
-            "/queue/stats": "GET - Get queue statistics",
-            "/health": "GET - Health check",
-            "/": "GET - API information"
+            "/queue/stats": "GET - Queue statistics",
+            "/queue/cleanup": "POST - Clean old jobs",
+            "/scoring/config": "GET - View scoring matrices",
+            "/health": "GET - Health check"
         },
-        "workflow": {
-            "async": [
-                "1. POST /analyze -> Get job_id",
-                "2. Poll GET /status/<job_id> until completed",
-                "3. Retrieve results from status response"
-            ],
-            "sync": [
-                "1. POST /analyze/sync -> Wait for results",
-                "2. Get results immediately (blocks)"
-            ]
-        },
-        "example_request": {
-            "patient": {
-                "age": 60,
-                "gender": "Male",
-                "diagnosis": "fever",
-                "condition": "headache",
-                "date_of_assessment": "2026-01-06"
-            },
-            "prescription": ["acetaminophen", "amoxicillin"],
-            "PubMed": {"email": "your_email@example.com"}
-        }
+        "features": [
+            "Centralized scoring configuration",
+            "Parallel analysis execution",
+            "Therapeutic duplication detection",
+            "Alternative medication finder",
+            "Queue-based job processing"
+        ]
     }), 200
-
-
-@app.errorhandler(404)
-def not_found(error):
-    """Handle 404 errors"""
-    return jsonify({"error": "Endpoint not found"}), 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors"""
-    return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":
     print("="*80)
-    print("Drug Analysis API Server (Queue-Based)")
+    print("Drug Analysis API Server v2.0")
+    print("Centralized Scoring System")
     print("="*80)
-    print("Starting server on http://0.0.0.0:8000")
-    print("\nEndpoints:")
-    print("  POST /analyze       - Submit async job (non-blocking)")
-    print("  POST /analyze/sync  - Submit sync job (blocking)")
-    print("  GET  /status/<id>   - Check job status")
-    print("  GET  /queue/stats   - Queue statistics")
-    print("  GET  /health        - Health check")
-    print("  GET  /              - API info")
-    print("\nQueue Workers: 2 (configurable)")
+    print(f"Server: http://0.0.0.0:8000")
+    print(f"Workers: {job_queue.num_workers}")
     print("="*80)
     
     try:
         app.run(host="0.0.0.0", port=8000, debug=False, threaded=True)
     finally:
-        # Cleanup on shutdown
         job_queue.stop_workers()

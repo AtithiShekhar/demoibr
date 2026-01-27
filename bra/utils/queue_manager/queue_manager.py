@@ -1,6 +1,7 @@
 """
-utils/queue_manager.py
+utils/queue_manager/queue_manager.py
 Queue-based job processing system for handling multiple analysis requests
+Updated for centralized scoring system
 """
 
 import queue
@@ -9,9 +10,10 @@ import uuid
 import time
 import json
 import os
+import shutil
 from datetime import datetime
 from typing import Dict, Optional
-from main import main as run_analysis
+from pathlib import Path
 
 
 class AnalysisJob:
@@ -19,7 +21,7 @@ class AnalysisJob:
     
     def __init__(self, job_id: str, request_data: dict):
         self.job_id = job_id
-        self.request_data = request_data   # 👈 already input.json content
+        self.request_data = request_data
         self.status = "queued"
         self.created_at = datetime.now()
         self.started_at = None
@@ -52,8 +54,11 @@ class JobQueue:
         self.jobs = {}  # job_id -> AnalysisJob
         self.jobs_lock = threading.Lock()
         self.workers = []
-        self.num_workers = 2  # Number of concurrent workers
+        self.num_workers = int(os.getenv("NUM_WORKERS", "2"))
         self.running = False
+        
+        # Create base results directory if it doesn't exist
+        os.makedirs("results", exist_ok=True)
         
         # Start worker threads
         self.start_workers()
@@ -73,7 +78,7 @@ class JobQueue:
             worker.start()
             self.workers.append(worker)
         
-        print(f"Started {self.num_workers} worker threads")
+        print(f"✓ Started {self.num_workers} worker threads")
     
     def stop_workers(self):
         """Stop all worker threads"""
@@ -88,14 +93,14 @@ class JobQueue:
             worker.join(timeout=5)
         
         self.workers = []
-        print("All workers stopped")
+        print("✓ All workers stopped")
     
     def submit_job(self, request_data: dict) -> str:
         """
         Submit a new analysis job to the queue
         
         Args:
-            request_data: Request data dictionary
+            request_data: Request data dictionary (EMR format)
             
         Returns:
             job_id: Unique job identifier
@@ -107,7 +112,9 @@ class JobQueue:
             self.jobs[job_id] = job
         
         self.job_queue.put(job_id)
-        print(f"Job {job_id} submitted to queue (Queue size: {self.job_queue.qsize()})")
+        
+        patient_name = request_data.get('patientInfo', {}).get('fullName', 'Unknown')
+        print(f"✓ Job {job_id[:8]}... submitted for {patient_name} (Queue: {self.job_queue.qsize()})")
         
         return job_id
     
@@ -128,15 +135,15 @@ class JobQueue:
                 return None
             
             status_dict = {
-    "job_id": job.job_id,
-    "status": job.status,
-    "created_at": job.created_at.isoformat(),
-    "started_at": job.started_at.isoformat() if job.started_at else None,
-    "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-    "execution_time": job.execution_time,
-    "queue_position": self._get_queue_position(job_id) if job.status == "queued" else None,
-    "input": job.request_data   # 👈 input.json content
-}
+                "job_id": job.job_id,
+                "status": job.status,
+                "created_at": job.created_at.isoformat(),
+                "started_at": job.started_at.isoformat() if job.started_at else None,
+                "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+                "execution_time": job.execution_time,
+                "queue_position": self._get_queue_position(job_id) if job.status == "queued" else None,
+                "input": job.request_data
+            }
             
             if job.status == "completed":
                 status_dict["result"] = job.result
@@ -147,13 +154,12 @@ class JobQueue:
     
     def _get_queue_position(self, job_id: str) -> int:
         """Get position of job in queue (approximate)"""
-        # This is approximate since queue doesn't support indexing
         return self.job_queue.qsize()
     
     def _worker(self):
         """Worker thread that processes jobs from the queue"""
         thread_name = threading.current_thread().name
-        print(f"{thread_name} started")
+        print(f"✓ {thread_name} started")
         
         while self.running:
             try:
@@ -180,139 +186,164 @@ class JobQueue:
             except queue.Empty:
                 continue
             except Exception as e:
-                print(f"{thread_name} error: {e}")
+                print(f"✗ {thread_name} error: {e}")
+                import traceback
+                traceback.print_exc()
         
-        print(f"{thread_name} stopped")
+        print(f"✓ {thread_name} stopped")
     
     def _process_job(self, job: AnalysisJob, worker_name: str):
         """
-        Process a single job
+        Process a single job using the new main() function
         
         Args:
             job: AnalysisJob object
             worker_name: Name of worker thread
         """
-        print(f"{worker_name} processing job {job.job_id}")
+        job_id_short = job.job_id[:8]
+        patient_name = job.request_data.get('patientInfo', {}).get('fullName', 'Unknown')
+        
+        print(f"\n[{worker_name}] Processing job {job_id_short}... ({patient_name})")
         
         # Update job status
         with self.jobs_lock:
             job.status = "processing"
             job.started_at = datetime.now()
         
-        # Create temporary input file for this job
-        input_file = f"input_{job.job_id}.json"
-        results_dir = f"results_{job.job_id}"
+        # Create job-specific workspace
+        job_workspace = f"workspace_{job.job_id}"
+        input_file = os.path.join(job_workspace, "input.json")
+        results_dir = os.path.join(job_workspace, "results")
         
         try:
+            # Create workspace
+            os.makedirs(job_workspace, exist_ok=True)
+            os.makedirs(results_dir, exist_ok=True)
+            
             # Write input file
             with open(input_file, "w", encoding="utf-8") as f:
                 json.dump(job.request_data, f, indent=2)
             
-            # Create results directory
-            os.makedirs(results_dir, exist_ok=True)
+            # Import main function
+            from main import main as run_analysis
             
-            # Temporarily change working directory context
-            original_input = "input.json"
-            original_results = "results"
-            
-            # Symlink or rename for main() to use
-            if os.path.exists(original_input):
-                os.rename(original_input, f"{original_input}.bak_{job.job_id}")
-            if os.path.exists(original_results):
-                os.rename(original_results, f"{original_results}.bak_{job.job_id}")
-            
-            os.rename(input_file, original_input)
-            os.rename(results_dir, original_results)
+            # Change to job workspace
+            original_dir = os.getcwd()
+            os.chdir(job_workspace)
             
             # Run analysis
             start_time = time.perf_counter()
-            success = run_analysis(verbose=False)
+            success = run_analysis(
+                verbose=False,
+                input_file="input.json",
+                output_summary=True
+            )
             end_time = time.perf_counter()
             execution_time = end_time - start_time
             
+            # Return to original directory
+            os.chdir(original_dir)
+            
             # Collect results
-            results = self._collect_results()
-            
-            # Restore original files
-            os.rename(original_input, input_file)
-            os.rename(original_results, results_dir)
-            
-            if os.path.exists(f"{original_input}.bak_{job.job_id}"):
-                os.rename(f"{original_input}.bak_{job.job_id}", original_input)
-            if os.path.exists(f"{original_results}.bak_{job.job_id}"):
-                os.rename(f"{original_results}.bak_{job.job_id}", original_results)
+            results = self._collect_results(results_dir, job_workspace)
             
             # Update job with results
             with self.jobs_lock:
-                if success:
+                if success and results:
                     job.status = "completed"
                     job.result = results
                     job.execution_time = round(execution_time, 2)
+                    print(f"✓ [{worker_name}] Job {job_id_short}... completed in {execution_time:.2f}s")
                 else:
                     job.status = "failed"
-                    job.error = "Analysis failed"
+                    job.error = "Analysis failed or no results generated"
+                    print(f"✗ [{worker_name}] Job {job_id_short}... failed")
                 
                 job.completed_at = datetime.now()
-            
-            print(f"{worker_name} completed job {job.job_id} in {execution_time:.2f}s")
         
         except Exception as e:
-            print(f"{worker_name} error processing job {job.job_id}: {e}")
+            print(f"✗ [{worker_name}] Error processing job {job_id_short}...: {e}")
+            import traceback
+            traceback.print_exc()
             
             with self.jobs_lock:
                 job.status = "failed"
-                job.error = str(e)
+                job.error = f"{str(e)}\n{traceback.format_exc()}"
                 job.completed_at = datetime.now()
         
         finally:
-            # Cleanup temporary files
-            self._cleanup_job_files(job.job_id, input_file, results_dir)
+            # Cleanup job workspace
+            try:
+                if os.path.exists(job_workspace):
+                    shutil.rmtree(job_workspace)
+            except Exception as e:
+                print(f"⚠ Cleanup error for job {job_id_short}...: {e}")
     
-    def _collect_results(self) -> Dict:
-        """Collect results from results directory"""
-        results_payload = []
-        results_dir = "results"
+    def _collect_results(self, results_dir: str, workspace_dir: str) -> Dict:
+        """
+        Collect results from results directory
         
-        if os.path.exists(results_dir):
-            for filename in sorted(os.listdir(results_dir)):
-                if filename.endswith(".json"):
-                    file_path = os.path.join(results_dir, filename)
+        Args:
+            results_dir: Path to results directory
+            workspace_dir: Path to workspace directory
+            
+        Returns:
+            Dictionary with collected results
+        """
+        results_payload = []
+        summary_data = None
+        
+        if not os.path.exists(results_dir):
+            return None
+        
+        # Collect individual result files
+        for filename in sorted(os.listdir(results_dir)):
+            if filename.endswith(".json"):
+                file_path = os.path.join(results_dir, filename)
+                
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
                     
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            data = json.load(f)
-                        
-                        parts = filename.replace("_result.json", "").split("_")
-                        medicine_name = parts[0] if len(parts) > 0 else "Unknown"
-                        condition = "_".join(parts[1:]) if len(parts) > 1 else "Unknown"
-                        
-                        results_payload.append({
-                            "medicine_name": medicine_name,
-                            "condition": condition,
-                            "result": data
-                        })
-                    
-                    except Exception as e:
-                        print(f"Error reading {filename}: {e}")
+                    # Check if this is a summary file
+                    if filename.startswith("analysis_summary_"):
+                        summary_data = data
                         continue
+                    
+                    # Parse filename to extract drug and condition
+                    # Format: DrugName_Condition_Name_result.json
+                    base_name = filename.replace("_result.json", "")
+                    parts = base_name.split("_")
+                    
+                    if len(parts) >= 2:
+                        medicine_name = parts[0]
+                        condition = "_".join(parts[1:])
+                    else:
+                        medicine_name = "Unknown"
+                        condition = "Unknown"
+                    
+                    # Extract summary from result
+                    analyses = data.get("analyses", {})
+                    summary = analyses.get("summary", {})
+                    
+                    results_payload.append({
+                        "medicine_name": medicine_name,
+                        "condition": condition,
+                        "total_score": summary.get("total_weighted_score", 0),
+                        "rct_count": summary.get("rct_count", 0),
+                        "alternatives_analyzed": summary.get("alternatives_analyzed", False),
+                        "result": data
+                    })
+                
+                except Exception as e:
+                    print(f"⚠ Error reading {filename}: {e}")
+                    continue
         
         return {
             "result_count": len(results_payload),
-            "results": results_payload
+            "results": results_payload,
+            "summary": summary_data
         }
-    
-    def _cleanup_job_files(self, job_id: str, input_file: str, results_dir: str):
-        """Clean up temporary job files"""
-        try:
-            if os.path.exists(input_file):
-                os.remove(input_file)
-            
-            if os.path.exists(results_dir):
-                import shutil
-                shutil.rmtree(results_dir)
-        
-        except Exception as e:
-            print(f"Cleanup error for job {job_id}: {e}")
     
     def get_queue_stats(self) -> Dict:
         """Get statistics about the queue"""
@@ -332,7 +363,33 @@ class JobQueue:
             "queue_size": self.job_queue.qsize(),
             "active_workers": self.num_workers
         }
+    
+    def clear_completed_jobs(self, max_age_hours: int = 24):
+        """
+        Clear completed/failed jobs older than specified hours
+        
+        Args:
+            max_age_hours: Maximum age in hours for keeping jobs
+        """
+        current_time = datetime.now()
+        jobs_to_remove = []
+        
+        with self.jobs_lock:
+            for job_id, job in self.jobs.items():
+                if job.status in ["completed", "failed"] and job.completed_at:
+                    age_hours = (current_time - job.completed_at).total_seconds() / 3600
+                    if age_hours > max_age_hours:
+                        jobs_to_remove.append(job_id)
+            
+            for job_id in jobs_to_remove:
+                del self.jobs[job_id]
+        
+        if jobs_to_remove:
+            print(f"✓ Cleared {len(jobs_to_remove)} old jobs")
+        
+        return len(jobs_to_remove)
 
 
 # Global queue instance
 job_queue = JobQueue()
+

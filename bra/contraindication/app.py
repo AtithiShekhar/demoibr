@@ -1,8 +1,15 @@
+
+
+# ================================
+# contraindication/app.py (UPDATED)
+# ================================
+
 import requests
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 import os
-import time
 from scoring.benefit_factor import get_contraindication_data
+
+
 class ContraindicationAnalyzer:
     def __init__(self):
         self.fda_api_key = os.getenv("FDA_API_KEY", "")
@@ -13,10 +20,12 @@ class ContraindicationAnalyzer:
         try:
             search_query = f'openfda.generic_name:"{medicine_name}" OR openfda.brand_name:"{medicine_name}"'
             params = {'search': search_query, 'limit': 1}
-            if self.fda_api_key: params['api_key'] = self.fda_api_key
+            if self.fda_api_key: 
+                params['api_key'] = self.fda_api_key
             
             response = requests.get(self.fda_base_url, params=params, timeout=15)
-            if response.status_code != 200: return None
+            if response.status_code != 200: 
+                return None
             
             data = response.json().get('results', [{}])[0]
             return {
@@ -26,7 +35,8 @@ class ContraindicationAnalyzer:
                 'warnings': self._get_text(data, 'warnings_and_cautions') or self._get_text(data, 'warnings'),
                 'pregnancy': self._get_text(data, 'pregnancy') or self._get_text(data, 'teratogenic_effects')
             }
-        except Exception: return None
+        except Exception: 
+            return None
 
     def _get_text(self, data: Dict, field: str) -> str:
         return "\n".join(data.get(field, []))
@@ -37,7 +47,6 @@ class ContraindicationAnalyzer:
         conditions = (patient.get('condition', '') + ',' + patient.get('diagnosis', '')).lower().split(',')
         conditions = [c.strip() for c in conditions if c.strip()]
         allergies = [a.lower() for a in patient.get('allergies', [])]
-        meds = [m.lower() for m in patient_data.get('prescription', [])]
 
         # 1. Absolute Contraindications & Allergies
         contra_text = sections.get('contraindications', '').lower()
@@ -63,16 +72,19 @@ class ContraindicationAnalyzer:
                 return {"status": "boxed_warning", "reason": f"Boxed warning for {cond}", "risk": cond}
 
         return {"status": "safe", "reason": "No absolute contraindications found", "risk": None}
+
+
 def start(drug: str, patient_data: dict, scoring_system=None) -> dict:
     """Main entry point following the system's start() pattern"""
     analyzer = ContraindicationAnalyzer()
     
     sections = analyzer.extract_fda_sections(drug)
     if not sections:
+        score_data = get_contraindication_data("no_data", scoring_system)
         return {
             "found": False,
             "output": f"No FDA label data found for {drug}.",
-            "contra_score": get_contraindication_data("no_data", scoring_system)
+            "contra_score": score_data
         }
 
     match_result = analyzer.check_match(drug, sections, patient_data)

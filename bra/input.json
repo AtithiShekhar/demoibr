@@ -1,18 +1,124 @@
 {
-  "patient": {
-    "age": 60,
+  "patientInfo": {
+    "fullName": "Rahul Sharma",
+    "age": 45,
     "gender": "Male",
-    "diagnosis": "tuberclosis",
-    "condition": "vomitting",
-    "allergies": [],
-    "date_of_assessment": "2026-01-06"
+    "mrn": "MRN-2026-00123"
   },
-  "prescription": [
-    "acetaminophen",
-    "amoxicillin"
+  "chiefComplaints": [
+    {
+      "complaint": "Headache",
+      "duration": "2 weeks",
+      "severity": "Moderate"
+    },
+    {
+      "complaint": "Dizziness",
+      "duration": "5 days",
+      "severity": "Mild"
+    }
   ],
-  "PubMed": {
-    "email": "your_email@example.com"
-  },
-  "notes": "Sample run. resource_pdf: /mnt/data/example.pdf"
+  "currentDiagnoses": [
+    {
+      "diagnosisName": "Hypertension",
+      "diagnosisDate": "2026-01-20",
+      "severity": "Stage 1",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Amlodipine",
+            "dosage": "5 mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Morning",
+            "startDate": "2026-01-20",
+            "status": "Active"
+          },
+          {
+            "name": "Losartan",
+            "dosage": "50 mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Evening",
+            "startDate": "2026-01-20",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Type 2 Diabetes Mellitus",
+      "diagnosisDate": "2018-06-12",
+      "severity": "Moderate",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Metformin",
+            "dosage": "500 mg",
+            "route": "Oral",
+            "frequency": "Twice daily",
+            "startDate": "2018-06-15",
+            "status": "Active"
+          },
+          {
+            "name": "Glimepiride",
+            "dosage": "2 mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Morning",
+            "startDate": "2021-03-10",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Hyperlipidemia",
+      "diagnosisDate": "2020-09-05",
+      "severity": "Mild",
+      "status": "Controlled",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Atorvastatin",
+            "dosage": "20 mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Night",
+            "startDate": "2020-09-10",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Gastroesophageal Reflux Disease (GERD)",
+      "diagnosisDate": "2025-11-02",
+      "severity": "Mild",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Pantoprazole",
+            "dosage": "40 mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Before breakfast",
+            "startDate": "2025-11-02",
+            "status": "Active",
+            "instructions": "Avoid spicy and oily foods"
+          }
+        ]
+      }
+    }
+  ],
+  "clinicalNotes": {
+    "physicianNotes": "Patient has multiple chronic conditions. Medications reviewed and adherence advised.",
+    "followUpDate": "2026-02-10"
+  }
 }

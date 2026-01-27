@@ -24,5 +24,7 @@
   "PubMed": {
     "email": "your_email@example.com"
   },
-  "notes": "Heavy-load performance test. Expect high duplication complexity and many parallel tasks."
+  "notes": "Heavy-load performance test. Expect high duplication complexity and many parallel tasks.",
+  "combinations":"108 means this code will perform 108 computations for all combinations"
 }
+
