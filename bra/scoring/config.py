@@ -1,6 +1,3 @@
-# ================================
-# scoring/config.py
-# ================================
 
 """
 Centralized Scoring Configuration
