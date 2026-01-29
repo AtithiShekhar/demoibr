@@ -1,24 +1,13 @@
-# ================================
-# utils/response_formatter.py
-# ================================
-
 """
-Response Formatter - Clinical Decision Support Format
-Designed for healthcare professionals and non-technical staff
+Response Formatter - Comprehensive Clinical Decision Support
+Includes ALL analysis details: approval, MME, contraindication, alternatives, consequences, RRM, duplication, PubMed, BRR
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 
 def interpret_brr(brr: Any, has_contraindication: bool = False) -> Dict[str, Any]:
-    """
-    Interpret BRR value according to clinical thresholds
-    
-    BRR Thresholds:
-    - >6: ✅ Favorable (Benefits outweigh risks; monitor as standard)
-    - 2-6: ⚠️ Conditional (Benefits outweigh risks only with strict monitoring)
-    - <2: ❌ Unfavorable (Risks outweigh benefits for this patient)
-    """
+    """Interpret BRR value according to clinical thresholds"""
     if brr == "Infinity" or brr == float('inf'):
         return {
             "outcome": "✅ Favorable",
@@ -74,7 +63,7 @@ def interpret_brr(brr: Any, has_contraindication: bool = False) -> Dict[str, Any
 
 
 def format_evidence_level(rct_count: int) -> Dict[str, str]:
-    """Format clinical evidence in user-friendly terms"""
+    """Format clinical evidence quality"""
     if rct_count >= 100:
         return {
             "level": "High Quality Evidence",
@@ -112,15 +101,45 @@ def format_evidence_level(rct_count: int) -> Dict[str, str]:
         }
 
 
-def format_drug_result(result: Dict) -> Dict:
+def extract_full_analysis_details(result_file_path: str) -> Optional[Dict]:
+    """Extract ALL analysis details from the result JSON file"""
+    import json
+    import os
+    
+    if not os.path.exists(result_file_path):
+        return None
+    
+    try:
+        with open(result_file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        analyses = data.get("analyses", {})
+        
+        return {
+            "regulatory_approval": analyses.get("benefit_factor", {}),
+            "market_experience": analyses.get("market_experience", {}),
+            "pubmed_evidence": analyses.get("pubmed_evidence", {}),
+            "contraindication": analyses.get("contraindication", {}),
+            "therapeutic_duplication": analyses.get("therapeutic_duplication", {}),
+            "adrs_analysis": analyses.get("adrs", {}),
+            "summary": analyses.get("summary", {}),
+            "brr_calculation": data.get("benefit_risk_ratio", {})
+        }
+    except Exception as e:
+        print(f"Error extracting analysis details: {e}")
+        return None
+
+
+def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None) -> Dict:
     """
-    Format primary medication analysis for UI display
+    Format primary medication with FULL analysis details
     
     Args:
-        result: Full analysis result from worker
+        result: Basic result from worker
+        detailed_analysis: Full analysis details from JSON file
         
     Returns:
-        User-friendly, clinically relevant result
+        Comprehensive medication analysis
     """
     if not result.get("success"):
         return {
@@ -136,7 +155,7 @@ def format_drug_result(result: Dict) -> Dict:
     brr_interpretation = interpret_brr(brr, has_contraindication)
     evidence = format_evidence_level(result.get("rct_count", 0))
     
-    # Build clinical recommendation
+    # Build clinical decision
     if has_contraindication:
         clinical_decision = {
             "decision": "⛔ NOT RECOMMENDED",
@@ -167,7 +186,8 @@ def format_drug_result(result: Dict) -> Dict:
                 "severity": "Low"
             }
     
-    return {
+    # Base response structure
+    formatted_result = {
         "medication_name": result.get("drug"),
         "indication": result.get("diagnosis"),
         "clinical_decision": clinical_decision,
@@ -194,18 +214,100 @@ def format_drug_result(result: Dict) -> Dict:
             "trial_count": result.get("rct_count", 0)
         }
     }
-
-
-def format_alternative_result(alt_result: Dict) -> Dict:
-    """
-    Format alternative medication for UI display
     
-    Args:
-        alt_result: Full alternative analysis result
+    # Add detailed analysis if available
+    if detailed_analysis:
+        # 1. Regulatory Approval Details
+        reg_data = detailed_analysis.get("regulatory_approval", {})
+        formatted_result["regulatory_approval"] = {
+            "cdsco_approved": reg_data.get("cdsco_approved", False),
+            "usfda_approved": reg_data.get("usfda_approved", False),
+            "benefit_type": reg_data.get("benefit_sub_factor", "Unknown"),
+            "approval_description": reg_data.get("description", ""),
+            "score": {
+                "weight": reg_data.get("weight", 0),
+                "score": reg_data.get("score", 0),
+                "weighted_score": reg_data.get("weighted_score", 0)
+            }
+        }
         
-    Returns:
-        User-friendly alternative medication info
-    """
+        # 2. Market Experience Details
+        mme_data = detailed_analysis.get("market_experience", {})
+        formatted_result["market_experience"] = {
+            "years_in_market": mme_data.get("years_in_market", 0),
+            "approval_date": mme_data.get("approval_date", "Unknown"),
+            "generic_name": mme_data.get("generic_name", result.get("drug")),
+            "experience_level": mme_data.get("experience_sub_factor", "Unknown"),
+            "description": mme_data.get("description", ""),
+            "score": {
+                "weight": mme_data.get("weight", 0),
+                "score": mme_data.get("score", 0),
+                "weighted_score": mme_data.get("weighted_score", 0)
+            }
+        }
+        
+        # 3. PubMed Evidence Details
+        pubmed_data = detailed_analysis.get("pubmed_evidence", {})
+        formatted_result["pubmed_evidence"] = {
+            "rct_count": pubmed_data.get("rct_count", 0),
+            "evidence_level": pubmed_data.get("evidence_sub_factor", "Unknown"),
+            "top_studies": pubmed_data.get("conclusions", []),
+            "output_summary": pubmed_data.get("output", ""),
+            "score": {
+                "weight": pubmed_data.get("weight", 0),
+                "score": pubmed_data.get("score", 0),
+                "weighted_score": pubmed_data.get("weighted_score", 0)
+            }
+        }
+        
+        # 4. Contraindication Details
+        contra_data = detailed_analysis.get("contraindication", {})
+        formatted_result["contraindication_analysis"] = {
+            "status": contra_data.get("status", "safe"),
+            "contraindication_found": contra_data.get("found", False),
+            "risk_identified": contra_data.get("risk", "None"),
+            "reason": contra_data.get("reason", "No contraindications detected"),
+            "clinical_explanation": contra_data.get("clinical_explanation", ""),
+            "matched_conditions": contra_data.get("matched_conditions", []),
+            "score": {
+                "weight": contra_data.get("contra_score", {}).get("weight", 0),
+                "score": contra_data.get("contra_score", {}).get("score", 0),
+                "weighted_score": contra_data.get("contra_score", {}).get("weighted_score", 0)
+            }
+        }
+        
+        # 5. Therapeutic Duplication Details
+        dup_data = detailed_analysis.get("therapeutic_duplication", {})
+        formatted_result["therapeutic_duplication"] = {
+            "status": dup_data.get("status", "not_applicable"),
+            "category": dup_data.get("duplication_category", "N/A"),
+            "overlaps_found": dup_data.get("overlaps_found", 0),
+            "redundant_found": dup_data.get("redundant_found", 0),
+            "description": dup_data.get("description", ""),
+            "score": {
+                "weight": dup_data.get("weight", 0),
+                "score": dup_data.get("score", 0),
+                "weighted_score": dup_data.get("weighted_score", 0)
+            } if dup_data.get("weight") else None
+        }
+        
+        # 6. ADRs Analysis Details
+        adrs_data = detailed_analysis.get("adrs_analysis", {})
+        if adrs_data:
+            formatted_result["adverse_drug_reactions"] = {
+                "life_threatening_adrs": adrs_data.get("life_threatening_adrs", []),
+                "serious_adrs": adrs_data.get("serious_adrs", []),
+                "drug_interactions": adrs_data.get("drug_interactions", []),
+                "has_life_threatening": len(adrs_data.get("life_threatening_adrs", [])) > 0,
+                "has_serious": len(adrs_data.get("serious_adrs", [])) > 0,
+                "has_interactions": len(adrs_data.get("drug_interactions", [])) > 0
+            }
+    
+    return formatted_result
+
+
+def format_alternative_result(alt_result: Dict, detailed_analysis: Optional[Dict] = None) -> Dict:
+    """Format alternative medication with full details"""
     if not alt_result.get("success"):
         return {
             "medication_name": alt_result.get("drug", "Unknown"),
@@ -219,7 +321,7 @@ def format_alternative_result(alt_result: Dict) -> Dict:
     brr_interpretation = interpret_brr(brr, has_contraindication)
     evidence = format_evidence_level(alt_result.get("rct_count", 0))
     
-    # Determine if this is a better option
+    # Determine if better option
     if has_contraindication:
         comparison = "⚠️ Also contraindicated"
         is_better = False
@@ -234,7 +336,7 @@ def format_alternative_result(alt_result: Dict) -> Dict:
             comparison = "❌ Similar concerns"
             is_better = False
     
-    return {
+    formatted_alt = {
         "medication_name": alt_result.get("drug"),
         "brand_name": alt_info.get("brand_name"),
         "rank": alt_info.get("alternative_rank"),
@@ -262,21 +364,33 @@ def format_alternative_result(alt_result: Dict) -> Dict:
             "manufacturer": alt_info.get("manufacturer", "Unknown")
         }
     }
+    
+    # Add detailed analysis if available
+    if detailed_analysis:
+        # Add same detailed sections as primary drug
+        formatted_alt.update({
+            "regulatory_approval": detailed_analysis.get("regulatory_approval", {}),
+            "market_experience": detailed_analysis.get("market_experience", {}),
+            "pubmed_evidence": detailed_analysis.get("pubmed_evidence", {}),
+            "contraindication_analysis": detailed_analysis.get("contraindication", {})
+        })
+    
+    return formatted_alt
 
 
-def format_complete_response(results: List[Dict]) -> Dict:
+def format_complete_response(results: List[Dict], rmm_table: List = None, consequences_data: Dict = None) -> Dict:
     """
-    Format complete analysis response - CLINICAL DECISION SUPPORT FORMAT
+    Format complete analysis response with ALL details
     
     Args:
         results: List of analysis results from workers
+        rmm_table: Aggregated RRM table
+        consequences_data: Consequences of non-treatment data
         
     Returns:
-        User-friendly, actionable clinical response
+        Comprehensive clinical response with all analysis details
     """
     medications_analysis = []
-    
-    # Categorize medications by alert level
     critical_alerts = []
     warnings = []
     safe_medications = []
@@ -290,8 +404,12 @@ def format_complete_response(results: List[Dict]) -> Dict:
             })
             continue
         
-        # Format primary medication
-        primary = format_drug_result(result)
+        # Extract full analysis details from result file
+        output_file = result.get("output_file")
+        detailed_analysis = extract_full_analysis_details(output_file) if output_file else None
+        
+        # Format primary medication with full details
+        primary = format_drug_result(result, detailed_analysis)
         
         # Track alerts
         alert_level = primary["safety_profile"]["alert_level"]
@@ -312,21 +430,24 @@ def format_complete_response(results: List[Dict]) -> Dict:
         else:
             safe_medications.append(result.get("drug"))
         
-        # Format alternatives
+        # Format alternatives with full details
         alternatives = []
         alt_analyses = result.get("alternative_analyses", [])
         for alt in alt_analyses:
-            alternatives.append(format_alternative_result(alt))
+            alt_output_file = alt.get("output_file")
+            alt_detailed = extract_full_analysis_details(alt_output_file) if alt_output_file else None
+            alternatives.append(format_alternative_result(alt, alt_detailed))
         
-        # Sort alternatives by safety (best first)
+        # Sort alternatives by safety
         alternatives.sort(key=lambda x: (
             not x.get("is_better_option", False),
             x.get("benefit_risk_score", {}).get("ratio_value", "0")
-        ))
+        ), reverse=True)
         
         medications_analysis.append({
             "medication": primary,
             "alternatives_available": len(alternatives) > 0,
+            "alternatives_count": len(alternatives),
             "alternatives": alternatives if alternatives else []
         })
     
@@ -334,10 +455,12 @@ def format_complete_response(results: List[Dict]) -> Dict:
     successful = [r for r in results if r.get("success")]
     total_meds = len(results)
     
-    # Clinical Summary
+    # Build final response
     return {
         "clinical_summary": {
             "total_medications_reviewed": total_meds,
+            "successful_analyses": len(successful),
+            "failed_analyses": total_meds - len(successful),
             "critical_alerts_count": len(critical_alerts),
             "warnings_count": len(warnings),
             "safe_medications_count": len(safe_medications),
@@ -354,7 +477,9 @@ def format_complete_response(results: List[Dict]) -> Dict:
             "safe_medications": safe_medications if safe_medications else None
         },
         "medication_analysis": medications_analysis,
-        "action_items": generate_action_items(critical_alerts, warnings)
+        "action_items": generate_action_items(critical_alerts, warnings),
+        "risk_mitigation_measures": rmm_table if rmm_table else [],
+        "consequences_of_non_treatment": consequences_data if consequences_data else {}
     }
 
 

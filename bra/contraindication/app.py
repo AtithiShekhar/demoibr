@@ -1,6 +1,5 @@
-
 # ================================
-# contraindication/app.py (COMPLETE REWRITE WITH GEMINI)
+# contraindication/app.py (FIXED)
 # ================================
 
 import requests
@@ -19,7 +18,6 @@ except ImportError:
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-print(f'the gemini key is {GEMINI_API_KEY}')
 gemini_client = genai.Client(api_key=GEMINI_API_KEY) if (GEMINI_AVAILABLE and GEMINI_API_KEY) else None
 
 
@@ -29,56 +27,93 @@ def normalize_to_concepts(text: str) -> Set[str]:
     concepts = set()
 
     # Pregnancy
-    if "pregnan" in text:
+    if any(k in text for k in ["pregnan", "gestation", "expecting", "gravid"]):
         concepts.add("PREGNANCY")
 
     # Heart Failure
-    if "heart failure" in text:
-        if any(k in text for k in ["acute", "decompensated", "unstable"]):
+    if any(k in text for k in ["heart failure", "cardiac failure", "chf", "congestive heart"]):
+        if any(k in text for k in ["acute", "decompensated", "unstable", "severe"]):
             concepts.add("HEART_FAILURE_ACUTE")
-        else:
-            concepts.add("HEART_FAILURE_CHRONIC")
+        concepts.add("HEART_FAILURE")
 
     # Asthma
     if "asthma" in text:
-        if any(k in text for k in ["acute", "attack", "exacerbation"]):
+        if any(k in text for k in ["acute", "attack", "exacerbation", "severe"]):
             concepts.add("ASTHMA_ACUTE")
-        else:
-            concepts.add("ASTHMA_CHRONIC")
+        concepts.add("ASTHMA")
 
     # Renal
-    if any(k in text for k in ["renal failure", "kidney failure", "ckd", "renal impairment"]):
+    if any(k in text for k in ["renal failure", "kidney failure", "ckd", "renal impairment", "kidney disease", "nephropathy"]):
         concepts.add("RENAL_FAILURE")
 
     # Hepatic
-    if any(k in text for k in ["hepatic", "liver failure", "cirrhosis"]):
+    if any(k in text for k in ["hepatic", "liver failure", "cirrhosis", "liver disease", "hepatitis"]):
         concepts.add("HEPATIC_FAILURE")
 
     # GI Bleeding
-    if any(k in text for k in ["gi bleed", "gastrointestinal bleeding", "peptic ulcer"]):
+    if any(k in text for k in ["gi bleed", "gastrointestinal bleeding", "peptic ulcer", "gastric ulcer", "stomach bleeding"]):
         concepts.add("GI_BLEED")
 
     # Hypotension
-    if any(k in text for k in ["hypotension", "low blood pressure", "cardiogenic shock"]):
+    if any(k in text for k in ["hypotension", "low blood pressure", "cardiogenic shock", "shock"]):
         concepts.add("HYPOTENSION")
 
     # Bradycardia
-    if any(k in text for k in ["bradycardia", "slow heart rate", "heart block"]):
+    if any(k in text for k in ["bradycardia", "slow heart rate", "heart block", "av block"]):
         concepts.add("BRADYCARDIA")
+    
+    # Hypertension
+    if any(k in text for k in ["hypertension", "high blood pressure", "htn"]):
+        concepts.add("HYPERTENSION")
+    
+    # Diabetes
+    if any(k in text for k in ["diabetes", "diabetic", "hyperglycemia", "dm"]):
+        concepts.add("DIABETES")
+    
+    # Stroke
+    if any(k in text for k in ["stroke", "cerebrovascular", "cva"]):
+        concepts.add("STROKE")
+    
+    # Myocardial Infarction
+    if any(k in text for k in ["myocardial infarction", "heart attack", "mi", "acute coronary"]):
+        concepts.add("MYOCARDIAL_INFARCTION")
+    
+    # Arrhythmia
+    if any(k in text for k in ["arrhythmia", "atrial fibrillation", "afib", "ventricular tachycardia"]):
+        concepts.add("ARRHYTHMIA")
+
+    # COPD
+    if any(k in text for k in ["copd", "chronic obstructive", "emphysema", "chronic bronchitis"]):
+        concepts.add("COPD")
+    
+    # Seizure
+    if any(k in text for k in ["seizure", "epilepsy", "convulsion"]):
+        concepts.add("SEIZURE")
+    
+    # Depression
+    if any(k in text for k in ["depression", "depressive disorder", "mdd"]):
+        concepts.add("DEPRESSION")
+    
+    # Glaucoma
+    if "glaucoma" in text:
+        concepts.add("GLAUCOMA")
 
     return concepts
 
 
-def extract_concepts_from_fda(text: str) -> Set[str]:
-    """Extract contraindicated concepts from FDA text"""
+def extract_contraindication_concepts(text: str) -> Set[str]:
+    """
+    Extract contraindicated conditions from FDA label text
+    ONLY from sections explicitly marked as contraindications
+    """
     text = text.lower()
     concepts = set()
 
-    # Only extract if explicitly contraindicated
-    if "contraindicated" not in text and "contraindication" not in text:
+    # Must contain contraindication keywords
+    if not any(k in text for k in ["contraindicated", "contraindication", "should not be used"]):
         return concepts
 
-    # Extract the same concepts
+    # Extract concepts from contraindication context
     concepts |= normalize_to_concepts(text)
     
     return concepts
@@ -112,13 +147,24 @@ class ContraindicationAnalyzer:
             print(f"FDA API Error for {medicine_name}: {e}")
             return None
 
-    def extract_patient_concepts(self, patient_data: dict) -> Set[str]:
-        """Extract medical concepts from patient data"""
+    def extract_patient_conditions(self, patient_data: dict, current_diagnosis: str = None) -> Set[str]:
+        """
+        Extract patient's medical conditions EXCLUDING the diagnosis being treated
+        
+        Args:
+            patient_data: Full patient data
+            current_diagnosis: The diagnosis for which this drug is prescribed (to exclude)
+        """
         concepts = set()
 
-        # From diagnoses
+        # From diagnoses (EXCLUDING current diagnosis being treated)
         for diag in patient_data.get("currentDiagnoses", []):
             diag_name = diag.get("diagnosisName", "")
+            
+            # Skip the diagnosis being treated - drug should be for this condition
+            if current_diagnosis and diag_name.lower() == current_diagnosis.lower():
+                continue
+                
             concepts |= normalize_to_concepts(diag_name)
 
         # From chief complaints
@@ -132,54 +178,66 @@ class ContraindicationAnalyzer:
 
         return concepts
 
-    def detect(self, drug: str, patient_data: dict) -> Optional[Dict]:
-        """Detect contraindications using concept matching"""
+    def detect(self, drug: str, diagnosis: str, patient_data: dict) -> Optional[Dict]:
+        """
+        Detect contraindications for drug based on patient's OTHER conditions
+        
+        Args:
+            drug: Medicine name
+            diagnosis: Diagnosis for which drug is prescribed
+            patient_data: Full patient data
+            
+        Returns:
+            Contraindication details if found, None otherwise
+        """
         sections = self.extract_fda_sections(drug)
         if not sections:
             print(f"[Contraindication] No FDA data for {drug}")
             return None
 
-        # Extract patient concepts
-        patient_concepts = self.extract_patient_concepts(patient_data)
-        print(f"[Contraindication] Patient concepts: {patient_concepts}")
+        # Extract patient concepts EXCLUDING the diagnosis being treated
+        patient_concepts = self.extract_patient_conditions(patient_data, diagnosis)
+        print(f"[Contraindication] Patient other conditions: {patient_concepts}")
+        print(f"[Contraindication] Treating diagnosis: {diagnosis} (excluded from contraindication check)")
 
         # Extract FDA contraindication concepts
         fda_text = sections.get("contraindications", "") + " " + sections.get("boxed_warning", "")
-        fda_concepts = extract_concepts_from_fda(fda_text)
-        print(f"[Contraindication] FDA concepts: {fda_concepts}")
+        fda_concepts = extract_contraindication_concepts(fda_text)
+        print(f"[Contraindication] FDA contraindicated conditions: {fda_concepts}")
 
-        # Find overlap
+        # Find overlap between patient's other conditions and drug contraindications
         overlap = patient_concepts & fda_concepts
         if overlap:
             risk = next(iter(overlap))
-            print(f"[Contraindication] ⚠️  MATCH FOUND: {risk}")
+            print(f"[Contraindication] ⚠️  CONTRAINDICATION DETECTED: {risk}")
+            print(f"[Contraindication] Drug {drug} is contraindicated in {risk}, which patient has")
             return {
                 "status": "absolute",
                 "risk": risk,
                 "reason": f"Contraindicated in {risk.replace('_', ' ').lower()}",
                 "fda_sections": sections,
-                "matched_concepts": list(overlap)
+                "matched_concepts": list(overlap),
+                "treating_diagnosis": diagnosis
             }
 
-        print(f"[Contraindication] ✓ No contraindications found")
+        print(f"[Contraindication] ✓ No contraindications found for {drug} in treating {diagnosis}")
         return None
 
-def explain_with_gemini(drug: str, risk: str, fda_context: str) -> str:
-    # for m in gemini_client.models.list():
-    #  print(m.name, m.supported_generation_methods)
+
+def explain_with_gemini(drug: str, risk: str, diagnosis: str, fda_context: str) -> str:
+    """Generate clinical explanation using Gemini"""
     if not gemini_client or not fda_context:
         return f"Based on FDA label documentation, {drug} is contraindicated in patients with {risk.replace('_', ' ').lower()}."
 
-    # Use a specific configuration for clinical accuracy
     config = types.GenerateContentConfig(
-        temperature=0.0,  # Minimize creativity/hallucination
+        temperature=0.0,
         max_output_tokens=150,
     )
 
     prompt = f"""You are a clinical pharmacologist.
-TASK: Explain the contraindication of {drug} in the context of {risk.replace('_', ' ').lower()}.
+TASK: Explain why {drug} (prescribed for {diagnosis}) is contraindicated in patients with {risk.replace('_', ' ').lower()}.
 SOURCE MATERIAL:
-{fda_context[:4000]} 
+{fda_context[:4000]}
 
 INSTRUCTIONS:
 1. Use ONLY the source material provided.
@@ -194,23 +252,35 @@ INSTRUCTIONS:
         )
         return response.text.strip()
     except Exception as e:
-        # Log error details but return the safe fallback
         print(f"Gemini API Error: {type(e).__name__} - {e}")
         return f"Based on FDA label documentation, {drug} is contraindicated in patients with {risk.replace('_', ' ').lower()}."
+
+
+def start(drug: str, diagnosis: str, patient_data: dict, scoring_system=None) -> dict:
+    """
+    Main contraindication checker entry point
     
-def start(drug: str, patient_data: dict, scoring_system=None) -> dict:
-    """Main contraindication checker entry point"""
+    Args:
+        drug: Medicine name
+        diagnosis: Diagnosis for which drug is prescribed
+        patient_data: Full patient data
+        scoring_system: Optional scoring system
+        
+    Returns:
+        Contraindication analysis result
+    """
     analyzer = ContraindicationAnalyzer()
-    result = analyzer.detect(drug, patient_data)
+    result = analyzer.detect(drug, diagnosis, patient_data)
 
     if not result:
         score_data = get_contraindication_data("safe", scoring_system)
         return {
-            "found": True,
+            "found": False,
             "status": "safe",
             "reason": "No contraindications detected",
             "contra_score": score_data,
-            "has_contraindication": False
+            "has_contraindication": False,
+            "treating_diagnosis": diagnosis
         }
 
     # Build FDA context for Gemini
@@ -219,7 +289,7 @@ def start(drug: str, patient_data: dict, scoring_system=None) -> dict:
     )
 
     # Get explanation
-    explanation = explain_with_gemini(drug, result["risk"], fda_context)
+    explanation = explain_with_gemini(drug, result["risk"], diagnosis, fda_context)
     
     # Determine status type
     status = result["status"]
@@ -238,5 +308,6 @@ def start(drug: str, patient_data: dict, scoring_system=None) -> dict:
         "clinical_explanation": explanation,
         "matched_conditions": result["matched_concepts"],
         "contra_score": score_data,
-        "has_contraindication": True
+        "has_contraindication": True,
+        "treating_diagnosis": diagnosis
     }

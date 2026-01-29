@@ -15,7 +15,50 @@ import time
 from utils.queue_manager.queue_manager import job_queue
 app = Flask(__name__)
 
+import json
+from datetime import datetime
 
+def simplify_medical_data(complex_data):
+    """
+    Transforms detailed EMR JSON into a simplified format for 
+    ADR and Factor analysis modules.
+    """
+    patient_info = complex_data.get("patientInfo", {})
+    
+    # 1. Extract and flatten diagnoses names
+    diagnoses_list = [d.get("diagnosisName") for d in complex_data.get("currentDiagnoses", [])]
+    
+    # 2. Extract and flatten complaints
+    complaints_list = [c.get("complaint") for c in complex_data.get("chiefComplaints", [])]
+    
+    # 3. Extract all unique medication names
+    medication_names = set()
+    for diagnosis in complex_data.get("currentDiagnoses", []):
+        meds = diagnosis.get("treatment", {}).get("medications", [])
+        for med in meds:
+            if med.get("name"):
+                medication_names.add(med["name"])
+    
+    # 4. Construct the simplified object
+    simplified = {
+        "patient": {
+            "age": patient_info.get("age"),
+            "gender": patient_info.get("gender"),
+            # Conditions maps to chief complaints per your request
+            "condition": ", ".join(complaints_list),
+            # Diagnosis name maps to diagnosis string
+            "diagnosis": ", ".join(diagnoses_list),
+            # Placeholder for lifestyle data if not in source
+            "smoking_alcohol": "Not specified", 
+            "date_of_assessment": datetime.now().strftime("%Y-%m-%d")
+        },
+        "prescription": list(medication_names)
+    }
+    
+    return simplified
+
+# Example usage:
+# simplified_json = simplify_medical_data(complex_input_json)
 @app.route("/analyze", methods=["POST"])
 def analyze():
     """
@@ -44,8 +87,8 @@ def analyze():
     
     if not has_medications:
         return jsonify({"error": "No medications found in any diagnosis"}), 400
-    
-    # Submit job to queue
+    with open("adrs_input.json",'w') as f:
+        json.dump(simplify_medical_data(request_data),f, indent=2)
     try:
         job_id = job_queue.submit_job(request_data)
         
@@ -71,58 +114,6 @@ def get_status(job_id):
     
     return jsonify(job_status), 200
 
-
-@app.route("/analyze/sync", methods=["POST"])
-def analyze_sync():
-    """Synchronous analysis endpoint (blocks until complete)"""
-    if not request.is_json:
-        return jsonify({"error": "Request body must be JSON"}), 400
-    
-    request_data = request.get_json()
-    
-    # Validate
-    if "patientInfo" not in request_data:
-        return jsonify({"error": "Missing 'patientInfo' field"}), 400
-    
-    if "currentDiagnoses" not in request_data or not request_data["currentDiagnoses"]:
-        return jsonify({"error": "Missing or empty 'currentDiagnoses' field"}), 400
-    
-    try:
-        job_id = job_queue.submit_job(request_data)
-        
-        # Poll for completion
-        max_wait = 600  # 10 minutes
-        start_time = time.time()
-        poll_interval = 2
-        
-        while time.time() - start_time < max_wait:
-            job_status = job_queue.get_job_status(job_id)
-            
-            if job_status["status"] == "completed":
-                return jsonify({
-                    "status": "completed",
-                    "job_id": job_id,
-                    "execution_time": job_status["execution_time"],
-                    "result": job_status["result"]
-                }), 200
-            
-            elif job_status["status"] == "failed":
-                return jsonify({
-                    "status": "failed",
-                    "job_id": job_id,
-                    "error": job_status["error"]
-                }), 500
-            
-            time.sleep(poll_interval)
-        
-        return jsonify({
-            "error": "Request timeout",
-            "job_id": job_id,
-            "message": f"Job still processing after {max_wait}s. Use /status/{job_id}"
-        }), 504
-    
-    except Exception as e:
-        return jsonify({"error": f"Analysis error: {str(e)}"}), 500
 
 
 @app.route("/queue/stats", methods=["GET"])

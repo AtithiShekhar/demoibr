@@ -1,13 +1,13 @@
 """
 utils/analysis/analysis_worker.py
 Worker functions for drug-diagnosis analysis
-UPDATED to support full alternative analysis on contraindication detection
+UPDATED: Fixed contraindication to exclude treating diagnosis
 """
-
+from adrs.app import start as adrs_start
 from approvalstatus.app import start as bedrock_start
 from mme.mme_checker import start as fda_start
 from pubmed.searcher import start as pubmed_start
-from contraindication.app import start as contra_start
+from contraindication.app import start as contra_start  # Use fixed version
 from scoring.scoring_sytem import ScoringSystem
 from alternatives.fda_finder import FDAAlternativesFinder
 from typing import Dict, List
@@ -49,8 +49,6 @@ def analyze_single_drug(
 
     # Create result filename - mark alternatives clearly
     if is_alternative:
-        # Extract the parent drug and alternative number from thread_id
-        # thread_id format: "1-ALT1", "1-ALT2", etc.
         result_file = f"results/ALT_{drug}_{diagnosis.replace(' ', '_').replace('/', '_')}_result.json"
     else:
         result_file = f"results/{drug}_{diagnosis.replace(' ', '_').replace('/', '_')}_result.json"
@@ -71,11 +69,10 @@ def analyze_single_drug(
         pubmed_result = pubmed_start(drug, diagnosis, email, scoring)
         rct_count = pubmed_result.get("rct_count", 0)
 
-        # 4. Contraindications - Pass full patient data
+        # 4. Contraindications - FIXED: Pass diagnosis to exclude it from contraindication check
         print(f"[{prefix} {thread_id}] → Contraindication analysis...")
-        # Use full_patient_data if available, otherwise wrap patient dict
         contra_patient_data = full_patient_data if full_patient_data else {"patient": patient}
-        contra_res = contra_start(drug, contra_patient_data, scoring)
+        contra_res = contra_start(drug, diagnosis, contra_patient_data, scoring)
         has_contraindication = contra_res.get("has_contraindication", False)
         
         print(f"[{prefix} {thread_id}] → Contraindication detected: {has_contraindication}")
@@ -93,10 +90,34 @@ def analyze_single_drug(
                 }
             )
 
-        # 6. Calculate BRR
+        # 6. ADRs Analysis
+        print(f"[{prefix} {thread_id}] → ADRs analysis...")
+        adrs_res = adrs_start(drug, contra_patient_data, scoring)
+        has_lt_adrs = adrs_res.get("has_life_threatening_adrs", False)
+        has_serious_adrs = adrs_res.get("has_serious_adrs", False)
+        has_drug_interactions = adrs_res.get("has_drug_interactions", False)
+
+        # 7. Calculate BRR
         brr_data = scoring.calculate_brr()
-        
-        # 7. Score aggregation
+
+        # 8. RRM and Consequences (if available)
+        try:
+            from rrm.rrm import start as rrm_start
+            print(f"[{prefix} {thread_id}] → RRM analysis...")
+            rrm_table = rrm_start()
+        except Exception as e:
+            print(f"[{prefix} {thread_id}] ⚠️  RRM not available: {e}")
+            rrm_table = []
+
+        try:
+            from consequences.consequences import start as cons_start
+            print(f"[{prefix} {thread_id}] → Consequences analysis...")
+            conn_data = cons_start()
+        except Exception as e:
+            print(f"[{prefix} {thread_id}] ⚠️  Consequences not available: {e}")
+            conn_data = {}
+
+        # 9. Score aggregation
         total_weighted_score = sum(scoring.benefit_scores) + sum(scoring.risk_scores)
         
         score_breakdown = {}
@@ -114,6 +135,7 @@ def analyze_single_drug(
             if dup_score and isinstance(dup_score, dict) and "weighted_score" in dup_score:
                 score_breakdown["therapeutic_duplication"] = dup_score
 
+        # Store complete analysis summary
         scoring.add_analysis("summary", {
             "drug": drug,
             "diagnosis": diagnosis,
@@ -125,7 +147,12 @@ def analyze_single_drug(
             "score_breakdown": score_breakdown,
             "therapeutic_duplication_performed": has_duplication_check,
             "rct_count": rct_count,
-            "has_contraindication": has_contraindication
+            "has_contraindication": has_contraindication,
+            "has_life_threatening_adrs": has_lt_adrs,
+            "has_serious_adrs": has_serious_adrs,
+            "has_drug_interactions": has_drug_interactions,
+            "rmm": rrm_table,
+            "consequence": conn_data
         })
 
         output_file = scoring.save_to_json()
@@ -144,7 +171,10 @@ def analyze_single_drug(
             "output_file": output_file,
             "duplication_checked": has_duplication_check,
             "rct_count": rct_count,
-            "has_contraindication": has_contraindication
+            "has_contraindication": has_contraindication,
+            "has_life_threatening_adrs": has_lt_adrs,
+            "has_serious_adrs": has_serious_adrs,
+            "has_drug_interactions": has_drug_interactions
         }
 
     except Exception as e:
@@ -244,8 +274,8 @@ def analyze_drug_diagnosis(
                             'manufacturer': alt.get('Manufacturer', 'Unknown'),
                             'route': alt.get('Route', 'Unknown'),
                             'alternative_rank': idx,
-                            'primary_drug': drug,  # NEW: Link to primary
-                            'primary_diagnosis': diagnosis  # NEW: Link to diagnosis
+                            'primary_drug': drug,
+                            'primary_diagnosis': diagnosis
                         }
                         alternative_analyses.append(alt_result)
                 

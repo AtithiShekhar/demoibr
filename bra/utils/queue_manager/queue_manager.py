@@ -12,8 +12,177 @@ import json
 import os
 import shutil
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional,List
 from pathlib import Path
+from utils.response_formatter import format_complete_response
+
+def collect_results_detailed(results_dir: str, workspace_dir: str) -> Dict:
+    """
+    Collect and format results with FULL analysis details
+    
+    Args:
+        results_dir: Path to results directory
+        workspace_dir: Path to workspace directory
+        
+    Returns:
+        Dictionary with formatted results including all analysis details
+    """
+    from utils.response_formatter import format_complete_response
+    
+    raw_results = []
+    aggregated_rmm_table = []
+    consequences_data = {}
+    
+    if not os.path.exists(results_dir):
+        return None
+    
+    # Collect primary results (skip ALT_ files - they'll be linked later)
+    for filename in sorted(os.listdir(results_dir)):
+        if filename.startswith("ALT_") or filename.startswith("analysis_summary_"):
+            continue
+            
+        if filename.endswith(".json"):
+            file_path = os.path.join(results_dir, filename)
+            
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                # Extract ALL analysis details
+                analyses = data.get("analyses", {})
+                summary = analyses.get("summary", {})
+                brr_data = data.get("benefit_risk_ratio", {})
+                
+                # Parse filename to extract drug and condition
+                base_name = filename.replace("_result.json", "")
+                parts = base_name.split("_")
+                
+                if len(parts) >= 2:
+                    medicine_name = parts[0]
+                    condition = "_".join(parts[1:]).replace("_", " ")
+                else:
+                    medicine_name = "Unknown"
+                    condition = "Unknown"
+                
+                # Collect RMM data
+                med_rmm = summary.get("rmm", [])
+                if isinstance(med_rmm, list):
+                    aggregated_rmm_table.extend(med_rmm)
+                
+                # Collect consequences data
+                med_consequence = summary.get("consequence", {})
+                if med_consequence and "factor_2_6_consequences_of_non_treatment" in med_consequence:
+                    consequences_data.update(med_consequence["factor_2_6_consequences_of_non_treatment"])
+                
+                # Collect alternative results for this primary drug
+                alt_results = collect_alternatives_for_drug(
+                    results_dir, 
+                    medicine_name, 
+                    condition
+                )
+                
+                # Build comprehensive primary result
+                primary_result = {
+                    "success": True,
+                    "drug": medicine_name,
+                    "diagnosis": condition,
+                    "total_benefit_score": brr_data.get("total_benefit_score", 0),
+                    "total_risk_score": brr_data.get("total_risk_score", 0),
+                    "brr": brr_data.get("brr"),
+                    "brr_interpretation": brr_data.get("interpretation"),
+                    "rct_count": summary.get("rct_count", 0),
+                    "has_contraindication": summary.get("has_contraindication", False),
+                    "has_life_threatening_adrs": summary.get("has_life_threatening_adrs", False),
+                    "has_serious_adrs": summary.get("has_serious_adrs", False),
+                    "has_drug_interactions": summary.get("has_drug_interactions", False),
+                    "duplication_checked": summary.get("therapeutic_duplication_performed", False),
+                    "alternatives_count": len(alt_results),
+                    "alternative_analyses": alt_results,
+                    "output_file": file_path  # Pass file path for detailed extraction
+                }
+                
+                raw_results.append(primary_result)
+            
+            except Exception as e:
+                print(f"⚠ Error reading {filename}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+    
+    # Format complete response with all details
+    return format_complete_response(
+        raw_results, 
+        rmm_table=aggregated_rmm_table,
+        consequences_data=consequences_data
+    )
+
+
+def collect_alternatives_for_drug(results_dir: str, drug_name: str, condition: str) -> List[Dict]:
+    """
+    Collect all alternative analyses for a specific primary drug
+    
+    Args:
+        results_dir: Results directory path
+        drug_name: Primary drug name
+        condition: Condition being treated
+        
+    Returns:
+        List of alternative analysis results
+    """
+    alt_results = []
+    
+    for alt_file in sorted(os.listdir(results_dir)):
+        if not alt_file.startswith("ALT_") or not alt_file.endswith("_result.json"):
+            continue
+        
+        try:
+            alt_path = os.path.join(results_dir, alt_file)
+            with open(alt_path, "r") as af:
+                alt_data = json.load(af)
+            
+            alt_analyses = alt_data.get("analyses", {})
+            alt_summary = alt_analyses.get("summary", {})
+            alt_brr = alt_data.get("benefit_risk_ratio", {})
+            
+            # Extract alt drug name from filename: ALT_DRUGNAME_Condition_result.json
+            alt_base = alt_file.replace("ALT_", "").replace("_result.json", "")
+            alt_parts = alt_base.split("_")
+            alt_drug_name = alt_parts[0] if alt_parts else "Unknown"
+            
+            # Extract condition from filename
+            alt_condition = "_".join(alt_parts[1:]).replace("_", " ") if len(alt_parts) > 1 else ""
+            
+            # Only include if this alternative is for the current primary drug's condition
+            if alt_condition.lower() == condition.lower():
+                alt_results.append({
+                    "success": True,
+                    "drug": alt_drug_name,
+                    "diagnosis": condition,
+                    "total_benefit_score": alt_brr.get("total_benefit_score", 0),
+                    "total_risk_score": alt_brr.get("total_risk_score", 0),
+                    "brr": alt_brr.get("brr"),
+                    "brr_interpretation": alt_brr.get("interpretation"),
+                    "rct_count": alt_summary.get("rct_count", 0),
+                    "has_contraindication": alt_summary.get("has_contraindication", False),
+                    "has_life_threatening_adrs": alt_summary.get("has_life_threatening_adrs", False),
+                    "has_serious_adrs": alt_summary.get("has_serious_adrs", False),
+                    "has_drug_interactions": alt_summary.get("has_drug_interactions", False),
+                    "alternative_info": {
+                        "brand_name": alt_drug_name,
+                        "generic_name": alt_drug_name,
+                        "alternative_rank": len(alt_results) + 1,
+                        "primary_drug": drug_name,
+                        "primary_diagnosis": condition
+                    },
+                    "output_file": alt_path  # Pass file path for detailed extraction
+                })
+        
+        except Exception as e:
+            print(f"Error reading alternative {alt_file}: {e}")
+            continue
+    
+    return alt_results
+
 
 
 class AnalysisJob:
@@ -279,125 +448,10 @@ class JobQueue:
             except Exception as e:
                 print(f"⚠ Cleanup error for job {job_id_short}...: {e}")
     
+    # Inside your JobQueue class in the main orchestration file
     def _collect_results(self, results_dir: str, workspace_dir: str) -> Dict:
-        """
-        Collect and format results from results directory
-        Uses worker results directly since alternatives are already attached
-        
-        Args:
-            results_dir: Path to results directory
-            workspace_dir: Path to workspace directory
-            
-        Returns:
-            Dictionary with formatted results (clean, concise)
-        """
-        from utils.response_formatter import format_complete_response
-        import json
-        import os
-        
-        raw_results = []
-        
-        if not os.path.exists(results_dir):
-            return None
-        
-        # Collect individual result files - SKIP alternatives (they start with ALT_)
-        for filename in sorted(os.listdir(results_dir)):
-            # Skip alternative files - they'll be collected with their primary
-            if filename.startswith("ALT_") or filename.startswith("analysis_summary_"):
-                continue
-                
-            if filename.endswith(".json"):
-                file_path = os.path.join(results_dir, filename)
-                
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    
-                    # Parse filename to extract drug and condition
-                    base_name = filename.replace("_result.json", "")
-                    parts = base_name.split("_")
-                    
-                    if len(parts) >= 2:
-                        medicine_name = parts[0]
-                        condition = "_".join(parts[1:]).replace("_", " ")
-                    else:
-                        medicine_name = "Unknown"
-                        condition = "Unknown"
-                    
-                    # Extract key data from analyses
-                    analyses = data.get("analyses", {})
-                    summary = analyses.get("summary", {})
-                    brr_data = data.get("benefit_risk_ratio", {})
-                    
-                    # Now look for ALT_ files for this primary drug
-                    alt_results = []
-                    for alt_file in os.listdir(results_dir):
-                        # Match pattern: ALT_DrugName_Condition_result.json
-                        if alt_file.startswith("ALT_") and alt_file.endswith("_result.json"):
-                            try:
-                                alt_path = os.path.join(results_dir, alt_file)
-                                with open(alt_path, "r") as af:
-                                    alt_data = json.load(af)
-                                
-                                alt_summary = alt_data.get("analyses", {}).get("summary", {})
-                                alt_brr = alt_data.get("benefit_risk_ratio", {})
-                                
-                                # Extract alt drug name from filename
-                                # Format: ALT_DRUGNAME_Condition_result.json
-                                alt_base = alt_file.replace("ALT_", "").replace("_result.json", "")
-                                alt_parts = alt_base.split("_")
-                                alt_drug_name = alt_parts[0] if alt_parts else "Unknown"
-                                
-                                # Check if this alternative belongs to current primary
-                                # by comparing the condition names
-                                alt_condition = "_".join(alt_parts[1:]).replace("_", " ") if len(alt_parts) > 1 else ""
-                                
-                                if alt_condition == condition:
-                                    alt_results.append({
-                                        "success": True,
-                                        "drug": alt_drug_name,
-                                        "total_benefit_score": alt_brr.get("total_benefit_score", 0),
-                                        "total_risk_score": alt_brr.get("total_risk_score", 0),
-                                        "brr": alt_brr.get("brr"),
-                                        "brr_interpretation": alt_brr.get("interpretation"),
-                                        "rct_count": alt_summary.get("rct_count", 0),
-                                        "has_contraindication": alt_summary.get("has_contraindication", False),
-                                        "alternative_info": {
-                                            "brand_name": alt_drug_name,
-                                            "generic_name": alt_drug_name,
-                                            "alternative_rank": len(alt_results) + 1,
-                                            "primary_drug": medicine_name,
-                                            "primary_diagnosis": condition
-                                        }
-                                    })
-                            except Exception as e:
-                                print(f"Error reading alternative {alt_file}: {e}")
-                    
-                    # Build primary result with alternatives attached
-                    raw_results.append({
-                        "success": True,
-                        "drug": medicine_name,
-                        "diagnosis": condition,
-                        "total_benefit_score": brr_data.get("total_benefit_score", 0),
-                        "total_risk_score": brr_data.get("total_risk_score", 0),
-                        "brr": brr_data.get("brr"),
-                        "brr_interpretation": brr_data.get("interpretation"),
-                        "rct_count": summary.get("rct_count", 0),
-                        "has_contraindication": summary.get("has_contraindication", False),
-                        "duplication_checked": summary.get("therapeutic_duplication_performed", False),
-                        "alternatives_count": len(alt_results),
-                        "alternative_analyses": alt_results
-                    })
-                
-                except Exception as e:
-                    print(f"⚠ Error reading {filename}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    continue
-        
-        # Format response using clean formatter
-        return format_complete_response(raw_results)
-    
+      '''Wrapper method for JobQueue class'''
+      return collect_results_detailed(results_dir, workspace_dir)
     def get_queue_stats(self) -> Dict:
         """Get statistics about the queue"""
         with self.jobs_lock:
@@ -445,239 +499,3 @@ class JobQueue:
 
 # Global queue instance
 job_queue = JobQueue()
-
-
-# ================================
-# server.py (COMPLETE VERSION)
-# ================================
-
-"""
-server.py
-Flask API server with queue-based job processing
-Updated for centralized scoring system v2.0
-"""
-
-from flask import Flask, request, jsonify
-import os
-import time
-
-app = Flask(__name__)
-
-
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    """
-    Submit an analysis job to the queue (non-blocking)
-    Returns immediately with job_id for status polling
-    """
-    if not request.is_json:
-        return jsonify({"error": "Request body must be JSON"}), 400
-    
-    request_data = request.get_json()
-    
-    # Validate required fields for NEW EMR schema
-    if "patientInfo" not in request_data:
-        return jsonify({"error": "Missing 'patientInfo' field"}), 400
-    
-    if "currentDiagnoses" not in request_data or not request_data["currentDiagnoses"]:
-        return jsonify({"error": "Missing or empty 'currentDiagnoses' field"}), 400
-    
-    # Validate at least one diagnosis has medications
-    has_medications = False
-    for diagnosis in request_data["currentDiagnoses"]:
-        meds = diagnosis.get("treatment", {}).get("medications", [])
-        if meds:
-            has_medications = True
-            break
-    
-    if not has_medications:
-        return jsonify({"error": "No medications found in any diagnosis"}), 400
-    
-    # Submit job to queue
-    try:
-        job_id = job_queue.submit_job(request_data)
-        
-        return jsonify({
-            "status": "accepted",
-            "job_id": job_id,
-            "message": "Job queued for processing",
-            "poll_url": f"/status/{job_id}",
-            "queue_stats": job_queue.get_queue_stats()
-        }), 202
-    
-    except Exception as e:
-        return jsonify({"error": f"Failed to submit job: {str(e)}"}), 500
-
-
-@app.route("/status/<job_id>", methods=["GET"])
-def get_status(job_id):
-    """Get status of a specific job"""
-    job_status = job_queue.get_job_status(job_id)
-    
-    if not job_status:
-        return jsonify({"error": "Job not found", "job_id": job_id}), 404
-    
-    return jsonify(job_status), 200
-
-
-@app.route("/analyze/sync", methods=["POST"])
-def analyze_sync():
-    """Synchronous analysis endpoint (blocks until complete)"""
-    if not request.is_json:
-        return jsonify({"error": "Request body must be JSON"}), 400
-    
-    request_data = request.get_json()
-    
-    # Validate
-    if "patientInfo" not in request_data:
-        return jsonify({"error": "Missing 'patientInfo' field"}), 400
-    
-    if "currentDiagnoses" not in request_data or not request_data["currentDiagnoses"]:
-        return jsonify({"error": "Missing or empty 'currentDiagnoses' field"}), 400
-    
-    try:
-        job_id = job_queue.submit_job(request_data)
-        
-        # Poll for completion
-        max_wait = 600  # 10 minutes
-        start_time = time.time()
-        poll_interval = 2
-        
-        while time.time() - start_time < max_wait:
-            job_status = job_queue.get_job_status(job_id)
-            
-            if job_status["status"] == "completed":
-                return jsonify({
-                    "status": "completed",
-                    "job_id": job_id,
-                    "execution_time": job_status["execution_time"],
-                    "result": job_status["result"]
-                }), 200
-            
-            elif job_status["status"] == "failed":
-                return jsonify({
-                    "status": "failed",
-                    "job_id": job_id,
-                    "error": job_status["error"]
-                }), 500
-            
-            time.sleep(poll_interval)
-        
-        return jsonify({
-            "error": "Request timeout",
-            "job_id": job_id,
-            "message": f"Job still processing after {max_wait}s. Use /status/{job_id}"
-        }), 504
-    
-    except Exception as e:
-        return jsonify({"error": f"Analysis error: {str(e)}"}), 500
-
-
-@app.route("/queue/stats", methods=["GET"])
-def queue_stats():
-    """Get queue statistics"""
-    return jsonify(job_queue.get_queue_stats()), 200
-
-
-@app.route("/queue/cleanup", methods=["POST"])
-def queue_cleanup():
-    """Clean up old completed jobs"""
-    max_age = request.json.get("max_age_hours", 24) if request.is_json else 24
-    removed = job_queue.clear_completed_jobs(max_age)
-    return jsonify({"removed_jobs": removed, "max_age_hours": max_age}), 200
-
-
-@app.route("/scoring/config", methods=["GET"])
-def scoring_config():
-    """Get current scoring configuration"""
-    from scoring.config import ScoringConfig
-    
-    config_data = {
-        "version": "2.0",
-        "benefit_factors": {
-            "indication_strength": {
-                key: {
-                    "description": entry.description,
-                    "weight": entry.weight,
-                    "score": entry.score,
-                    "weighted_score": entry.weighted_score
-                }
-                for key, entry in ScoringConfig.INDICATION_STRENGTH.items()
-            },
-            "evidence_strength": {
-                key: {
-                    "description": entry.description,
-                    "weight": entry.weight,
-                    "score": entry.score,
-                    "weighted_score": entry.weighted_score
-                }
-                for key, entry in ScoringConfig.EVIDENCE_STRENGTH.items()
-            }
-        },
-        "risk_factors": {
-            "contraindication": {
-                key: {
-                    "description": entry.description,
-                    "weight": entry.weight,
-                    "score": entry.score,
-                    "weighted_score": entry.weighted_score
-                }
-                for key, entry in ScoringConfig.CONTRAINDICATION.items()
-            }
-        }
-    }
-    
-    return jsonify(config_data), 200
-
-
-@app.route("/health", methods=["GET"])
-def health():
-    """Health check"""
-    return jsonify({
-        "status": "healthy",
-        "service": "Drug Analysis API",
-        "version": "2.0.0",
-        "scoring_system": "Centralized Configuration",
-        "queue_stats": job_queue.get_queue_stats()
-    }), 200
-
-
-@app.route("/", methods=["GET"])
-def index():
-    """API information"""
-    return jsonify({
-        "service": "Drug Analysis API",
-        "version": "2.0.0",
-        "scoring_system": "Centralized Configuration",
-        "endpoints": {
-            "/analyze": "POST - Submit async job",
-            "/analyze/sync": "POST - Submit sync job",
-            "/status/<job_id>": "GET - Get job status",
-            "/queue/stats": "GET - Queue statistics",
-            "/queue/cleanup": "POST - Clean old jobs",
-            "/scoring/config": "GET - View scoring matrices",
-            "/health": "GET - Health check"
-        },
-        "features": [
-            "Centralized scoring configuration",
-            "Parallel analysis execution",
-            "Therapeutic duplication detection",
-            "Alternative medication finder",
-            "Queue-based job processing"
-        ]
-    }), 200
-
-
-if __name__ == "__main__":
-    print("="*80)
-    print("Drug Analysis API Server v2.0")
-    print("Centralized Scoring System")
-    print("="*80)
-    print(f"Server: http://0.0.0.0:8000")
-    print(f"Workers: {job_queue.num_workers}")
-    print("="*80)
-    
-    try:
-        app.run(host="0.0.0.0", port=8000, debug=False, threaded=True)
-    finally:
-        job_queue.stop_workers()
