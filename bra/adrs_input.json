@@ -2,13 +2,13 @@
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Severe dizziness, black stools, and fainting",
-    "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
+    "condition": "Sever dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding, lactic acidosis",
     "smoking_alcohol": "Not specified",
     "date_of_assessment": "2026-01-30"
   },
   "prescription": [
-    "Metformin",
-    "Ibuprofen"
+    "Ibuprofen",
+    "Metformin"
   ]
 }

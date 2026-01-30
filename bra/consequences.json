@@ -1,19 +1,17 @@
 {
-  "date": "2026-01-30 17:39:43",
+  "date": "2026-01-30 18:32:45",
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Severe dizziness, black stools, and fainting",
-    "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
+    "condition": "Sever dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding, lactic acidosis",
     "smoking_alcohol": "Not specified",
     "date_of_assessment": "2026-01-30"
   },
   "diagnoses_analyzed": [
     "Upper Gastrointestinal Bleeding",
-    "Lactic Acidosis",
-    "Severe dizziness",
-    "black stools",
-    "and fainting"
+    "lactic acidosis",
+    "Sever dizziness"
   ],
   "factor_2_6_consequences_of_non_treatment": {
     "Upper Gastrointestinal Bleeding": {
@@ -22,96 +20,127 @@
         {
           "category": "Acute, life-threatening condition",
           "timeframe": "Immediate/short-term",
-          "consequences_if_untreated": "Untreated upper gastrointestinal bleeding can lead to rapid and significant blood loss, resulting in hypovolemic shock. This state of inadequate tissue perfusion can quickly progress to multi-organ failure, including acute kidney injury, myocardial infarction, and cerebral ischemia. Without prompt medical intervention to stop the bleeding and restore hemodynamic stability, the condition is often fatal.",
+          "consequences_if_untreated": "Untreated upper gastrointestinal bleeding (UGIB) can lead to hypovolemic shock due to rapid blood loss. This results in decreased blood pressure, inadequate tissue perfusion, and organ damage. Severe bleeding can also lead to aspiration of blood into the lungs, causing aspiration pneumonia and respiratory failure. Furthermore, significant blood loss can cause acute kidney injury (AKI) due to decreased renal perfusion. In patients with underlying cardiovascular disease, severe anemia from UGIB can precipitate myocardial ischemia or infarction.",
           "severity": "Death or irreversible organ damage",
           "specific_outcomes": [
             "Hypovolemic shock",
-            "Severe anemia",
-            "Acute kidney injury",
-            "Myocardial infarction",
-            "Cerebral ischemia/stroke",
-            "Aspiration pneumonia (due to hematemesis)",
-            "Multi-organ failure",
+            "Organ failure (kidney, heart, brain)",
+            "Aspiration pneumonia",
             "Death"
           ],
           "reliable_sources_used": [
-            "StatPearls/NCBI/NIH",
-            "UpToDate",
-            "Mayo Clinic",
-            "Johns Hopkins Medicine",
-            "Medical textbooks and peer-reviewed journals"
+            "ncbi.nlm.nih.gov",
+            "uptodate.com",
+            "mayoclinic.org"
+          ]
+        },
+        {
+          "category": "Chronic, life-threatening",
+          "timeframe": "Long-term/progressive",
+          "consequences_if_untreated": "Recurrent or persistent upper gastrointestinal bleeding, even if initially mild, can lead to chronic iron deficiency anemia. This can cause fatigue, weakness, shortness of breath, and impaired cognitive function. In severe cases, chronic anemia can exacerbate underlying heart conditions, leading to heart failure. Furthermore, the underlying cause of the bleeding (e.g., peptic ulcer, esophageal varices, malignancy) may progress if left untreated, leading to further complications and increased mortality.",
+          "severity": "Increased mortality risk over time",
+          "specific_outcomes": [
+            "Severe anemia",
+            "Heart failure",
+            "Progression of underlying disease (e.g., cancer)",
+            "Increased risk of future bleeding episodes"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "uptodate.com",
+            "mayoclinic.org"
           ]
         }
       ]
     },
-    "Lactic Acidosis": {
-      "disease": "Lactic Acidosis",
+    "lactic acidosis": {
+      "disease": "lactic acidosis",
       "classifications": [
         {
           "category": "Acute, life-threatening condition",
           "timeframe": "Immediate/short-term",
-          "consequences_if_untreated": "Untreated lactic acidosis rapidly progresses to severe metabolic derangements, leading to profound organ dysfunction and failure. The severe acidemia impairs cellular enzymatic function, reduces myocardial contractility, causes vasodilation leading to hypotension and shock, and can lead to respiratory muscle fatigue. Without prompt identification and treatment of the underlying cause and correction of the acidosis, the condition is almost universally fatal.",
+          "consequences_if_untreated": "If lactic acidosis is not treated promptly, the buildup of lactic acid in the bloodstream can lead to a cascade of severe physiological derangements. The initial symptoms, such as rapid breathing, increased heart rate, and nausea, will progress to more critical conditions. The body's compensatory mechanisms will eventually fail, leading to profound metabolic acidosis, which impairs cellular function. This can result in organ dysfunction, including acute kidney injury, liver failure, and cardiac arrhythmias. Hypotension and shock are common consequences as the cardiovascular system becomes compromised. Ultimately, if left unaddressed, lactic acidosis can lead to coma and death due to multi-organ failure.",
           "severity": "Death or irreversible organ damage",
           "specific_outcomes": [
-            "Severe metabolic acidosis",
-            "Cardiovascular collapse (hypotension, arrhythmias, decreased cardiac output)",
-            "Multi-organ failure (e.g., acute kidney injury, hepatic dysfunction)",
-            "Respiratory failure (due to compensatory mechanism exhaustion or direct acidemia effects)",
-            "Central nervous system depression (e.g., coma)",
+            "Organ failure (kidney, liver, heart)",
+            "Cardiac arrest",
+            "Coma",
             "Shock",
             "Death"
           ],
           "reliable_sources_used": [
-            "StatPearls/NCBI/NIH",
-            "UpToDate",
-            "Mayo Clinic",
-            "Johns Hopkins Medicine",
-            "Medical textbooks and peer-reviewed journals"
+            "ncbi.nlm.nih.gov",
+            "uptodate.com",
+            "mayoclinic.org"
           ]
         }
       ]
     },
-    "Severe dizziness": {
-      "disease": "Severe dizziness",
+    "Sever dizziness": {
+      "disease": "Sever dizziness",
       "classifications": [
         {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Severe dizziness",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
-        }
-      ]
-    },
-    "black stools": {
-      "disease": "black stools",
-      "classifications": [
+          "category": "Acute, non-life-threatening",
+          "timeframe": "Short-term",
+          "consequences_if_untreated": "Severe dizziness, if left untreated, can lead to falls, injuries, and impaired ability to perform daily activities. The underlying cause of the dizziness may worsen, leading to prolonged symptoms and potential complications. For example, if the dizziness is due to an inner ear infection (labyrinthitis), untreated infection can lead to persistent balance problems. If the dizziness is caused by dehydration, lack of treatment can lead to worsening dehydration and associated symptoms. Benign Paroxysmal Positional Vertigo (BPPV), a common cause of dizziness, may resolve spontaneously, but without treatment (such as the Epley maneuver), symptoms can persist for weeks or months, significantly impacting quality of life.",
+          "severity": "Acute worsening/complications but no immediate mortality",
+          "specific_outcomes": [
+            "Falls and injuries",
+            "Prolonged symptoms",
+            "Worsening of underlying cause",
+            "Dehydration (if cause)",
+            "Persistent balance problems (if cause is labyrinthitis)",
+            "Reduced quality of life"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
+        },
         {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for black stools",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
-        }
-      ]
-    },
-    "and fainting": {
-      "disease": "and fainting",
-      "classifications": [
+          "category": "Chronic, non-life-threatening",
+          "timeframe": "Long-term/progressive",
+          "consequences_if_untreated": "If severe dizziness is caused by an underlying chronic condition (e.g., Meniere's disease, vestibular migraine, or certain neurological disorders), lack of treatment can lead to progressive worsening of symptoms, including chronic imbalance, hearing loss (in Meniere's disease), persistent headaches (in vestibular migraine), and increased risk of falls. Chronic dizziness can also lead to anxiety, depression, and social isolation, significantly impacting quality of life. Furthermore, undiagnosed and untreated underlying conditions can lead to further complications.",
+          "severity": "Reduced quality of life but no significant mortality risk",
+          "specific_outcomes": [
+            "Chronic imbalance",
+            "Hearing loss (in Meniere's disease)",
+            "Persistent headaches (in vestibular migraine)",
+            "Increased risk of falls",
+            "Anxiety",
+            "Depression",
+            "Social isolation",
+            "Worsening of underlying condition"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
+        },
         {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for and fainting",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
+          "category": "Acute, life-threatening condition",
+          "timeframe": "Immediate/short-term",
+          "consequences_if_untreated": "In rare cases, severe dizziness can be a symptom of a life-threatening condition such as a stroke, heart attack, or severe internal bleeding. If dizziness is accompanied by other symptoms such as chest pain, difficulty breathing, weakness on one side of the body, slurred speech, or loss of consciousness, it requires immediate medical attention. Failure to treat these underlying conditions can lead to irreversible organ damage or death.",
+          "severity": "Death or irreversible organ damage",
+          "specific_outcomes": [
+            "Stroke",
+            "Heart attack",
+            "Severe internal bleeding",
+            "Irreversible organ damage",
+            "Death"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
         }
       ]
     }
   },
-  "total_diagnoses_analyzed": 5,
+  "total_diagnoses_analyzed": 3,
   "consequence_score": {
     "medical_need_category": "Acute, Life-Threatening Condition",
     "description": "Acute, life-threatening condition",

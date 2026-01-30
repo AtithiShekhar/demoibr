@@ -1,0 +1,568 @@
+{
+  "analysis_timestamp": "2026-01-30T18:13:17.099820",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Off label",
+      "description": "Off label",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "benefit",
+      "cdsco_approved": false,
+      "usfda_approved": false
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "description": "Established indication (>5Y, approved widely)",
+      "weight": 90,
+      "score": 5,
+      "weighted_score": 450,
+      "score_type": "benefit",
+      "years_in_market": 14
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "description": "Low evidence (limited data, uncertain)",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "score_type": "benefit",
+      "rct_count": 22
+    },
+    "contraindication": {
+      "description": "Boxed warning present",
+      "weight": 100,
+      "score": 5,
+      "weighted_score": 500,
+      "score_type": "risk",
+      "status": "boxed_warning"
+    },
+    "therapeutic_duplication": {
+      "status": "not_applicable",
+      "reason": "Single medication for this condition - no duplication check needed"
+    },
+    "life_threatening_adrs": {
+      "lt_adr_category": "Low Risk - No life-threatening ADRs detected",
+      "description": "No life-threatening ADRs",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "risk",
+      "adr_count": 0,
+      "has_risk_factors": false
+    },
+    "serious_adrs": {
+      "serious_adr_category": "Low Risk - No serious ADRs detected",
+      "description": "No serious ADRs / no interactions",
+      "weight": 20,
+      "score": 1,
+      "weighted_score": 20,
+      "score_type": "risk",
+      "adr_count": 0,
+      "has_risk_factors": false
+    },
+    "drug_interactions": {
+      "interaction_category": "No Drug Interactions",
+      "description": "No drug interactions",
+      "weight": 0,
+      "score": 0,
+      "weighted_score": 0,
+      "score_type": "risk",
+      "contraindicated_count": 0,
+      "lt_interaction_count": 0,
+      "serious_interaction_count": 0,
+      "total_critical_interactions": 0
+    },
+    "medical_need_severity": {
+      "medical_need_category": "Acute, Life-Threatening Condition",
+      "description": "Acute, life-threatening condition",
+      "weight": 100,
+      "score": 5,
+      "weighted_score": 500,
+      "score_type": "benefit",
+      "severity_level": "critical",
+      "is_life_threatening": true,
+      "is_acute": true
+    },
+    "risk_mitigation_feasibility": {
+      "mitigation_sub_factor": "Preventable and Reversible ADR",
+      "worst_case_adr": "Manageable",
+      "description": "Preventable and Reversible ADR",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "score_type": "risk"
+    },
+    "summary": {
+      "drug": "Metformin",
+      "diagnosis": "Lactic Acidosis",
+      "total_weighted_score": 1550,
+      "total_benefit_score": 990,
+      "total_risk_score": 560,
+      "brr": 1.768,
+      "brr_interpretation": "Good - Benefits outweigh risks",
+      "score_breakdown": {
+        "pubmed_evidence": {
+          "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+          "description": "Low evidence (limited data, uncertain)",
+          "weight": 30,
+          "score": 1,
+          "weighted_score": 30,
+          "score_type": "benefit",
+          "rct_count": 22
+        },
+        "contraindication_risk": {
+          "description": "Boxed warning present",
+          "weight": 100,
+          "score": 5,
+          "weighted_score": 500,
+          "score_type": "risk",
+          "status": "boxed_warning"
+        }
+      },
+      "therapeutic_duplication_performed": false,
+      "rct_count": 22,
+      "has_contraindication": true,
+      "has_life_threatening_adrs": false,
+      "has_serious_adrs": false,
+      "has_drug_interactions": false,
+      "rmm": [
+        {
+          "medicine": "Ibuprofen",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Heart Failure",
+          "section_5_warnings_and_precautions_extract": "Do not use if you have ever had an allergic reaction to any other pain reliever/fever reducer right before or after heart sur",
+          "proactive_actions_symptoms_to_monitor": "\"Leg swelling, Trouble breathing\"",
+          "immediate_actions_required": "{",
+          "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+        },
+        {
+          "medicine": "Ibuprofen",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Stroke",
+          "section_5_warnings_and_precautions_extract": "stomach ulcers or bleeding problems have 3 or more alcoholic drinks every day while using this product are age 60 or older take other drugs containing prescription or nonprescription NSAIDs [aspirin, ibuprofen, naproxen, or others] Heart attack and stroke warning: NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke",
+          "proactive_actions_symptoms_to_monitor": "\"Slurred speech, Weakness in one part or side of body\"",
+          "immediate_actions_required": "{",
+          "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Anaphylaxis",
+          "section_5_warnings_and_precautions_extract": "Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment",
+          "proactive_actions_symptoms_to_monitor": "\"\"",
+          "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+          "immediate_actions_reasoning": "Anaphylaxis is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Stevens-Johnson Syndrome",
+          "section_5_warnings_and_precautions_extract": "Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment",
+          "proactive_actions_symptoms_to_monitor": "\"Exfoliative skin conditions\"",
+          "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+          "immediate_actions_reasoning": "Stevens-Johnson Syndrome is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Heart Failure",
+          "section_5_warnings_and_precautions_extract": "Monitor patients for signs and symptoms",
+          "proactive_actions_symptoms_to_monitor": "\"\"",
+          "immediate_actions_required": "{",
+          "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Renal Failure",
+          "section_5_warnings_and_precautions_extract": "Monitor patients for signs and symptoms. Before initiating ZITUVIMET and at least annually thereafter, assess renal function",
+          "proactive_actions_symptoms_to_monitor": "\"\"",
+          "immediate_actions_required": "{",
+          "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Necrotizing Pancreatitis",
+          "section_5_warnings_and_precautions_extract": "NA",
+          "proactive_actions_symptoms_to_monitor": "\"\"",
+          "immediate_actions_required": "{",
+          "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+        },
+        {
+          "medicine": "Metformin",
+          "risk_type": "LT/Fatal ADR",
+          "risk_description": "Lactic Acidosis",
+          "section_5_warnings_and_precautions_extract": "NA",
+          "proactive_actions_symptoms_to_monitor": "\"Malaise, Myalgias (muscle pain), Abdominal pain, Increased somnolence (drowsiness), Respiratory distress (",
+          "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy",
+          "immediate_actions_reasoning": "Lactic Acidosis is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+        }
+      ],
+      "consequence": {
+        "date": "2026-01-30 18:12:37",
+        "patient": {
+          "age": 60,
+          "gender": "Male",
+          "condition": "Severe dizziness, black stools, and fainting",
+          "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
+          "smoking_alcohol": "Not specified",
+          "date_of_assessment": "2026-01-30"
+        },
+        "diagnoses_analyzed": [
+          "Upper Gastrointestinal Bleeding",
+          "Lactic Acidosis",
+          "Severe dizziness",
+          "black stools",
+          "and fainting"
+        ],
+        "factor_2_6_consequences_of_non_treatment": {
+          "Upper Gastrointestinal Bleeding": {
+            "disease": "Upper Gastrointestinal Bleeding",
+            "classifications": [
+              {
+                "category": "Acute, life-threatening condition",
+                "timeframe": "Immediate/short-term",
+                "consequences_if_untreated": "Untreated upper gastrointestinal bleeding can lead to rapid and significant blood loss, resulting in hypovolemic shock. This state of inadequate tissue perfusion can quickly progress to multi-organ failure, including acute kidney injury, myocardial infarction, and cerebral ischemia. Without prompt medical intervention to stop the bleeding and restore hemodynamic stability, the condition is often fatal.",
+                "severity": "Death or irreversible organ damage",
+                "specific_outcomes": [
+                  "Hypovolemic shock",
+                  "Severe anemia",
+                  "Acute kidney injury",
+                  "Myocardial infarction",
+                  "Cerebral ischemia/stroke",
+                  "Aspiration pneumonia (due to hematemesis)",
+                  "Multi-organ failure",
+                  "Death"
+                ],
+                "reliable_sources_used": [
+                  "StatPearls/NCBI/NIH",
+                  "UpToDate",
+                  "Mayo Clinic",
+                  "Johns Hopkins Medicine",
+                  "Medical textbooks and peer-reviewed journals"
+                ]
+              }
+            ]
+          },
+          "Lactic Acidosis": {
+            "disease": "Lactic Acidosis",
+            "classifications": [
+              {
+                "category": "Acute, life-threatening condition",
+                "timeframe": "Immediate/short-term",
+                "consequences_if_untreated": "Untreated lactic acidosis rapidly leads to severe metabolic derangements, impairing cellular function and organ perfusion. The profound acidosis directly depresses myocardial contractility, reduces systemic vascular resistance, and can cause refractory hypotension. It also interferes with enzyme function, oxygen delivery, and cellular metabolism across multiple organ systems. Without prompt identification and treatment of the underlying cause and correction of the acidosis, the condition progresses to multi-organ system failure.",
+                "severity": "Death or irreversible organ damage",
+                "specific_outcomes": [
+                  "Cardiovascular collapse (refractory hypotension, arrhythmias, decreased cardiac output)",
+                  "Respiratory failure (due to respiratory muscle fatigue and inability to compensate for acidosis)",
+                  "Acute kidney injury (AKI)",
+                  "Hepatic dysfunction",
+                  "Central nervous system depression (confusion, stupor, coma)",
+                  "Multi-organ system failure (MOSF)",
+                  "Death"
+                ],
+                "reliable_sources_used": [
+                  "StatPearls/NCBI/NIH",
+                  "UpToDate",
+                  "Johns Hopkins Medicine",
+                  "Mayo Clinic"
+                ]
+              }
+            ]
+          },
+          "Severe dizziness": {
+            "disease": "Severe dizziness",
+            "classifications": [
+              {
+                "category": "Unable to determine",
+                "timeframe": "Unknown",
+                "consequences_if_untreated": "Unable to analyze consequences for Severe dizziness",
+                "severity": "Unknown",
+                "specific_outcomes": [],
+                "reliable_sources_used": []
+              }
+            ]
+          },
+          "black stools": {
+            "disease": "black stools",
+            "classifications": [
+              {
+                "category": "Unable to determine",
+                "timeframe": "Unknown",
+                "consequences_if_untreated": "Unable to analyze consequences for black stools",
+                "severity": "Unknown",
+                "specific_outcomes": [],
+                "reliable_sources_used": []
+              }
+            ]
+          },
+          "and fainting": {
+            "disease": "and fainting",
+            "classifications": [
+              {
+                "category": "Unable to determine",
+                "timeframe": "Unknown",
+                "consequences_if_untreated": "Unable to analyze consequences for and fainting",
+                "severity": "Unknown",
+                "specific_outcomes": [],
+                "reliable_sources_used": []
+              }
+            ]
+          }
+        },
+        "total_diagnoses_analyzed": 5,
+        "consequence_score": {
+          "medical_need_category": "Acute, Life-Threatening Condition",
+          "description": "Acute, life-threatening condition",
+          "weight": 100,
+          "score": 5,
+          "weighted_score": 500,
+          "score_type": "benefit",
+          "severity_level": "critical",
+          "is_life_threatening": true,
+          "is_acute": true
+        }
+      },
+      "rmf": {
+        "date": "2026-01-30 18:13:17",
+        "patient": {
+          "age": 60,
+          "gender": "Male",
+          "condition": "Severe dizziness, black stools, and fainting",
+          "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
+          "smoking_alcohol": "Not specified",
+          "date_of_assessment": "2026-01-30"
+        },
+        "medications": [
+          "Ibuprofen",
+          "Metformin"
+        ],
+        "total_adrs_analyzed": 8,
+        "factor_3_4_risk_mitigation_feasibility": {
+          "risk_reversibility_risk_tolerability": {
+            "Ibuprofen - Heart Failure": {
+              "medicine": "Ibuprofen",
+              "adr_name": "Heart Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Reversible ADR",
+              "reasoning": "While heart failure is a serious condition, ibuprofen-induced heart failure is often due to fluid retention and increased blood pressure. This is generally reversible upon discontinuation of the drug and with appropriate management (e.g., diuretics). It doesn't typically cause permanent structural damage to the heart unless there's a pre-existing underlying heart condition.",
+              "fda_evidence": "Based on medical knowledge",
+              "keywords_found": [
+                "heart failure",
+                "ibuprofen",
+                "reversible"
+              ]
+            },
+            "Ibuprofen - Stroke": {
+              "medicine": "Ibuprofen",
+              "adr_name": "Stroke",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Irreversible ADR",
+              "reasoning": "Stroke can cause permanent brain damage and neurological deficits, which are often irreversible.",
+              "fda_evidence": "Based on medical knowledge",
+              "keywords_found": [
+                "Stroke",
+                "permanent damage"
+              ]
+            },
+            "Metformin - Anaphylaxis": {
+              "medicine": "Metformin",
+              "adr_name": "Anaphylaxis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Reversible ADR",
+              "reasoning": "Anaphylaxis, while severe, is a hypersensitivity reaction that can be managed with immediate discontinuation of the drug and appropriate treatment (e.g., epinephrine, antihistamines, corticosteroids). The reaction itself is not a permanent condition and resolves with treatment and avoidance of the drug.",
+              "fda_evidence": "There have been postmarketing reports of serious allergic and hypersensitivity reactions in patients treated with sitagliptin such as anaphylaxis, angioedema, and exfoliative skin conditions including Stevens-Johnson syndrome. Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment.",
+              "keywords_found": [
+                "anaphylaxis",
+                "hypersensitivity reactions",
+                "promptly stop",
+                "institute appropriate monitoring and treatment"
+              ]
+            },
+            "Metformin - Stevens-Johnson Syndrome": {
+              "medicine": "Metformin",
+              "adr_name": "Stevens-Johnson Syndrome",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Irreversible ADR",
+              "reasoning": "Stevens-Johnson Syndrome is a known irreversible condition with permanent consequences",
+              "fda_evidence": "Documented as irreversible in medical literature",
+              "keywords_found": [
+                "stevens-johnson syndrome"
+              ]
+            },
+            "Metformin - Heart Failure": {
+              "medicine": "Metformin",
+              "adr_name": "Heart Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Reversible ADR",
+              "reasoning": "Heart failure caused by metformin, while serious, is often reversible upon discontinuation of the drug and appropriate management of the condition. The provided USPI context only mentions observing heart failure and monitoring for it, not irreversible damage.",
+              "fda_evidence": "Has been observed with two other members of the DPP-4 inhibitor class. Consider risks and benefits of ZITUVIMET in patients who have known risk factors for heart failure. Monitor patients for signs and symptoms.",
+              "keywords_found": [
+                "Heart Failure",
+                "Monitor patients",
+                "risk factors"
+              ]
+            },
+            "Metformin - Renal Failure": {
+              "medicine": "Metformin",
+              "adr_name": "Renal Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Reversible ADR",
+              "reasoning": "The FDA USPI mentions acute renal failure reported postmarketing, sometimes requiring dialysis, suggesting reversibility upon discontinuation and potential recovery of renal function, even if temporary dialysis is needed.",
+              "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis.",
+              "keywords_found": [
+                "Renal Failure",
+                "dialysis",
+                "acute"
+              ]
+            },
+            "Metformin - Necrotizing Pancreatitis": {
+              "medicine": "Metformin",
+              "adr_name": "Necrotizing Pancreatitis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Irreversible ADR",
+              "reasoning": "Necrotizing pancreatitis can result in permanent damage to the pancreas, even if the initial inflammation subsides after drug discontinuation.",
+              "fda_evidence": "There have been postmarketing reports of acute pancreatitis, including fatal and non-fatal hemorrhagic or necrotizing pancreatitis. If pancreatitis is suspected, promptly discontinue ZITUVIMET.",
+              "keywords_found": [
+                "necrotizing pancreatitis",
+                "fatal"
+              ]
+            },
+            "Metformin - Lactic Acidosis": {
+              "medicine": "Metformin",
+              "adr_name": "Lactic Acidosis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Reversible ADR",
+              "reasoning": "The FDA USPI states that if metformin-associated lactic acidosis is suspected, general supportive measures should be instituted promptly in a hospital setting, along with immediate discontinuation of ZITUVIMET, suggesting that the condition can be managed and potentially reversed upon stopping the medication and providing supportive care. Although fatal cases are mentioned, the management strategy implies reversibility in many cases.",
+              "fda_evidence": "If metformin-associated lactic acidosis is suspected, general supportive measures should be instituted promptly in a hospital setting, along with immediate discontinuation of ZITUVIMET.",
+              "keywords_found": [
+                "lactic acidosis",
+                "discontinuation",
+                "supportive measures"
+              ]
+            }
+          },
+          "risk_preventability": {
+            "Ibuprofen - Heart Failure": {
+              "medicine": "Ibuprofen",
+              "adr_name": "Heart Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "Ibuprofen-induced heart failure is often related to fluid retention and increased blood pressure. These effects can be exacerbated by excessive dosing, prolonged use, or underlying cardiovascular conditions. Monitoring for these factors and adjusting the dose or discontinuing the medication can potentially prevent heart failure. Also, the FDA advises using the smallest effective dose.",
+              "fda_evidence": "None None Directions do not take more than directed the smallest effective dose should be used",
+              "prevention_measures": [
+                "Monitor blood pressure",
+                "Monitor for fluid retention (e.g., weight gain, edema)",
+                "Use the lowest effective dose for the shortest duration",
+                "Assess cardiovascular risk factors before initiating treatment",
+                "Consider alternative pain relievers in patients with heart failure or risk factors"
+              ]
+            },
+            "Ibuprofen - Stroke": {
+              "medicine": "Ibuprofen",
+              "adr_name": "Stroke",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "Stroke is a known risk associated with NSAIDs like ibuprofen, particularly with high doses or in individuals with pre-existing cardiovascular risk factors. Careful patient selection, using the lowest effective dose for the shortest duration, and monitoring for cardiovascular symptoms can potentially reduce the risk.",
+              "fda_evidence": "None None Directions do not take more than directed the smallest effective dose should be used adults and children 12 years and over: take 1 tablet every 4 to 6 hours while symptoms persist if pain or fever does not respond to 1 tablet, 2 tablets may be used do not exceed 6 tablets in 24 hours, unless directed by a doctor children under 12 years: ask a doctor",
+              "prevention_measures": [
+                "Careful patient selection, considering cardiovascular risk factors",
+                "Use the lowest effective dose for the shortest duration",
+                "Monitor for cardiovascular symptoms and educate patients about potential risks"
+              ]
+            },
+            "Metformin - Anaphylaxis": {
+              "medicine": "Metformin",
+              "adr_name": "Anaphylaxis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Non-preventable ADR",
+              "reasoning": "Anaphylaxis is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
+              "fda_evidence": "Documented as unpredictable reaction",
+              "prevention_measures": []
+            },
+            "Metformin - Stevens-Johnson Syndrome": {
+              "medicine": "Metformin",
+              "adr_name": "Stevens-Johnson Syndrome",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Non-preventable ADR",
+              "reasoning": "Stevens-Johnson Syndrome is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
+              "fda_evidence": "Documented as unpredictable reaction",
+              "prevention_measures": []
+            },
+            "Metformin - Heart Failure": {
+              "medicine": "Metformin",
+              "adr_name": "Heart Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "The FDA USPI mentions heart failure has been observed with other DPP-4 inhibitors (sitagliptin component of ZITUVIMET). It advises to consider risks and benefits in patients with known risk factors for heart failure and to monitor patients for signs and symptoms. This indicates that careful patient selection, monitoring, and risk assessment can potentially prevent or mitigate the severity of heart failure associated with the medication.",
+              "fda_evidence": "Heart Failure : Has been observed with two other members of the DPP-4 inhibitor class. Consider risks and benefits of ZITUVIMET in patients who have known risk factors for heart failure. Monitor patients for signs and symptoms.",
+              "prevention_measures": [
+                "Assess patient's risk factors for heart failure before initiating ZITUVIMET",
+                "Monitor patients for signs and symptoms of heart failure during treatment",
+                "Consider alternative medications in patients with high risk of heart failure"
+              ]
+            },
+            "Metformin - Renal Failure": {
+              "medicine": "Metformin",
+              "adr_name": "Renal Failure",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "The FDA USPI specifically mentions acute renal failure as a postmarketing report, sometimes requiring dialysis. It further recommends assessing renal function before initiating ZITUVIMET and at least annually thereafter. This indicates that monitoring renal function can potentially prevent or mitigate the severity of renal failure associated with metformin.",
+              "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis. Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
+              "prevention_measures": [
+                "Assess renal function before initiation",
+                "Annual renal function monitoring"
+              ]
+            },
+            "Metformin - Necrotizing Pancreatitis": {
+              "medicine": "Metformin",
+              "adr_name": "Necrotizing Pancreatitis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "The FDA USPI lists pancreatitis as a postmarketing report, explicitly advising discontinuation of the drug if suspected. While the onset may not always be predictable, awareness of potential symptoms and prompt discontinuation upon suspicion can be considered a preventative measure. While some cases may still occur despite these measures, the risk can be mitigated through proactive action.",
+              "fda_evidence": "Pancreatitis: There have been postmarketing reports of acute pancreatitis, including fatal and non-fatal hemorrhagic or necrotizing pancreatitis. If pancreatitis is suspected, promptly discontinue ZITUVIMET.",
+              "prevention_measures": [
+                "Awareness of potential pancreatitis symptoms",
+                "Prompt discontinuation of metformin upon suspicion of pancreatitis",
+                "Consider alternative medications in patients with a history of pancreatitis"
+              ]
+            },
+            "Metformin - Lactic Acidosis": {
+              "medicine": "Metformin",
+              "adr_name": "Lactic Acidosis",
+              "adr_type": "LT/Fatal ADR",
+              "classification": "Preventable ADR",
+              "reasoning": "Lactic acidosis due to metformin is preventable through monitoring renal function, avoiding use in high-risk patients (e.g., renal impairment, heart failure), and recognizing early symptoms. The FDA warning highlights risk factors and the importance of monitoring.",
+              "fda_evidence": "Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
+              "prevention_measures": [
+                "Assess renal function before and during treatment",
+                "Avoid use in patients with renal impairment",
+                "Monitor for signs and symptoms of lactic acidosis (malaise, myalgias, abdominal pain, respiratory distress)",
+                "Discontinue metformin if lactic acidosis is suspected"
+              ]
+            }
+          }
+        },
+        "mitigation_score": {
+          "mitigation_sub_factor": "Preventable and Reversible ADR",
+          "worst_case_adr": "Manageable",
+          "description": "Preventable and Reversible ADR",
+          "weight": 30,
+          "score": 1,
+          "weighted_score": 30,
+          "score_type": "risk"
+        }
+      }
+    }
+  },
+  "benefit_risk_ratio": {
+    "total_benefit_score": 990,
+    "total_risk_score": 560,
+    "brr": 1.768,
+    "interpretation": "Good - Benefits outweigh risks",
+    "benefit_components": 4,
+    "risk_components": 5
+  }
+}

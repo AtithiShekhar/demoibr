@@ -622,7 +622,7 @@ def start(input_file: Optional[str] = None,scoring_system=None) -> Dict[str, Any
 
         # 6. Cleanup: Delete the input file before returning
         try:
-            os.remove(target_file)
+            # os.remove(target_file)
             print(f"🗑️ Original file {target_file} deleted successfully.")
         except Exception as e:
             print(f"⚠️ Warning: Could not delete {target_file}: {str(e)}")

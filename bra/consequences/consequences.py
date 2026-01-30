@@ -152,9 +152,11 @@ Your JSON response:"""
         try:
             # Generate content using new API
             response = self.gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
+            
             contents=prompt,
-            config=self.config
+            config=self.config,
+
         )
             response_text = response.text.strip()
             
@@ -325,25 +327,35 @@ Your JSON response:"""
         print("\n" + "=" * 80 + "\n")
 
 from scoring.benefit_factor import get_consequences_data
-
 def start(scoring_system=None):
+    # Use absolute paths or consistent relative paths to avoid directory shifts
     input_file = '../adrs_input.json'
     analyzer = Factor_2_6_Consequences_Analyzer()
     
     if not os.path.exists(input_file):
+        print(f"❌ Error: {input_file} not found.")
         return None
             
-    with open(input_file, 'r') as f:
-        patient_data = json.load(f)
+    try:
+        with open(input_file, 'r', encoding='utf-8') as f:
+            patient_data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"❌ Error: adrs_input.json is malformed: {e}")
+        return None
 
+    # Run the Gemini Analysis
     results = analyzer.analyze_patient(patient_data)
     
-    # Calculate Score
-    cons_score = get_consequences_data(results, scoring_system)
-    results['consequence_score'] = cons_score
+    # Calculate Score through the centralized config
+    # This adds the 'medical_need_severity' to the scoring object
+    if scoring_system:
+        from scoring.benefit_factor import get_consequences_data
+        cons_score = get_consequences_data(results, scoring_system)
+        results['consequence_score'] = cons_score
 
+    # Save output for the next module in the pipeline
     output_file = "../consequences.json"
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2)
     
     return results

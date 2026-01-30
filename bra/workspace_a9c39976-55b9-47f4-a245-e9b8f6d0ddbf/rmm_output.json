@@ -1,0 +1,90 @@
+{
+  "date": "2026-01-30 18:20:58",
+  "patient": {
+    "age": 60,
+    "gender": "Male",
+    "condition": "Severe dizziness, black stools, and fainting",
+    "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
+    "smoking_alcohol": "Not specified",
+    "date_of_assessment": "2026-01-30"
+  },
+  "medications": [
+    "Metformin",
+    "Ibuprofen"
+  ],
+  "rmm_table": [
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Anaphylaxis",
+      "section_5_warnings_and_precautions_extract": "Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment",
+      "proactive_actions_symptoms_to_monitor": "\"\"",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+      "immediate_actions_reasoning": "Anaphylaxis is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+    },
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Stevens-Johnson Syndrome",
+      "section_5_warnings_and_precautions_extract": "Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment",
+      "proactive_actions_symptoms_to_monitor": "\"\"",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+      "immediate_actions_reasoning": "Stevens-Johnson Syndrome is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+    },
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Heart Failure",
+      "section_5_warnings_and_precautions_extract": "Monitor patients for signs and symptoms",
+      "proactive_actions_symptoms_to_monitor": "\"\"",
+      "immediate_actions_required": "{",
+      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+    },
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Renal Failure",
+      "section_5_warnings_and_precautions_extract": "Monitor patients for signs and symptoms. Before initiating ZITUVIMET and at least annually thereafter, assess renal function",
+      "proactive_actions_symptoms_to_monitor": "\"\"",
+      "immediate_actions_required": "{",
+      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+    },
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Necrotizing Pancreatitis",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "\"\"",
+      "immediate_actions_required": "{",
+      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+    },
+    {
+      "medicine": "Metformin",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Lactic Acidosis",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "\"malaise, myalgias (muscle pain), abdominal pain, increased somnolence (drowsiness), respiratory distress (difficulty breathing",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy",
+      "immediate_actions_reasoning": "Lactic Acidosis is a life-threatening emergency requiring immediate intervention as per FDA guidelines."
+    },
+    {
+      "medicine": "Ibuprofen",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Heart Failure",
+      "section_5_warnings_and_precautions_extract": "Do not use if you have ever had an allergic reaction to any other pain reliever/fever reducer right before or after heart sur",
+      "proactive_actions_symptoms_to_monitor": "\"Leg swelling, Trouble breathing\"",
+      "immediate_actions_required": "{",
+      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+    },
+    {
+      "medicine": "Ibuprofen",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Stroke",
+      "section_5_warnings_and_precautions_extract": "stomach ulcers or bleeding problems have 3 or more alcoholic drinks every day while using this product are age 60 or older take other drugs containing prescription or nonprescription NSAIDs [aspirin, ibuprofen, naproxen, or others] Heart attack and stroke warning: NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke",
+      "proactive_actions_symptoms_to_monitor": "\"Slurred speech, Weakness in one part or side of body, Trouble breathing\"",
+      "immediate_actions_required": "{",
+      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\","
+    }
+  ],
+  "total_rmm_entries": 8
+}
