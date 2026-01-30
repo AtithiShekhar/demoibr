@@ -99,6 +99,7 @@ def collect_results_detailed(results_dir: str, workspace_dir: str) -> Dict:
                     "alternatives_count": len(alt_results),
                     "alternative_analyses": alt_results,
                     "output_file": file_path  # Pass file path for detailed extraction
+                    ,"rmf":summary.get("rmf")
                 }
                 
                 raw_results.append(primary_result)

@@ -3,40 +3,29 @@ from adrs.analyzer import Factor_3_2_3_3_Analyzer_Fixed
 
 import json
 import os
+from scoring.benefit_factor import get_lt_adr_data, get_serious_adr_data, get_drug_interaction_data
 
-def start(drug, patient_data, scoring_system=None):
-    """
-    Analyzes ADRs for a patient and saves the result to a specific JSON file.
-    """
-    # Initialize the analyzer
+def start(drug, scoring_system=None):
     analyzer = Factor_3_2_3_3_Analyzer_Fixed()
     
-    # Run the core analysis workflow
-    results = analyzer.analyze(patient_data)
-    
-    # Define the output path in the parent directory
-    output_path = os.path.join("..", "adrs_output.json")
-    
-    # Save the results to the specified file
-    try:
+    with open("../adrs_input.json", 'r') as f:
+        patient_data = json.load(f)
+        results = analyzer.analyze(patient_data)
+        
+        # Calculate Scores
+        lt_score = get_lt_adr_data(results, scoring_system)
+        serious_score = get_serious_adr_data(results, scoring_system)
+        interaction_score = get_drug_interaction_data(results, scoring_system)
+        
+        # Attach scores to the results object for the worker to see
+        results['scoring'] = {
+            'lt_adr_score': lt_score,
+            'serious_adr_score': serious_score,
+            'interaction_score': interaction_score
+        }
+
+        output_path = os.path.join("..", "adrs_output.json")
         with open(output_path, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"✓ Analysis results saved to: {output_path}")
-    except Exception as e:
-        print(f"❌ Failed to save results: {str(e)}")
-        
-    return results
-
-if __name__ == "__main__":
-    # Load the patient input from the parent directory
-    input_path = os.path.join("..", "adrs_input.json")
-    
-    try:
-        with open(input_path) as f:
-            patient_data = json.load(f)
-        
-        # Execute the start function
-        final_results = start(None, patient_data)
-        
-    except FileNotFoundError:
-        print(f"❌ Error: {input_path} not found.")
+            
+        return results

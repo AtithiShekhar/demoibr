@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "analysis_timestamp": "2026-01-30T15:57:11.275349",
+    "execution_time_seconds": 52.57,
+    "system_version": "2.0",
+    "scoring_system": "Centralized Configuration"
+  },
+  "patient_info": {
+    "name": "Mohit Sharma",
+    "mrn": "MRN-2026-01123",
+    "age": 60,
+    "gender": "Male"
+  },
+  "analysis_summary": {
+    "total_tasks": 3,
+    "successful": 3,
+    "failed": 0,
+    "duplication_checks_performed": 0,
+    "alternatives_searches_performed": 0
+  },
+  "risk_analysis": {
+    "highest_risk_medication": "Amlodipine_Hypertension",
+    "highest_risk_score": 1190,
+    "lowest_risk_medication": "Paracetamol_Osteoarthritis",
+    "lowest_risk_score": 510,
+    "average_risk_score": 963.33
+  },
+  "detailed_results": [
+    {
+      "drug": "Paracetamol",
+      "diagnosis": "Osteoarthritis",
+      "success": true,
+      "total_score": 510,
+      "rct_count": 101,
+      "duplication_checked": false,
+      "alternatives_found": false,
+      "output_file": "results/Paracetamol_Osteoarthritis_result.json",
+      "error": null
+    },
+    {
+      "drug": "Amlodipine",
+      "diagnosis": "Hypertension",
+      "success": true,
+      "total_score": 1190,
+      "rct_count": 956,
+      "duplication_checked": false,
+      "alternatives_found": false,
+      "output_file": "results/Amlodipine_Hypertension_result.json",
+      "error": null
+    },
+    {
+      "drug": "Metformin",
+      "diagnosis": "Type 2 Diabetes Mellitus",
+      "success": true,
+      "total_score": 1190,
+      "rct_count": 734,
+      "duplication_checked": false,
+      "alternatives_found": false,
+      "output_file": "results/Metformin_Type_2_Diabetes_Mellitus_result.json",
+      "error": null
+    }
+  ],
+  "failed_analyses": []
+}

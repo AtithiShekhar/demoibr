@@ -324,48 +324,26 @@ Your JSON response:"""
         
         print("\n" + "=" * 80 + "\n")
 
+from scoring.benefit_factor import get_consequences_data
 
-def start():
-    """
-    Entry point function. 
-    Reads input from 'adrs_input.json', analyzes clinical consequences,
-    and returns the results.
-    """
+def start(scoring_system=None):
     input_file = '../adrs_input.json'
+    analyzer = Factor_2_6_Consequences_Analyzer()
     
-    # Initialize analyzer
-    try:
-        analyzer = Factor_2_6_Consequences_Analyzer()
-    except ValueError as e:
-        print(f"\n❌ {str(e)}")
-        print("Please add GEMINI_API_KEY to your .env file")
+    if not os.path.exists(input_file):
         return None
-    
-    # Load data from adrs_input.json
-    try:
-        if not os.path.exists(input_file):
-            print(f"\n❌ Error: {input_file} not found!")
-            return None
             
-        with open(input_file, 'r') as f:
-            patient_data = json.load(f)
-    except Exception as e:
-        print(f"\n❌ Error loading {input_file}: {str(e)}")
-        return None
+    with open(input_file, 'r') as f:
+        patient_data = json.load(f)
 
-    # Run analysis
     results = analyzer.analyze_patient(patient_data)
     
-    # Print report
-    analyzer.print_report(results)
-    
-    # Save results to a specialized output file
+    # Calculate Score
+    cons_score = get_consequences_data(results, scoring_system)
+    results['consequence_score'] = cons_score
+
     output_file = "../consequences.json"
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
     
-    # print(f"✓ Consequences results saved to: {output_file}\n")
     return results
-
-if __name__ == "__main__":
-    start()

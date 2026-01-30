@@ -2,13 +2,13 @@
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Joint pain",
-    "diagnosis": "Osteoarthritis, Hypertension, Type 2 Diabetes Mellitus",
+    "condition": "Severe dizziness, black stools, and fainting",
+    "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
     "smoking_alcohol": "Not specified",
     "date_of_assessment": "2026-01-30"
   },
   "prescription": [
     "Metformin",
-    "Amlodipine"
+    "Ibuprofen"
   ]
 }

@@ -92,18 +92,16 @@ def analyze_single_drug(
 
         # 6. ADRs Analysis
         print(f"[{prefix} {thread_id}] → ADRs analysis...")
-        adrs_res = adrs_start(drug, contra_patient_data, scoring)
+        adrs_res = adrs_start(drug, scoring)
         has_lt_adrs = adrs_res.get("has_life_threatening_adrs", False)
         has_serious_adrs = adrs_res.get("has_serious_adrs", False)
         has_drug_interactions = adrs_res.get("has_drug_interactions", False)
 
-        # 7. Calculate BRR
-        brr_data = scoring.calculate_brr()
-
-        # 8. RRM and Consequences (if available)
+# 7. RRM and Consequences
         try:
             from rrm.rrm import start as rrm_start
             print(f"[{prefix} {thread_id}] → RRM analysis...")
+            # RRM table generation (used for clinical reporting)
             rrm_table = rrm_start()
         except Exception as e:
             print(f"[{prefix} {thread_id}] ⚠️  RRM not available: {e}")
@@ -112,10 +110,25 @@ def analyze_single_drug(
         try:
             from consequences.consequences import start as cons_start
             print(f"[{prefix} {thread_id}] → Consequences analysis...")
-            conn_data = cons_start()
+            # NEW: Passing 'scoring' triggers internal get_consequences_data()
+            conn_data = cons_start(scoring_system=scoring)
         except Exception as e:
             print(f"[{prefix} {thread_id}] ⚠️  Consequences not available: {e}")
             conn_data = {}
+
+        # 8. Risk Mitigation Feasibility (Factor 3.4)
+        try:
+            from risk_mitigation_feasability.rmf import start as rmf_start
+            print(f"[{prefix} {thread_id}] → Mitigation feasibility analysis...")
+            # NEW: Passing 'scoring' triggers internal get_mitigation_feasibility_data()
+            rmf_data = rmf_start(scoring_system=scoring)
+        except Exception as e:
+            print(f"[{prefix} {thread_id}] ⚠️  Mitigation analysis not available: {e}")
+            rmf_data = {}
+        brr_data = scoring.calculate_brr()
+
+        # 8. RRM and Consequences (if available)
+        
 
         # 9. Score aggregation
         total_weighted_score = sum(scoring.benefit_scores) + sum(scoring.risk_scores)
@@ -152,7 +165,8 @@ def analyze_single_drug(
             "has_serious_adrs": has_serious_adrs,
             "has_drug_interactions": has_drug_interactions,
             "rmm": rrm_table,
-            "consequence": conn_data
+            "consequence": conn_data,
+            "rmf":rmf_data
         })
 
         output_file = scoring.save_to_json()

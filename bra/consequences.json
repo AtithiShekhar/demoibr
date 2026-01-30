@@ -1,105 +1,109 @@
 {
-  "date": "2026-01-30 03:46:30",
+  "date": "2026-01-30 17:39:43",
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Joint pain",
-    "diagnosis": "Osteoarthritis, Hypertension, Type 2 Diabetes Mellitus",
+    "condition": "Severe dizziness, black stools, and fainting",
+    "diagnosis": "Upper Gastrointestinal Bleeding, Lactic Acidosis",
     "smoking_alcohol": "Not specified",
     "date_of_assessment": "2026-01-30"
   },
   "diagnoses_analyzed": [
-    "Osteoarthritis",
-    "Hypertension",
-    "Type 2 Diabetes Mellitus",
-    "Joint pain"
+    "Upper Gastrointestinal Bleeding",
+    "Lactic Acidosis",
+    "Severe dizziness",
+    "black stools",
+    "and fainting"
   ],
   "factor_2_6_consequences_of_non_treatment": {
-    "Osteoarthritis": {
-      "disease": "Osteoarthritis",
-      "classifications": [
-        {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Osteoarthritis",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
-        }
-      ]
-    },
-    "Hypertension": {
-      "disease": "Hypertension",
+    "Upper Gastrointestinal Bleeding": {
+      "disease": "Upper Gastrointestinal Bleeding",
       "classifications": [
         {
           "category": "Acute, life-threatening condition",
           "timeframe": "Immediate/short-term",
-          "consequences_if_untreated": "Severely elevated blood pressure (hypertensive crisis, specifically a hypertensive emergency) can lead to acute, life-threatening organ damage within hours or days. This includes conditions such as hypertensive encephalopathy, acute stroke (ischemic or hemorrhagic), acute myocardial infarction, acute heart failure with pulmonary edema, aortic dissection, and acute kidney injury. These conditions require immediate medical intervention to prevent death or permanent disability.",
+          "consequences_if_untreated": "Untreated upper gastrointestinal bleeding can lead to rapid and significant blood loss, resulting in hypovolemic shock. This state of inadequate tissue perfusion can quickly progress to multi-organ failure, including acute kidney injury, myocardial infarction, and cerebral ischemia. Without prompt medical intervention to stop the bleeding and restore hemodynamic stability, the condition is often fatal.",
           "severity": "Death or irreversible organ damage",
           "specific_outcomes": [
-            "Hypertensive encephalopathy",
-            "Acute ischemic stroke",
-            "Acute hemorrhagic stroke",
-            "Acute myocardial infarction",
-            "Acute heart failure with pulmonary edema",
-            "Aortic dissection",
+            "Hypovolemic shock",
+            "Severe anemia",
             "Acute kidney injury",
-            "Eclampsia (in pregnant individuals)"
+            "Myocardial infarction",
+            "Cerebral ischemia/stroke",
+            "Aspiration pneumonia (due to hematemesis)",
+            "Multi-organ failure",
+            "Death"
           ],
           "reliable_sources_used": [
             "StatPearls/NCBI/NIH",
-            "Mayo Clinic",
             "UpToDate",
-            "Johns Hopkins Medicine"
-          ]
-        },
-        {
-          "category": "Chronic, life-threatening",
-          "timeframe": "Long-term/progressive",
-          "consequences_if_untreated": "Sustained, untreated hypertension causes progressive damage to blood vessels and organs throughout the body over months to years. This leads to a significantly increased risk of major cardiovascular events, chronic kidney disease, and other systemic complications. The cumulative damage from high blood pressure is a leading cause of premature death and disability worldwide.",
-          "severity": "Increased mortality risk over time",
-          "specific_outcomes": [
-            "Coronary artery disease",
-            "Myocardial infarction (heart attack)",
-            "Heart failure",
-            "Stroke (ischemic and hemorrhagic)",
-            "Chronic kidney disease leading to end-stage renal disease",
-            "Peripheral artery disease",
-            "Aortic aneurysm",
-            "Retinopathy and vision loss",
-            "Vascular dementia and cognitive decline"
-          ],
-          "reliable_sources_used": [
-            "CDC",
-            "WHO",
-            "StatPearls/NCBI/NIH",
             "Mayo Clinic",
             "Johns Hopkins Medicine",
-            "UpToDate"
+            "Medical textbooks and peer-reviewed journals"
           ]
         }
       ]
     },
-    "Type 2 Diabetes Mellitus": {
-      "disease": "Type 2 Diabetes Mellitus",
+    "Lactic Acidosis": {
+      "disease": "Lactic Acidosis",
+      "classifications": [
+        {
+          "category": "Acute, life-threatening condition",
+          "timeframe": "Immediate/short-term",
+          "consequences_if_untreated": "Untreated lactic acidosis rapidly progresses to severe metabolic derangements, leading to profound organ dysfunction and failure. The severe acidemia impairs cellular enzymatic function, reduces myocardial contractility, causes vasodilation leading to hypotension and shock, and can lead to respiratory muscle fatigue. Without prompt identification and treatment of the underlying cause and correction of the acidosis, the condition is almost universally fatal.",
+          "severity": "Death or irreversible organ damage",
+          "specific_outcomes": [
+            "Severe metabolic acidosis",
+            "Cardiovascular collapse (hypotension, arrhythmias, decreased cardiac output)",
+            "Multi-organ failure (e.g., acute kidney injury, hepatic dysfunction)",
+            "Respiratory failure (due to compensatory mechanism exhaustion or direct acidemia effects)",
+            "Central nervous system depression (e.g., coma)",
+            "Shock",
+            "Death"
+          ],
+          "reliable_sources_used": [
+            "StatPearls/NCBI/NIH",
+            "UpToDate",
+            "Mayo Clinic",
+            "Johns Hopkins Medicine",
+            "Medical textbooks and peer-reviewed journals"
+          ]
+        }
+      ]
+    },
+    "Severe dizziness": {
+      "disease": "Severe dizziness",
       "classifications": [
         {
           "category": "Unable to determine",
           "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Type 2 Diabetes Mellitus",
+          "consequences_if_untreated": "Unable to analyze consequences for Severe dizziness",
           "severity": "Unknown",
           "specific_outcomes": [],
           "reliable_sources_used": []
         }
       ]
     },
-    "Joint pain": {
-      "disease": "Joint pain",
+    "black stools": {
+      "disease": "black stools",
       "classifications": [
         {
           "category": "Unable to determine",
           "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Joint pain",
+          "consequences_if_untreated": "Unable to analyze consequences for black stools",
+          "severity": "Unknown",
+          "specific_outcomes": [],
+          "reliable_sources_used": []
+        }
+      ]
+    },
+    "and fainting": {
+      "disease": "and fainting",
+      "classifications": [
+        {
+          "category": "Unable to determine",
+          "timeframe": "Unknown",
+          "consequences_if_untreated": "Unable to analyze consequences for and fainting",
           "severity": "Unknown",
           "specific_outcomes": [],
           "reliable_sources_used": []
@@ -107,5 +111,16 @@
       ]
     }
   },
-  "total_diagnoses_analyzed": 4
+  "total_diagnoses_analyzed": 5,
+  "consequence_score": {
+    "medical_need_category": "Acute, Life-Threatening Condition",
+    "description": "Acute, life-threatening condition",
+    "weight": 100,
+    "score": 5,
+    "weighted_score": 500,
+    "score_type": "benefit",
+    "severity_level": "critical",
+    "is_life_threatening": true,
+    "is_acute": true
+  }
 }
