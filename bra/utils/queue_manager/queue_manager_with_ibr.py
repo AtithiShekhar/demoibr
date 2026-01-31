@@ -118,7 +118,7 @@ def collect_results_with_ibr_scoring(results_dir: str, workspace_dir: str, input
                     medicine_name, 
                     condition
                 )
-                # print(f' the summary is {summary}')
+                
                 # Build comprehensive primary result with NEW SCORES
                 primary_result = {
                     "success": True,
@@ -167,7 +167,6 @@ def collect_results_with_ibr_scoring(results_dir: str, workspace_dir: str, input
     )
     
     # Generate iBR Report
-    # print(f'this object is given to ibr response {formatted_response}')
     ibr_report = format_ibr_response(formatted_response, input_data)
     
     # Add iBR Report to response

@@ -1,18 +1,17 @@
 {
-  "date": "2026-01-30 18:33:23",
+  "date": "2026-01-31 18:52:21",
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Sever dizziness",
-    "diagnosis": "Upper Gastrointestinal Bleeding, lactic acidosis",
+    "condition": "dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding",
     "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-30"
+    "date_of_assessment": "2026-01-31"
   },
   "medications": [
-    "Ibuprofen",
-    "Metformin"
+    "Ibuprofen"
   ],
-  "total_adrs_analyzed": 8,
+  "total_adrs_analyzed": 2,
   "factor_3_4_risk_mitigation_feasibility": {
     "risk_reversibility_risk_tolerability": {
       "Ibuprofen - Heart Failure": {
@@ -20,10 +19,10 @@
         "adr_name": "Heart Failure",
         "adr_type": "LT/Fatal ADR",
         "classification": "Reversible ADR",
-        "reasoning": "While heart failure is a serious condition, ibuprofen-induced heart failure is often due to fluid retention and increased blood pressure, which can be reversed with drug discontinuation and appropriate medical management (e.g., diuretics).",
+        "reasoning": "While heart failure is a serious condition, in the context of NSAID-induced heart failure, it is often reversible with discontinuation of the drug and appropriate medical management to address the heart failure symptoms. The heart failure is typically due to fluid retention and increased afterload, which can be reversed.",
         "fda_evidence": "Based on medical knowledge",
         "keywords_found": [
-          "Heart Failure",
+          "heart failure",
           "Ibuprofen"
         ]
       },
@@ -32,88 +31,11 @@
         "adr_name": "Stroke",
         "adr_type": "LT/Fatal ADR",
         "classification": "Irreversible ADR",
-        "reasoning": "Stroke can cause permanent brain damage and neurological deficits, making it an irreversible adverse drug reaction.",
+        "reasoning": "Stroke can cause permanent neurological damage, leading to long-term disability or death, even after discontinuing the medication.",
         "fda_evidence": "Based on medical knowledge",
         "keywords_found": [
-          "stroke",
-          "permanent damage"
-        ]
-      },
-      "Metformin - Anaphylaxis": {
-        "medicine": "Metformin",
-        "adr_name": "Anaphylaxis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Reversible ADR",
-        "reasoning": "Anaphylaxis is a severe allergic reaction that, while life-threatening, is generally reversible with prompt treatment and discontinuation of the offending drug. The FDA USPI text states to \"Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment.\"",
-        "fda_evidence": "There have been postmarketing reports of serious allergic and hypersensitivity reactions in patients treated with sitagliptin such as anaphylaxis, angioedema, and exfoliative skin conditions including Stevens-Johnson syndrome. Promptly stop ZITUVIMET, assess for other potential causes, institute appropriate monitoring and treatment.",
-        "keywords_found": [
-          "anaphylaxis",
-          "hypersensitivity reactions",
-          "stop ZITUVIMET",
-          "treatment"
-        ]
-      },
-      "Metformin - Stevens-Johnson Syndrome": {
-        "medicine": "Metformin",
-        "adr_name": "Stevens-Johnson Syndrome",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Stevens-Johnson Syndrome is a known irreversible condition with permanent consequences",
-        "fda_evidence": "Documented as irreversible in medical literature",
-        "keywords_found": [
-          "stevens-johnson syndrome"
-        ]
-      },
-      "Metformin - Heart Failure": {
-        "medicine": "Metformin",
-        "adr_name": "Heart Failure",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Reversible ADR",
-        "reasoning": "While heart failure is a serious condition, the FDA USPI context suggests monitoring patients for signs and symptoms of heart failure when taking ZITUVIMET (which contains Metformin). This implies that the heart failure can potentially be managed or reversed with appropriate intervention, most likely involving discontinuation of the drug. The context also mentions that heart failure has been observed with other members of the DPP-4 inhibitor class, suggesting a class effect that could be mitigated by stopping the medication.",
-        "fda_evidence": "Heart Failure : Has been observed with two other members of the DPP-4 inhibitor class. Consider risks and benefits of ZITUVIMET in patients who have known risk factors for heart failure. Monitor patients for signs and symptoms.",
-        "keywords_found": [
-          "Heart Failure",
-          "Monitor",
-          "risks and benefits"
-        ]
-      },
-      "Metformin - Renal Failure": {
-        "medicine": "Metformin",
-        "adr_name": "Renal Failure",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Reversible ADR",
-        "reasoning": "The FDA USPI mentions that acute renal failure, while sometimes requiring dialysis, is a postmarketing report associated with metformin. While it can be severe, including needing dialysis, the implication is that renal function can recover, especially if the drug is promptly discontinued and appropriate supportive measures are implemented. The text also advises assessing renal function before and during treatment, suggesting monitoring for and potential reversibility of any decline.",
-        "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis. Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
-        "keywords_found": [
-          "Renal Failure",
-          "dialysis",
-          "assess renal function"
-        ]
-      },
-      "Metformin - Necrotizing Pancreatitis": {
-        "medicine": "Metformin",
-        "adr_name": "Necrotizing Pancreatitis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Necrotizing pancreatitis, even if non-fatal, often results in irreversible damage to the pancreas and potential long-term complications like exocrine or endocrine insufficiency.",
-        "fda_evidence": "There have been postmarketing reports of acute pancreatitis, including fatal and non-fatal hemorrhagic or necrotizing pancreatitis. If pancreatitis is suspected, promptly discontinue ZITUVIMET.",
-        "keywords_found": [
-          "Necrotizing Pancreatitis",
-          "fatal",
-          "non-fatal"
-        ]
-      },
-      "Metformin - Lactic Acidosis": {
-        "medicine": "Metformin",
-        "adr_name": "Lactic Acidosis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Reversible ADR",
-        "reasoning": "The FDA USPI states that lactic acidosis can be managed with general supportive measures in a hospital setting and immediate discontinuation of ZITUVIMET. The description suggests that with proper intervention, the condition can be addressed, implying reversibility. Furthermore, the text indicates that metformin decreases liver uptake of lactate which may increase the risk of lactic acidosis, this suggests that removing metformin would improve the condition.",
-        "fda_evidence": "If metformin-associated lactic acidosis is suspected, general supportive measures should be instituted promptly in a hospital setting, along with immediate discontinuation of ZITUVIMET.",
-        "keywords_found": [
-          "lactic acidosis",
-          "discontinuation",
-          "supportive measures"
+          "Stroke",
+          "permanent"
         ]
       }
     },
@@ -123,14 +45,14 @@
         "adr_name": "Heart Failure",
         "adr_type": "LT/Fatal ADR",
         "classification": "Preventable ADR",
-        "reasoning": "Ibuprofen can exacerbate or cause heart failure, particularly in patients with pre-existing heart conditions or risk factors. This risk is dose-dependent and can be mitigated by using the lowest effective dose for the shortest duration possible. Monitoring for symptoms of heart failure (e.g., edema, shortness of breath) is important, especially in at-risk individuals.",
-        "fda_evidence": "Directions do not take more than directed the smallest effective dose should be used adults and children 12 years and over: take 1 tablet every 4 to 6 hours while symptoms persist if pain or fever does not respond to 1 tablet, 2 tablets may be used do not exceed 6 tablets in 24 hours, unless directed by a doctor children under 12 years: ask a doctor",
+        "reasoning": "Ibuprofen, an NSAID, can exacerbate or induce heart failure, especially in patients with pre-existing cardiovascular conditions or renal impairment. This risk can be mitigated through careful patient selection, dose adjustment, and monitoring for signs of fluid retention or worsening heart failure symptoms.",
+        "fda_evidence": "None None Directions do not take more than directed the smallest effective dose should be used adults and children 12 years and over: take 1 tablet every 4 to 6 hours while symptoms persist if pain or fever does not respond to 1 tablet, 2 tablets may be used do not exceed 6 tablets in 24 hours, unless directed by a doctor children under 12 years: ask a doctor",
         "prevention_measures": [
+          "Screen patients for pre-existing heart conditions and renal impairment",
           "Use the lowest effective dose for the shortest duration",
-          "Screen patients for pre-existing heart conditions or risk factors for heart failure",
-          "Monitor for signs and symptoms of heart failure (e.g., edema, shortness of breath)",
-          "Educate patients about the risk of heart failure and when to seek medical attention",
-          "Consider alternative analgesics in patients with significant heart disease"
+          "Monitor for signs and symptoms of fluid retention (edema, weight gain) and worsening heart failure",
+          "Educate patients about the risk of heart failure and the importance of reporting symptoms",
+          "Consider alternative analgesics in high-risk patients"
         ]
       },
       "Ibuprofen - Stroke": {
@@ -138,83 +60,13 @@
         "adr_name": "Stroke",
         "adr_type": "LT/Fatal ADR",
         "classification": "Preventable ADR",
-        "reasoning": "While stroke is a serious adverse event, ibuprofen's potential to increase cardiovascular risk, including stroke, is dose-dependent and influenced by patient-specific risk factors. The FDA labeling emphasizes using the lowest effective dose for the shortest duration. This suggests that careful patient selection, dose optimization, and awareness of pre-existing cardiovascular risks could potentially mitigate the risk of stroke associated with ibuprofen use. Moreover, avoiding prolonged use and encouraging patients to promptly report any symptoms that could indicate cardiovascular compromise can also be preventative.",
+        "reasoning": "Stroke risk with NSAIDs like ibuprofen is dose-dependent and related to cardiovascular risk factors. The USPI emphasizes using the lowest effective dose and avoiding exceeding the recommended dosage. Therefore, adherence to dosing guidelines and consideration of patient-specific cardiovascular risk factors can potentially reduce the risk.",
         "fda_evidence": "Directions do not take more than directed the smallest effective dose should be used",
         "prevention_measures": [
-          "Use lowest effective dose for shortest duration",
-          "Assess patient's cardiovascular risk factors before prescribing",
-          "Monitor for signs and symptoms of cardiovascular events",
-          "Avoid use in patients with significant cardiovascular disease or risk factors if alternative analgesics are available",
-          "Educate patients on the risks and signs of stroke and when to seek medical attention"
-        ]
-      },
-      "Metformin - Anaphylaxis": {
-        "medicine": "Metformin",
-        "adr_name": "Anaphylaxis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Non-preventable ADR",
-        "reasoning": "Anaphylaxis is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
-        "fda_evidence": "Documented as unpredictable reaction",
-        "prevention_measures": []
-      },
-      "Metformin - Stevens-Johnson Syndrome": {
-        "medicine": "Metformin",
-        "adr_name": "Stevens-Johnson Syndrome",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Non-preventable ADR",
-        "reasoning": "Stevens-Johnson Syndrome is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
-        "fda_evidence": "Documented as unpredictable reaction",
-        "prevention_measures": []
-      },
-      "Metformin - Heart Failure": {
-        "medicine": "Metformin",
-        "adr_name": "Heart Failure",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Preventable ADR",
-        "reasoning": "The FDA USPI mentions that heart failure has been observed with other DPP-4 inhibitors and recommends considering the risks and benefits in patients with known risk factors for heart failure and to monitor patients for signs and symptoms. This suggests that with careful patient selection and monitoring, the risk of heart failure can be mitigated.",
-        "fda_evidence": "Heart Failure : Has been observed with two other members of the DPP-4 inhibitor class. Consider risks and benefits of ZITUVIMET in patients who have known risk factors for heart failure. Monitor patients for signs and symptoms.",
-        "prevention_measures": [
-          "Assess risk factors for heart failure before initiation",
-          "Monitor for signs and symptoms of heart failure during treatment"
-        ]
-      },
-      "Metformin - Renal Failure": {
-        "medicine": "Metformin",
-        "adr_name": "Renal Failure",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Preventable ADR",
-        "reasoning": "The FDA USPI specifically mentions acute renal failure as a postmarketing report and advises assessing renal function before initiating and at least annually thereafter. This suggests that monitoring renal function can potentially prevent or mitigate the severity of renal failure associated with the drug.",
-        "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis. Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
-        "prevention_measures": [
-          "Assess renal function before initiating treatment",
-          "Monitor renal function annually",
-          "Dose adjustment based on renal function",
-          "Consider alternative medications in patients with pre-existing renal impairment"
-        ]
-      },
-      "Metformin - Necrotizing Pancreatitis": {
-        "medicine": "Metformin",
-        "adr_name": "Necrotizing Pancreatitis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Preventable ADR",
-        "reasoning": "While necrotizing pancreatitis can be severe, the FDA USPI includes a warning about pancreatitis and recommends prompt discontinuation of the drug if suspected. Early detection and discontinuation may prevent progression to necrotizing pancreatitis.",
-        "fda_evidence": "Pancreatitis: There have been postmarketing reports of acute pancreatitis, including fatal and non-fatal hemorrhagic or necrotizing pancreatitis. If pancreatitis is suspected, promptly discontinue ZITUVIMET.",
-        "prevention_measures": [
-          "Patient education on symptoms of pancreatitis",
-          "Prompt discontinuation of metformin if pancreatitis is suspected"
-        ]
-      },
-      "Metformin - Lactic Acidosis": {
-        "medicine": "Metformin",
-        "adr_name": "Lactic Acidosis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Preventable ADR",
-        "reasoning": "Lactic acidosis associated with metformin has identifiable risk factors and can be mitigated through monitoring renal function, avoiding use in patients with contraindications (such as renal impairment), and recognizing early symptoms. While the FDA highlights its potentially fatal nature, the focus on monitoring and risk factor identification suggests preventability.",
-        "fda_evidence": "Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
-        "prevention_measures": [
-          "Assess renal function before and annually",
-          "Monitor for nonspecific symptoms like malaise, myalgias, abdominal pain",
-          "Avoid use in patients with renal impairment"
+          "Use lowest effective dose",
+          "Assess cardiovascular risk factors before prescribing",
+          "Monitor blood pressure",
+          "Educate patients on signs and symptoms of stroke"
         ]
       }
     }
@@ -223,9 +75,9 @@
     "mitigation_sub_factor": "Preventable and Reversible ADR",
     "worst_case_adr": "Manageable",
     "description": "Preventable and Reversible ADR",
-    "weight": 30,
+    "weight": 100,
     "score": 1,
-    "weighted_score": 30,
+    "weighted_score": 100,
     "score_type": "risk"
   }
 }

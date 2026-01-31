@@ -1,16 +1,15 @@
 {
-  "date": "2026-01-30 18:30:52",
+  "date": "2026-01-31 18:51:28",
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Sever dizziness",
-    "diagnosis": "Upper Gastrointestinal Bleeding, lactic acidosis",
+    "condition": "dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding",
     "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-30"
+    "date_of_assessment": "2026-01-31"
   },
   "medications": [
-    "Ibuprofen",
-    "Metformin"
+    "Ibuprofen"
   ],
   "factor_3_2": {
     "LT_ADRs": {
@@ -32,53 +31,6 @@
             "fda_context": "...roxen, or others] Heart attack and stroke warning: NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke. These can be fatal. The risk is higher if you use more than directed or for longer than directed. Do not use if you have ever had an allergic reaction to any other..."
           }
         ]
-      },
-      "Metformin": {
-        "with_risk_factors": [],
-        "without_risk_factors": [
-          {
-            "medicine": "Metformin",
-            "adr_name": "Anaphylaxis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...ate their frequency or establish a causal relationship to drug exposure. Skin and subcutaneous tissue disorders: hypersensitivity reactions including anaphylaxis, angioedema, rash, urticaria, cutaneous vasculitis, and exfoliative skin conditions including Stevens-Johnson syndrome; bullous pemphigoid..."
-          },
-          {
-            "medicine": "Metformin",
-            "adr_name": "Stevens-Johnson Syndrome",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...rders: hypersensitivity reactions including anaphylaxis, angioedema, rash, urticaria, cutaneous vasculitis, and exfoliative skin conditions including Stevens-Johnson syndrome; bullous pemphigoid; Respiratory, thoracic and mediastinal disorders: upper respiratory tract infection; Hepatobiliary disord..."
-          },
-          {
-            "medicine": "Metformin",
-            "adr_name": "Heart Failure",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...elsewhere in the prescribing information: Lactic Acidosis [see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings a..."
-          },
-          {
-            "medicine": "Metformin",
-            "adr_name": "Renal Failure",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...[see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings and Precautions ( 5.5 )] Hypoglycemia with Concomitant Use w..."
-          },
-          {
-            "medicine": "Metformin",
-            "adr_name": "Necrotizing Pancreatitis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...hepatocellular, and mixed hepatocellular liver injury; Gastrointestinal disorders: acute pancreatitis, including fatal and non-fatal hemorrhagic and necrotizing pancreatitis [see Indications and Usage (1)]; constipation; vomiting; mouth ulceration; stomatitis; Renal and urinary disorders: worsening..."
-          },
-          {
-            "medicine": "Metformin",
-            "adr_name": "Lactic Acidosis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "6 ADVERSE REACTIONS The following adverse reactions are also discussed elsewhere in the prescribing information: Lactic Acidosis [see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions..."
-          }
-        ]
       }
     },
     "Serious_ADRs": {}
@@ -90,6 +42,16 @@
     "lt_adr_score": {
       "lt_adr_category": "Low Risk - No life-threatening ADRs detected",
       "description": "No life-threatening ADRs",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "score_type": "risk",
+      "adr_count": 0,
+      "has_risk_factors": false
+    },
+    "serious_adr_score": {
+      "serious_adr_category": "Low Risk - No serious ADRs detected",
+      "description": "No Serious ADRs",
       "weight": 10,
       "score": 1,
       "weighted_score": 10,
@@ -97,27 +59,17 @@
       "adr_count": 0,
       "has_risk_factors": false
     },
-    "serious_adr_score": {
-      "serious_adr_category": "Low Risk - No serious ADRs detected",
-      "description": "No serious ADRs / no interactions",
-      "weight": 20,
-      "score": 1,
-      "weighted_score": 20,
-      "score_type": "risk",
-      "adr_count": 0,
-      "has_risk_factors": false
-    },
     "interaction_score": {
       "interaction_category": "No Drug Interactions",
-      "description": "No drug interactions",
-      "weight": 0,
-      "score": 0,
-      "weighted_score": 0,
+      "description": "No interactions",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
       "score_type": "risk",
       "contraindicated_count": 0,
       "lt_interaction_count": 0,
       "serious_interaction_count": 0,
-      "total_critical_interactions": 0
+      "non_serious_count": 0
     }
   }
 }

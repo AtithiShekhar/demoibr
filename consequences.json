@@ -1,130 +1,131 @@
 {
-  "date": "2026-01-30 15:57:11",
+  "date": "2026-01-31 02:35:23",
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Joint pain",
-    "diagnosis": "Osteoarthritis, Hypertension, Type 2 Diabetes Mellitus",
+    "condition": "Severe dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding",
     "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-30"
+    "date_of_assessment": "2026-01-31"
   },
   "diagnoses_analyzed": [
-    "Osteoarthritis",
-    "Hypertension",
-    "Type 2 Diabetes Mellitus",
-    "Joint pain"
+    "Upper Gastrointestinal Bleeding",
+    "Severe dizziness"
   ],
   "factor_2_6_consequences_of_non_treatment": {
-    "Osteoarthritis": {
-      "disease": "Osteoarthritis",
-      "classifications": [
-        {
-          "category": "Chronic, non-life-threatening",
-          "timeframe": "Long-term/progressive",
-          "consequences_if_untreated": "If osteoarthritis is not treated, the condition will progressively worsen over months to years. The cartilage in the affected joints will continue to degenerate, leading to increased bone-on-bone friction. This results in chronic and often severe joint pain, stiffness, swelling, and tenderness. The range of motion in the affected joint will progressively decrease, leading to significant functional disability and difficulty performing daily activities such as walking, climbing stairs, dressing, or gripping objects. Muscle weakness and atrophy around the joint can occur due to disuse and pain. Joint deformities may develop, further impairing function. The chronic pain and disability can lead to a reduced quality of life, psychological distress (e.g., depression, anxiety), and social isolation. Reduced physical activity due to pain and limited mobility can also indirectly contribute to the development or worsening of other chronic conditions like obesity, cardiovascular disease, and diabetes, and increase the risk of falls.",
-          "severity": "Reduced quality of life but no significant mortality risk",
-          "specific_outcomes": [
-            "Progressive joint pain",
-            "Increased joint stiffness",
-            "Reduced range of motion",
-            "Functional disability",
-            "Difficulty with daily activities",
-            "Muscle weakness and atrophy",
-            "Joint deformity",
-            "Impaired mobility",
-            "Increased risk of falls",
-            "Psychological distress (depression, anxiety)",
-            "Reduced quality of life",
-            "Indirect contribution to other chronic diseases (e.g., cardiovascular disease, obesity) due to inactivity"
-          ],
-          "reliable_sources_used": [
-            "mayoclinic.org",
-            "hopkinsmedicine.org",
-            "uptodate.com",
-            "ncbi.nlm.nih.gov",
-            "cdc.gov"
-          ]
-        }
-      ]
-    },
-    "Hypertension": {
-      "disease": "Hypertension",
+    "Upper Gastrointestinal Bleeding": {
+      "disease": "Upper Gastrointestinal Bleeding",
       "classifications": [
         {
           "category": "Acute, life-threatening condition",
           "timeframe": "Immediate/short-term",
-          "consequences_if_untreated": "Severely elevated blood pressure (hypertensive crisis, specifically a hypertensive emergency) can lead to acute, life-threatening organ damage within hours or days. This includes conditions such as hypertensive encephalopathy, acute stroke (ischemic or hemorrhagic), acute myocardial infarction, acute heart failure with pulmonary edema, aortic dissection, and acute kidney injury. These conditions require immediate medical intervention to prevent death or permanent disability.",
+          "consequences_if_untreated": "Untreated upper gastrointestinal bleeding (UGIB) can lead to hypovolemic shock due to rapid blood loss. This results in decreased blood pressure, inadequate tissue perfusion, and organ damage. Severe bleeding can also lead to aspiration of blood into the lungs, causing aspiration pneumonia and respiratory failure. Furthermore, significant blood loss can cause acute kidney injury (AKI) due to decreased renal perfusion. In patients with underlying cardiovascular disease, severe anemia from UGIB can precipitate myocardial ischemia or infarction.",
           "severity": "Death or irreversible organ damage",
           "specific_outcomes": [
-            "Hypertensive encephalopathy",
-            "Acute ischemic stroke",
-            "Acute hemorrhagic stroke",
-            "Acute myocardial infarction",
-            "Acute heart failure with pulmonary edema",
-            "Aortic dissection",
+            "Hypovolemic shock",
+            "Organ failure",
+            "Aspiration pneumonia",
             "Acute kidney injury",
-            "Eclampsia (in pregnant individuals)"
+            "Myocardial ischemia/infarction",
+            "Death"
           ],
           "reliable_sources_used": [
-            "StatPearls/NCBI/NIH",
-            "Mayo Clinic",
-            "UpToDate",
-            "Johns Hopkins Medicine"
+            "ncbi.nlm.nih.gov",
+            "uptodate.com",
+            "mayoclinic.org"
           ]
         },
         {
           "category": "Chronic, life-threatening",
           "timeframe": "Long-term/progressive",
-          "consequences_if_untreated": "Sustained, untreated hypertension causes progressive damage to blood vessels and organs throughout the body over months to years. This leads to a significantly increased risk of major cardiovascular events, chronic kidney disease, and other systemic complications. The cumulative damage from high blood pressure is a leading cause of premature death and disability worldwide.",
+          "consequences_if_untreated": "If the underlying cause of upper gastrointestinal bleeding (e.g., peptic ulcer disease, esophageal varices) is not treated, recurrent bleeding episodes are likely. Repeated episodes of bleeding can lead to chronic iron deficiency anemia, requiring ongoing transfusions. Furthermore, persistent bleeding and the need for multiple transfusions can lead to iron overload (hemochromatosis), which can damage the liver, heart, and other organs. Untreated underlying conditions like cirrhosis with varices will continue to progress, increasing the risk of further bleeding episodes and liver failure, ultimately increasing mortality.",
           "severity": "Increased mortality risk over time",
           "specific_outcomes": [
-            "Coronary artery disease",
-            "Myocardial infarction (heart attack)",
-            "Heart failure",
-            "Stroke (ischemic and hemorrhagic)",
-            "Chronic kidney disease leading to end-stage renal disease",
-            "Peripheral artery disease",
-            "Aortic aneurysm",
-            "Retinopathy and vision loss",
-            "Vascular dementia and cognitive decline"
+            "Chronic iron deficiency anemia",
+            "Iron overload (hemochromatosis)",
+            "Liver damage",
+            "Heart damage",
+            "Increased risk of recurrent bleeding",
+            "Progression of underlying disease (e.g., cirrhosis)",
+            "Death"
           ],
           "reliable_sources_used": [
-            "CDC",
-            "WHO",
-            "StatPearls/NCBI/NIH",
-            "Mayo Clinic",
-            "Johns Hopkins Medicine",
-            "UpToDate"
+            "ncbi.nlm.nih.gov",
+            "uptodate.com",
+            "who.int"
           ]
         }
       ]
     },
-    "Type 2 Diabetes Mellitus": {
-      "disease": "Type 2 Diabetes Mellitus",
+    "Severe dizziness": {
+      "disease": "Severe dizziness",
       "classifications": [
         {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Type 2 Diabetes Mellitus",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
-        }
-      ]
-    },
-    "Joint pain": {
-      "disease": "Joint pain",
-      "classifications": [
+          "category": "Acute, life-threatening condition",
+          "timeframe": "Immediate/short-term",
+          "consequences_if_untreated": "Severe dizziness, especially if caused by certain underlying conditions, can lead to falls resulting in head trauma, fractures, or other injuries. If the dizziness is due to a stroke, TIA, or cardiac arrhythmia, failure to treat it immediately can result in permanent neurological damage, cardiac arrest, or death. Dizziness can also cause significant impairment, leading to accidents while driving or operating machinery.",
+          "severity": "Death or irreversible organ damage",
+          "specific_outcomes": [
+            "Falls and injuries (head trauma, fractures)",
+            "Stroke/TIA leading to permanent neurological deficits",
+            "Cardiac arrest due to arrhythmia",
+            "Accidents while driving or operating machinery"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
+        },
         {
-          "category": "Unable to determine",
-          "timeframe": "Unknown",
-          "consequences_if_untreated": "Unable to analyze consequences for Joint pain",
-          "severity": "Unknown",
-          "specific_outcomes": [],
-          "reliable_sources_used": []
+          "category": "Acute, non-life-threatening",
+          "timeframe": "Short-term",
+          "consequences_if_untreated": "If severe dizziness is caused by conditions like benign paroxysmal positional vertigo (BPPV) or vestibular neuritis and is left untreated, it can lead to prolonged periods of imbalance, nausea, vomiting, and difficulty with daily activities. While not immediately life-threatening, these symptoms can significantly impair quality of life and lead to secondary complications like dehydration from persistent vomiting.",
+          "severity": "Acute worsening/complications but no immediate mortality",
+          "specific_outcomes": [
+            "Prolonged imbalance",
+            "Persistent nausea and vomiting",
+            "Dehydration",
+            "Difficulty with daily activities",
+            "Increased risk of falls"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
+        },
+        {
+          "category": "Chronic, non-life-threatening",
+          "timeframe": "Long-term/progressive",
+          "consequences_if_untreated": "Chronic dizziness, if left unaddressed, can lead to persistent balance problems, anxiety, and depression. It can also result in a reduced ability to participate in social activities and work, leading to social isolation and decreased quality of life. While not directly life-threatening, the chronic nature of the symptoms can significantly impact mental and emotional well-being.",
+          "severity": "Reduced quality of life but no significant mortality risk",
+          "specific_outcomes": [
+            "Chronic balance problems",
+            "Anxiety and depression",
+            "Social isolation",
+            "Reduced ability to work or participate in social activities",
+            "Increased risk of falls"
+          ],
+          "reliable_sources_used": [
+            "ncbi.nlm.nih.gov",
+            "mayoclinic.org",
+            "uptodate.com"
+          ]
         }
       ]
     }
   },
-  "total_diagnoses_analyzed": 4
+  "total_diagnoses_analyzed": 2,
+  "consequence_score": {
+    "medical_need_category": "Acute, Life-Threatening Condition",
+    "description": "Acute, life-threatening condition",
+    "weight": 500,
+    "score": 1,
+    "weighted_score": 500,
+    "score_type": "benefit",
+    "severity_level": "critical",
+    "is_life_threatening": true,
+    "is_acute": true
+  }
 }

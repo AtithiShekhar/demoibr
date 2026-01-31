@@ -86,32 +86,36 @@ def main(verbose=True, input_file="input.json", output_summary=True):
     if verbose:
         for condition, meds in condition_meds.items():
             print(f"  • {condition}: {len(meds)} medication(s)")
-
+    condition_duplication_results = {}
+    duplication_count = 0
     # ================================================
     # STEP 4: Therapeutic Duplication Analysis
     # ================================================
     if verbose:
         print(f"\n[STEP 4] Running therapeutic duplication analysis...")
-    
-    condition_duplication_results = {}
-    duplication_count = 0
-    
-    for condition, meds in condition_meds.items():
-        if len(meds) >= 2:
-            duplication_count += 1
-            if verbose:
-                print(f"\n  Analyzing: {condition}")
-                print(f"  Medications: {', '.join(meds)}")
-            
-            condition_duplication_results[condition] = duplication_start({
-                "prescription": meds
-            })
-            
-            if verbose:
-                result = condition_duplication_results[condition]
-                score = result.get('duplication_score', {})
-                print(f"  Result: {score.get('duplication_category', 'Unknown')}")
-                print(f"  Score: {score.get('weighted_score', 0)}")
+
+        
+
+        for condition, meds in condition_meds.items():
+            if len(meds) >= 2:
+                duplication_count += 1
+                if verbose:
+                    print(f"\n  Analyzing: {condition}")
+                    print(f"  Medications: {', '.join(meds)}")
+                
+                # FIX: Pass all required arguments to duplication_start
+                # Passing 'meds' (list), 'condition' (str), and 'data' (full dict)
+                condition_duplication_results[condition] = duplication_start(
+                    drug=", ".join(meds), # Or just meds if the function handles lists
+                    diagnosis=condition, 
+                    patient_data=data
+                )
+                
+                if verbose:
+                    result = condition_duplication_results[condition]
+                    score = result.get('duplication_score', {})
+                    print(f"  Result: {score.get('duplication_category', 'Unknown')}")
+                    print(f"  Score: {score.get('weighted_score', 0)}")
         else:
             if verbose:
                 print(f"  ⊘ Skipping {condition} (only {len(meds)} medication)")

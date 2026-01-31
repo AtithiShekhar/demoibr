@@ -2,13 +2,12 @@
   "patient": {
     "age": 60,
     "gender": "Male",
-    "condition": "Sever dizziness",
-    "diagnosis": "Upper Gastrointestinal Bleeding, lactic acidosis",
+    "condition": "dizziness",
+    "diagnosis": "Upper Gastrointestinal Bleeding",
     "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-30"
+    "date_of_assessment": "2026-01-31"
   },
   "prescription": [
-    "Ibuprofen",
-    "Metformin"
+    "Ibuprofen"
   ]
 }

@@ -172,7 +172,7 @@ def analyze_single_drug(
         output_file = scoring.save_to_json()
         
         print(f"[{prefix} {thread_id}] ✓ Complete - BRR: {brr_data['brr']} ({brr_data['interpretation']})")
-
+        # print(f'has drug interation is {has_drug_interactions},has contraindicatio is {has_contraindication},has life threatining adrs{has_lt_adrs} has serius adrs{has_serious_adrs}')
         return {
             "success": True,
             "drug": drug,

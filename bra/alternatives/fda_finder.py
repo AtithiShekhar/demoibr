@@ -110,7 +110,6 @@ class FDAAlternativesFinder:
         
         if len(df) == 0:
             return df
-        
         # Remove duplicates based on Active_Moiety
         print(f"\nTotal medications before deduplication: {len(df)}")
         df_unique = df.drop_duplicates(subset=['Active_Moiety'], keep='first')

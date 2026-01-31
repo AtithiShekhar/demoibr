@@ -1,24 +1,33 @@
-# ================================
-# contraindication/app.py (FIXED)
-# ================================
+"""
+Contraindication Checker - CORRECTED
+Separates contraindication detection from therapeutic duplication assessment
+"""
 
-import requests
 import os
-from typing import Dict, Any, Optional, Set
-from scoring.benefit_factor import get_contraindication_data
+import requests
+from typing import Optional, Dict, Set
+from google import genai
+from google.genai import types
 
-# Gemini SDK
+# Initialize Gemini
 try:
-    from google import genai
-    from google.genai import types
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-    print("⚠️  Gemini SDK not available. Install: pip install google-generativeai")
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if gemini_api_key:
+        gemini_client = genai.Client(api_key=gemini_api_key)
+    else:
+        gemini_client = None
+        print("⚠️  GEMINI_API_KEY not set - using fallback explanations")
+except Exception as e:
+    gemini_client = None
+    print(f"⚠️  Gemini initialization failed: {e}")
 
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-gemini_client = genai.Client(api_key=GEMINI_API_KEY) if (GEMINI_AVAILABLE and GEMINI_API_KEY) else None
+def get_contraindication_data(status: str, scoring_system=None):
+    """Get contraindication score from centralized scoring"""
+    if scoring_system:
+        from scoring.config import ScoringConfig
+        return ScoringConfig.calculate_contraindication_score(status)
+    return None
 
 
 def normalize_to_concepts(text: str) -> Set[str]:
@@ -81,15 +90,19 @@ def normalize_to_concepts(text: str) -> Set[str]:
     # Arrhythmia
     if any(k in text for k in ["arrhythmia", "atrial fibrillation", "afib", "ventricular tachycardia"]):
         concepts.add("ARRHYTHMIA")
+    
     # COPD
     if any(k in text for k in ["copd", "chronic obstructive", "emphysema", "chronic bronchitis"]):
         concepts.add("COPD")
+    
     # Seizure
     if any(k in text for k in ["seizure", "epilepsy", "convulsion"]):
         concepts.add("SEIZURE")
+    
     # Depression
     if any(k in text for k in ["depression", "depressive disorder", "mdd"]):
         concepts.add("DEPRESSION")
+    
     # Glaucoma
     if "glaucoma" in text:
         concepts.add("GLAUCOMA")
@@ -116,6 +129,13 @@ def extract_contraindication_concepts(text: str) -> Set[str]:
 
 
 class ContraindicationAnalyzer:
+    """
+    Analyzes drug contraindications based on patient's OTHER medical conditions
+    
+    IMPORTANT: This class ONLY checks for contraindications.
+    Therapeutic duplication is handled separately in therapeutic_duplication.py
+    """
+    
     def __init__(self):
         self.fda_api_key = os.getenv("FDA_API_KEY", "")
         self.fda_base_url = "https://api.fda.gov/drug/label.json"
@@ -150,6 +170,9 @@ class ContraindicationAnalyzer:
         Args:
             patient_data: Full patient data
             current_diagnosis: The diagnosis for which this drug is prescribed (to exclude)
+            
+        Returns:
+            Set of patient's OTHER medical concepts (excluding the condition being treated)
         """
         concepts = set()
 
@@ -157,8 +180,9 @@ class ContraindicationAnalyzer:
         for diag in patient_data.get("currentDiagnoses", []):
             diag_name = diag.get("diagnosisName", "")
             
-            # Skip the diagnosis being treated - drug should be for this condition
+            # Skip the diagnosis being treated - drug SHOULD be for this condition
             if current_diagnosis and diag_name.lower() == current_diagnosis.lower():
+                print(f"[Contraindication] Excluding {diag_name} from contraindication check (this is the condition being treated)")
                 continue
                 
             concepts |= normalize_to_concepts(diag_name)
@@ -178,9 +202,15 @@ class ContraindicationAnalyzer:
         """
         Detect contraindications for drug based on patient's OTHER conditions
         
+        LOGIC:
+        1. Extract patient's OTHER medical conditions (excluding the diagnosis being treated)
+        2. Extract drug's contraindicated conditions from FDA label
+        3. Find overlap between patient's OTHER conditions and drug contraindications
+        4. If overlap exists → CONTRAINDICATION DETECTED
+        
         Args:
             drug: Medicine name
-            diagnosis: Diagnosis for which drug is prescribed
+            diagnosis: Diagnosis for which drug is prescribed (EXCLUDED from contraindication check)
             patient_data: Full patient data
             
         Returns:
@@ -193,7 +223,7 @@ class ContraindicationAnalyzer:
 
         # Extract patient concepts EXCLUDING the diagnosis being treated
         patient_concepts = self.extract_patient_conditions(patient_data, diagnosis)
-        print(f"[Contraindication] Patient other conditions: {patient_concepts}")
+        print(f"[Contraindication] Patient's OTHER conditions: {patient_concepts}")
         print(f"[Contraindication] Treating diagnosis: {diagnosis} (excluded from contraindication check)")
 
         # Extract FDA contraindication concepts
@@ -201,22 +231,22 @@ class ContraindicationAnalyzer:
         fda_concepts = extract_contraindication_concepts(fda_text)
         print(f"[Contraindication] FDA contraindicated conditions: {fda_concepts}")
 
-        # Find overlap between patient's other conditions and drug contraindications
+        # Find overlap between patient's OTHER conditions and drug contraindications
         overlap = patient_concepts & fda_concepts
         if overlap:
             risk = next(iter(overlap))
             print(f"[Contraindication] ⚠️  CONTRAINDICATION DETECTED: {risk}")
-            print(f"[Contraindication] Drug {drug} is contraindicated in {risk}, which patient has")
+            print(f"[Contraindication] Drug {drug} is contraindicated in {risk}, which patient has as a comorbidity")
             return {
                 "status": "absolute",
                 "risk": risk,
                 "reason": f"Contraindicated in {risk.replace('_', ' ').lower()}",
                 "fda_sections": sections,
-                "matched_concepts": list(overlap),
+                "matched_conditions": list(overlap),
                 "treating_diagnosis": diagnosis
             }
 
-        print(f"[Contraindication] ✓ No contraindications found for {drug} in treating {diagnosis}")
+        print(f"[Contraindication] ✓ No contraindications found for {drug} when treating {diagnosis}")
         return None
 
 
@@ -242,7 +272,7 @@ INSTRUCTIONS:
 
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-exp",
             contents=prompt,
             config=config
         )
@@ -256,6 +286,9 @@ def start(drug: str, diagnosis: str, patient_data: dict, scoring_system=None) ->
     """
     Main contraindication checker entry point
     
+    PURPOSE: Check if drug is contraindicated based on patient's OTHER medical conditions
+    NOTE: This does NOT check for therapeutic duplication - that's handled separately
+    
     Args:
         drug: Medicine name
         diagnosis: Diagnosis for which drug is prescribed
@@ -263,7 +296,7 @@ def start(drug: str, diagnosis: str, patient_data: dict, scoring_system=None) ->
         scoring_system: Optional scoring system
         
     Returns:
-        Contraindication analysis result
+        Contraindication analysis result with scoring
     """
     analyzer = ContraindicationAnalyzer()
     result = analyzer.detect(drug, diagnosis, patient_data)
@@ -302,8 +335,27 @@ def start(drug: str, diagnosis: str, patient_data: dict, scoring_system=None) ->
         "risk": result["risk"],
         "reason": result["reason"],
         "clinical_explanation": explanation,
-        "matched_conditions": result["matched_concepts"],
+        "matched_conditions": result["matched_conditions"],
         "contra_score": score_data,
         "has_contraindication": True,
         "treating_diagnosis": diagnosis
     }
+
+
+# ============================================================================
+# THERAPEUTIC DUPLICATION LOGIC (SEPARATE FROM CONTRAINDICATION)
+# ============================================================================
+
+"""
+THERAPEUTIC DUPLICATION CRITERIA (Factor 2.4):
+
+Rule: If 2 or more medicines have:
+  - Same indication AND/OR
+  - Same mechanism of action
+  
+Then → Proceed to Duplication Assessment
+
+Otherwise → Select "Unique role, no overlap" for Factor 2.4
+
+This logic should be in therapeutic_duplication.py, NOT in contraindication.py
+"""
