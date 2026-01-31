@@ -7,7 +7,6 @@ from typing import Dict, List, Any, Optional
 from google import genai
 from google.genai import types
 
-
 # Load environment variables
 load_dotenv()
 
@@ -25,15 +24,9 @@ class Factor_2_6_Consequences_Analyzer:
             raise ValueError("GEMINI_API_KEY not found in environment variables!")
         
         # Configure new Gemini client
-        self.gemini_client = genai.Client(api_key=self.gemini_api_key) if (self.gemini_api_key and self.gemini_api_key) else None
-        self.config = types.GenerateContentConfig(
-        temperature=0.0,  # Minimize creativity/hallucination
-        max_output_tokens=1000,
-        response_mime_type="application/json"
-    )   
-
-        print(f"✓ Gemini model initialized ")
-
+        self.client = genai.Client(api_key=self.gemini_api_key)
+        
+        print(f"✓ Gemini client initialized")
     
     # ============================================================================
     # PART 1: PARSE DIAGNOSES FROM PATIENT DATA
@@ -83,81 +76,66 @@ class Factor_2_6_Consequences_Analyzer:
         Use Gemini to analyze consequences of non-treatment
         """
         
-        prompt = f"""You are a medical expert analyzing the consequences of untreated medical conditions. Use your knowledge of medical literature and current clinical guidelines to provide accurate information.
+        prompt = f"""You are a medical expert. Classify untreated {disease} consequences.
 
-DISEASE/CONDITION: {disease}
+CLASSIFICATION RULES (STRICT):
 
-TASK: Determine what happens if this disease/condition is NOT treated or medication is NOT administered. Base your analysis on information from reliable medical sources such as:
-- CDC (Centers for Disease Control and Prevention)
-- WHO (World Health Organization)
-- StatPearls/NCBI/NIH (National Library of Medicine)
-- FDA (Food and Drug Administration)
-- Mayo Clinic
-- Johns Hopkins Medicine
-- UpToDate
-- Medical textbooks and peer-reviewed journals
+1. **Acute, life-threatening**: Death/irreversible damage within hours-days WITHOUT treatment
+   - Examples: Ventricular fibrillation, Anaphylaxis, Status epilepticus, Acute MI
+   - NOT diabetes, hypertension, COPD (these are chronic)
 
-CLASSIFICATION CRITERIA:
+2. **Acute, non-life-threatening**: Worsens in days-weeks but NOT immediately fatal
+   - Examples: UTI, Mild pneumonia, Gastroenteritis
 
-1. **Acute, life-threatening condition**
-   - Timeframe: Immediate/short-term (minutes to days)
-   - Consequences: Death or irreversible organ damage
-   - Example: Untreated ventricular fibrillation → cardiac arrest and death within minutes
+3. **Chronic, life-threatening**: Progressive mortality risk over months-years
+   - Examples: Diabetes (DKA possible but not immediate), Hypertension, CKD, COPD
+   - Most chronic diseases belong here
 
-2. **Acute, non-life-threatening**
-   - Timeframe: Short-term (days to weeks)
-   - Consequences: Acute worsening or complications BUT no immediate mortality risk
-   - Example: Untreated UTI → severe pain, kidney infection, but not immediately fatal
+4. **Chronic, non-life-threatening**: Long-term discomfort, NO significant mortality
+   - Examples: Osteoarthritis, Mild hypothyroidism, GERD
 
-3. **Chronic, life-threatening**
-   - Timeframe: Long-term/progressive (months to years)
-   - Consequences: Progressive disease worsening AND increased mortality risk over time
-   - Example: Untreated hypertension → stroke, heart attack, kidney failure over years
+CRITICAL GUIDELINES:
+- Type 2 Diabetes = Chronic, life-threatening (NOT acute unless actively in DKA)
+- Hypertension = Chronic, life-threatening (NOT acute unless hypertensive crisis)
+- CKD/Renal impairment = Chronic, life-threatening
+- If disease takes months-years to cause death → Chronic, life-threatening
+- If disease causes death in hours-days without treatment → Acute, life-threatening
 
-4. **Chronic, non-life-threatening**
-   - Timeframe: Long-term (months to years)
-   - Consequences: Illness, disability, reduced quality of life BUT no significant mortality risk
-   - Example: Untreated mild osteoarthritis → chronic pain, reduced mobility
+DISEASE: {disease}
 
-IMPORTANT:
-- If a disease has BOTH acute and chronic consequences, list BOTH classifications
-- For example, untreated diabetes:
-  * Acute, life-threatening: Diabetic ketoacidosis (DKA) can occur within days → coma/death
-  * Chronic, life-threatening: Long-term complications (retinopathy, nephropathy, neuropathy, CVD) → increased mortality
+Provide SHORT, CONCISE consequences (max 3-4 bullet points, 10-15 words each).
+NO paragraphs. ONLY key outcomes.
 
-RESPOND IN THIS EXACT JSON FORMAT:
+JSON FORMAT:
 {{
   "disease": "{disease}",
   "classifications": [
     {{
-      "category": "Acute, life-threatening condition" OR "Acute, non-life-threatening" OR "Chronic, life-threatening" OR "Chronic, non-life-threatening",
+      "category": "Choose ONLY ONE from above 4 categories",
       "timeframe": "Immediate/short-term" OR "Long-term/progressive",
-      "consequences_if_untreated": "Detailed description of what happens",
-      "severity": "Death or irreversible organ damage" OR "Acute worsening/complications but no immediate mortality" OR "Increased mortality risk over time" OR "Reduced quality of life but no significant mortality risk",
-      "specific_outcomes": ["outcome 1", "outcome 2", "outcome 3"],
-      "reliable_sources_used": ["source domain 1", "source domain 2"]
+      "consequences_if_untreated": "• Outcome 1\\n• Outcome 2\\n• Outcome 3",
+      "severity": "Match category",
+      "specific_outcomes": ["outcome1", "outcome2", "outcome3"],
+      "reliable_sources_used": ["CDC", "WHO"]
     }}
   ]
 }}
 
-CRITICAL RULES:
-1. Use your comprehensive medical knowledge to provide accurate, evidence-based information
-2. Base your analysis on information consistent with CDC, WHO, NCBI/NIH, FDA, and major academic medical centers
-3. If disease has both acute AND chronic consequences, include BOTH in the classifications array
-4. Be medically accurate and evidence-based
-5. Return ONLY valid JSON, no additional text
+Rules:
+- Keep consequences_if_untreated to 3-4 bullet points MAX
+- Each bullet point: 10-15 words
+- Be concise, direct, factual
+- Return ONLY JSON
 
-Your JSON response:"""
+JSON:"""
 
         try:
             # Generate content using new API
-            response = self.gemini_client.models.generate_content(
-            model="gemini-2.0-flash",
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=prompt
+            )
             
-            contents=prompt,
-            config=self.config,
-
-        )
             response_text = response.text.strip()
             
             # Clean up response - remove markdown code blocks if present
@@ -326,36 +304,50 @@ Your JSON response:"""
         
         print("\n" + "=" * 80 + "\n")
 
-from scoring.benefit_factor import get_consequences_data
-def start(scoring_system=None):
-    # Use absolute paths or consistent relative paths to avoid directory shifts
-    input_file = '../adrs_input.json'
-    analyzer = Factor_2_6_Consequences_Analyzer()
-    
-    if not os.path.exists(input_file):
-        print(f"❌ Error: {input_file} not found.")
-        return None
-            
-    try:
-        with open(input_file, 'r', encoding='utf-8') as f:
-            patient_data = json.load(f)
-    except json.JSONDecodeError as e:
-        print(f"❌ Error: adrs_input.json is malformed: {e}")
-        return None
 
-    # Run the Gemini Analysis
+def main():
+    """Main execution"""
+    
+    print("\n" + "=" * 80)
+    print("FACTOR 2.6: CONSEQUENCES OF NON-TREATMENT ANALYZER")
+    print("Powered by Gemini 2.0 Flash")
+    print("=" * 80)
+    
+    # Initialize analyzer
+    try:
+        analyzer = Factor_2_6_Consequences_Analyzer()
+    except ValueError as e:
+        print(f"\n❌ {str(e)}")
+        print("Please add GEMINI_API_KEY to your .env file")
+        return
+    
+    # Load patient input
+    patient_input_file = 'patient_input.json'
+    
+    try:
+        with open(patient_input_file, 'r') as f:
+            patient_data = json.load(f)
+    except FileNotFoundError:
+        print(f"\n❌ Error: {patient_input_file} not found!")
+        print("Please create patient_input.json with patient diagnosis information.")
+        return
+    except json.JSONDecodeError:
+        print(f"\n❌ Error: Invalid JSON in {patient_input_file}")
+        return
+    
+    # Analyze patient
     results = analyzer.analyze_patient(patient_data)
     
-    # Calculate Score through the centralized config
-    # This adds the 'medical_need_severity' to the scoring object
-    if scoring_system:
-        from scoring.benefit_factor import get_consequences_data
-        cons_score = get_consequences_data(results, scoring_system)
-        results['consequence_score'] = cons_score
-
-    # Save output for the next module in the pipeline
-    output_file = "../consequences.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
+    # Print report
+    analyzer.print_report(results)
+    
+    # Save to JSON
+    output_file = f"factor_2_6_consequences_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
     
-    return results
+    print(f"✓ Results saved to: {output_file}\n")
+
+
+if __name__ == "__main__":
+    main()
