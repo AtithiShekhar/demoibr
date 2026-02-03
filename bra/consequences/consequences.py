@@ -65,19 +65,70 @@ class Factor_2_6_Consequences_Analyzer:
         return unique_diagnoses
     
     # ============================================================================
-    # PART 2: ANALYZE CONSEQUENCES WITH GEMINI
+    # PART 2: ANALYZE CONSEQUENCES WITH GEMINI (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def analyze_consequences(
         self,
-        disease: str
+        disease: str,
+        patient_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Use Gemini to analyze consequences of non-treatment
+        Use Gemini to analyze consequences of non-treatment with patient context
         """
         
-        prompt = f"""You are a medical expert. Classify untreated {disease} consequences.
+        # Build patient context if provided
+        patient_context = ""
+        if patient_data:
+            patient = patient_data.get('patient', {})
+            age = patient.get('age', 'unknown')
+            gender = patient.get('gender', 'unknown')
+            diagnosis = patient.get('diagnosis', '')
+            social_risk = patient.get('social_risk_factors', '')
+            
+            # Extract medical history
+            medical_history = patient_data.get('MedicalHistory', [])
+            active_conditions = []
+            severe_conditions = []
+            
+            for history in medical_history:
+                condition_name = history.get('diagnosisName', '')
+                status = history.get('status', '')
+                severity = history.get('severity', '')
+                
+                if status == 'Active':
+                    active_conditions.append(condition_name)
+                    if severity in ['Severe', 'Critical']:
+                        severe_conditions.append(f"{condition_name} ({severity})")
+            
+            # Determine patient characteristics
+            is_post_transplant = 'transplant' in diagnosis.lower()
+            is_immunosuppressed = is_post_transplant or 'immunosuppressed' in diagnosis.lower()
+            age_category = "pediatric" if age != "unknown" and age < 18 else ("geriatric" if age != "unknown" and age >= 65 else "adult")
+            
+            patient_context = f"""
+PATIENT CONTEXT (consider for severity assessment):
+- Age: {age} years ({age_category})
+- Gender: {gender}
+- Primary Diagnosis: {diagnosis}
+- Social Risk Factors: {social_risk}
+- Post-Transplant: {'Yes' if is_post_transplant else 'No'}
+- Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}"""
 
+            if active_conditions:
+                patient_context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
+            
+            if severe_conditions:
+                patient_context += f"\n- Severe/Critical Conditions: {', '.join(severe_conditions)}"
+
+            patient_context += f"""
+
+Consider how this patient's specific characteristics (age, immunosuppression, comorbidities) 
+affect the severity and timeframe of consequences if {disease} is left untreated.
+"""
+        
+        prompt = f"""You are a medical expert. Classify untreated {disease} consequences.
+{patient_context}
 CLASSIFICATION RULES (STRICT):
 
 1. **Acute, life-threatening**: Death/irreversible damage within hours-days WITHOUT treatment
@@ -100,6 +151,7 @@ CRITICAL GUIDELINES:
 - CKD/Renal impairment = Chronic, life-threatening
 - If disease takes months-years to cause death → Chronic, life-threatening
 - If disease causes death in hours-days without treatment → Acute, life-threatening
+{"- Consider patient's age, immunosuppression status, and comorbidities when assessing severity" if patient_data else ""}
 
 DISEASE: {disease}
 
@@ -116,7 +168,8 @@ JSON FORMAT:
       "consequences_if_untreated": "• Outcome 1\\n• Outcome 2\\n• Outcome 3",
       "severity": "Match category",
       "specific_outcomes": ["outcome1", "outcome2", "outcome3"],
-      "reliable_sources_used": ["CDC", "WHO"]
+      "reliable_sources_used": ["CDC", "WHO"]{"," if patient_data else ""}
+      {"\"patient_specific_notes\": \"How patient's age/immunosuppression affects severity\"" if patient_data else ""}
     }}
   ]
 }}
@@ -125,6 +178,7 @@ Rules:
 - Keep consequences_if_untreated to 3-4 bullet points MAX
 - Each bullet point: 10-15 words
 - Be concise, direct, factual
+{"- Include patient_specific_notes if patient context is provided" if patient_data else ""}
 - Return ONLY JSON
 
 JSON:"""
@@ -132,7 +186,7 @@ JSON:"""
         try:
             # Generate content using new API
             response = self.client.models.generate_content(
-                model='gemini-2.0-flash-exp',
+                model='gemini-2.0-flash',
                 contents=prompt
             )
             
@@ -212,15 +266,15 @@ JSON:"""
         for i, d in enumerate(diagnoses, 1):
             print(f"  {i}. {d}")
         
-        print("\nAnalyzing consequences...\n")
+        print("\nAnalyzing consequences with patient context...\n")
         
         factor_2_6_results = {}
         
         for i, disease in enumerate(diagnoses, 1):
             print(f"[{i}/{len(diagnoses)}] Analyzing: {disease}")
             
-            # Analyze with Gemini
-            result = self.analyze_consequences(disease)
+            # Analyze with Gemini (passing patient_data for context-aware analysis)
+            result = self.analyze_consequences(disease, patient_data)
             
             # Store result
             factor_2_6_results[disease] = result
@@ -231,6 +285,8 @@ JSON:"""
                     print(f"  → Category: {classification.get('category')}")
                     print(f"     Timeframe: {classification.get('timeframe')}")
                     print(f"     Severity: {classification.get('severity')}")
+                    if 'patient_specific_notes' in classification:
+                        print(f"     Patient Note: {classification.get('patient_specific_notes')}")
             
             print()
             
@@ -285,12 +341,17 @@ JSON:"""
                 severity = classification.get('severity', 'Unknown')
                 outcomes = classification.get('specific_outcomes', [])
                 sources = classification.get('reliable_sources_used', [])
+                patient_notes = classification.get('patient_specific_notes', '')
                 
                 print(f"\n  Category: {category}")
                 print(f"  Timeframe: {timeframe}")
                 print(f"  Severity: {severity}")
                 print(f"\n  Consequences if Untreated:")
                 print(f"    {consequences}")
+                
+                if patient_notes:
+                    print(f"\n  Patient-Specific Considerations:")
+                    print(f"    {patient_notes}")
                 
                 if outcomes:
                     print(f"\n  Specific Outcomes:")
@@ -305,24 +366,34 @@ JSON:"""
         print("\n" + "=" * 80 + "\n")
 
 
-def main():
-    """Main execution"""
+# ============================================================================
+# NEW: START FUNCTION FOR SYSTEM INTEGRATION
+# ============================================================================
+
+def start(scoring_system=None) -> Dict[str, Any]:
+    """
+    Main entry point for consequences analysis (called by the system)
     
-    print("\n" + "=" * 80)
-    print("FACTOR 2.6: CONSEQUENCES OF NON-TREATMENT ANALYZER")
-    print("Powered by Gemini 2.0 Flash")
-    print("=" * 80)
+    Args:
+        scoring_system: Scoring system object that contains patient_data
     
-    # Initialize analyzer
+    Returns:
+        Dictionary with consequences analysis results and scoring data
+    """
+    
     try:
+        # Initialize analyzer
         analyzer = Factor_2_6_Consequences_Analyzer()
     except ValueError as e:
-        print(f"\n❌ {str(e)}")
-        print("Please add GEMINI_API_KEY to your .env file")
-        return
+        print(f"❌ {str(e)}")
+        return {
+            'error': str(e),
+            'factor_2_6_consequences_of_non_treatment': {},
+            'consequences_score': None
+        }
     
     # Load patient input
-    patient_input_file = 'patient_input.json'
+    patient_input_file = '../adrs_input.json'
     
     try:
         with open(patient_input_file, 'r') as f:
@@ -338,16 +409,27 @@ def main():
     # Analyze patient
     results = analyzer.analyze_patient(patient_data)
     
-    # Print report
-    analyzer.print_report(results)
+    # -------------------------------
+    # Consequences scoring (if scoring_system provided)
+    # -------------------------------
+    if scoring_system:
+        try:
+            from scoring.benefit_factor import get_consequences_data
+            
+            consequences_score = get_consequences_data(
+                consequences_data=results.get('consequences.json', {}),
+                scoring_system=scoring_system
+            )
+        except ImportError:
+            print("⚠️  scoring.consequences_factor module not found - skipping scoring")
+            consequences_score = None
+        except Exception as e:
+            print(f"⚠️  Error in consequences scoring: {str(e)}")
+            consequences_score = None
+    else:
+        consequences_score = None
     
-    # Save to JSON
-    output_file = f"factor_2_6_consequences_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(output_file, 'w') as f:
-        json.dump(results, f, indent=2)
+    # Add scoring to results
+    results['consequences_score'] = consequences_score
     
-    print(f"✓ Results saved to: {output_file}\n")
-
-
-if __name__ == "__main__":
-    main()
+    return results

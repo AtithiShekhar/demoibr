@@ -25,7 +25,7 @@ class Factor_2_6_Consequences_Analyzer:
         
         # Configure new Gemini client
         genai.configure(api_key=self.gemini_api_key)
-        self.model_name = "gemini-2.0-flash-exp"
+        self.model_name = "gemini-2.0-flash"
         self.model = genai.GenerativeModel(self.model_name)
 
 

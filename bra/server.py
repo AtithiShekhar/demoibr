@@ -17,46 +17,56 @@ app = Flask(__name__)
 
 import json
 from datetime import datetime
-
+from datetime import datetime
+from datetime import datetime
 def simplify_medical_data(complex_data):
     """
-    Transforms detailed EMR JSON into a simplified format for 
-    ADR and Factor analysis modules.
+    Simplifies EMR data while preserving the full MedicalHistory array 
+    for downstream processing.
     """
     patient_info = complex_data.get("patientInfo", {})
     
-    # 1. Extract and flatten diagnoses names
-    diagnoses_list = [d.get("diagnosisName") for d in complex_data.get("currentDiagnoses", [])]
-    
-    # 2. Extract and flatten complaints
+    # 1. Extract diagnoses and complaints as flattened strings for quick reference
+    current_diagnoses = [d.get("diagnosisName") for d in complex_data.get("currentDiagnoses", [])]
     complaints_list = [c.get("complaint") for c in complex_data.get("chiefComplaints", [])]
     
-    # 3. Extract all unique medication names
+    # 2. Correctly capture the MedicalHistory ARRAY from the root level
+    # We keep this as a list of objects to match your system's requirements
+    medical_history_array = complex_data.get("MedicalHistory", [])
+    
+    # 3. Extract unique medication names from ALL sources (Current + History)
     medication_names = set()
-    for diagnosis in complex_data.get("currentDiagnoses", []):
-        meds = diagnosis.get("treatment", {}).get("medications", [])
+    
+    # Check Current Diagnoses
+    for dx in complex_data.get("currentDiagnoses", []):
+        meds = dx.get("treatment", {}).get("medications", [])
         for med in meds:
             if med.get("name"):
                 medication_names.add(med["name"])
+                
+    # Check Medical History
+    for h_dx in medical_history_array:
+        h_meds = h_dx.get("treatment", {}).get("medications", [])
+        for h_med in h_meds:
+            if h_med.get("name"):
+                medication_names.add(h_med["name"])
     
     # 4. Construct the simplified object
     simplified = {
         "patient": {
             "age": patient_info.get("age"),
             "gender": patient_info.get("gender"),
-            # Conditions maps to chief complaints per your request
             "condition": ", ".join(complaints_list),
-            # Diagnosis name maps to diagnosis string
-            "diagnosis": ", ".join(diagnoses_list),
-            # Placeholder for lifestyle data if not in source
-            "smoking_alcohol": "Not specified", 
-            "date_of_assessment": datetime.now().strftime("%Y-%m-%d")
+            "diagnosis": ", ".join(current_diagnoses),
+            "social_risk_factors": patient_info.get('social_risk_factors'), 
+            "date_of_assessment": datetime.now().strftime("%Y-%m-%d"),
+            # PRESERVED: The full array as requested
+            "MedicalHistory": medical_history_array 
         },
         "prescription": list(medication_names)
     }
     
     return simplified
-
 # Example usage:
 # simplified_json = simplify_medical_data(complex_input_json)
 @app.route("/analyze", methods=["POST"])

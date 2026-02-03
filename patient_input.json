@@ -3,7 +3,7 @@
     "age": 65,
     "gender": "Male",
     "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
-    "smoking_alcohol": "Not reported",
+    "social_risk_factors": "smoking/alcohol(only two options)",
     "date_of_assessment": "2025-09-17"
   },
   "prescription": [

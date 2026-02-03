@@ -1,0 +1,155 @@
+{
+  "analysis_timestamp": "2026-02-04T02:34:25.118743",
+  "analyses": {
+    "benefit_factor": {
+      "benefit_sub_factor": "Off label",
+      "description": "Off label",
+      "weight": 240,
+      "score": 1,
+      "weighted_score": 240,
+      "score_type": "benefit",
+      "cdsco_approved": false,
+      "usfda_approved": false
+    },
+    "market_experience": {
+      "experience_sub_factor": "Established indication (>5Y, approved widely)",
+      "description": "Established indication (>5Y, approved widely)",
+      "weight": 120,
+      "score": 1,
+      "weighted_score": 120,
+      "score_type": "benefit",
+      "years_in_market": 29
+    },
+    "pubmed_evidence": {
+      "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+      "description": "Low evidence (limited data, uncertain)",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "benefit",
+      "rct_count": 0
+    },
+    "contraindication": {
+      "description": "No contraindication",
+      "weight": 0,
+      "score": 1,
+      "weighted_score": 0,
+      "score_type": "risk",
+      "status": "safe"
+    },
+    "therapeutic_duplication": {
+      "status": "not_applicable",
+      "reason": "Single medication for this condition - no duplication check needed"
+    },
+    "life_threatening_adrs": {
+      "lt_adr_category": "Low Risk - No life-threatening ADRs detected",
+      "description": "No life-threatening ADRs",
+      "weight": 30,
+      "score": 1,
+      "weighted_score": 30,
+      "score_type": "risk",
+      "adr_count": 0,
+      "has_risk_factors": false
+    },
+    "serious_adrs": {
+      "serious_adr_category": "Low Risk - No serious ADRs detected",
+      "description": "No Serious ADRs",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "risk",
+      "adr_count": 0,
+      "has_risk_factors": false
+    },
+    "drug_interactions": {
+      "interaction_category": "No Drug Interactions",
+      "description": "No interactions",
+      "weight": 10,
+      "score": 1,
+      "weighted_score": 10,
+      "score_type": "risk",
+      "contraindicated_count": 0,
+      "lt_interaction_count": 0,
+      "serious_interaction_count": 0,
+      "non_serious_count": 0
+    },
+    "medical_need_severity": {
+      "medical_need_category": "Unknown - Insufficient Data",
+      "description": "Chronic, non-life-threatening",
+      "weight": 150,
+      "score": 1,
+      "weighted_score": 150,
+      "score_type": "benefit",
+      "severity_level": "unknown"
+    },
+    "summary": {
+      "drug": "Ibuprofen",
+      "diagnosis": "Upper Gastrointestinal Bleeding",
+      "total_weighted_score": 570,
+      "total_benefit_score": 520,
+      "total_risk_score": 50,
+      "brr": 10.4,
+      "brr_interpretation": "Excellent - Benefits strongly outweigh risks",
+      "score_breakdown": {
+        "pubmed_evidence": {
+          "evidence_sub_factor": "Low evidence (limited data, uncertain)",
+          "description": "Low evidence (limited data, uncertain)",
+          "weight": 10,
+          "score": 1,
+          "weighted_score": 10,
+          "score_type": "benefit",
+          "rct_count": 0
+        },
+        "contraindication_risk": {
+          "description": "No contraindication",
+          "weight": 0,
+          "score": 1,
+          "weighted_score": 0,
+          "score_type": "risk",
+          "status": "safe"
+        }
+      },
+      "therapeutic_duplication_performed": false,
+      "rct_count": 0,
+      "has_contraindication": false,
+      "has_life_threatening_adrs": false,
+      "has_serious_adrs": false,
+      "has_drug_interactions": false,
+      "rmm": [],
+      "consequence": {
+        "date": "2026-02-04 02:34:25",
+        "patient": {
+          "age": 65,
+          "gender": "Male",
+          "current_symptoms": "Severe dizziness",
+          "active_diagnoses": "Upper Gastrointestinal Bleeding",
+          "MedicalHistory": "Upper Gastrointestinal Bleeding, Hypertension",
+          "social_risk_factors": "smoking/alcohol",
+          "assessment_date": "2026-02-04"
+        },
+        "factor_2_6": {},
+        "total_diagnoses_analyzed": 0,
+        "consequences_score": {
+          "medical_need_category": "Unknown - Insufficient Data",
+          "description": "Chronic, non-life-threatening",
+          "weight": 150,
+          "score": 1,
+          "weighted_score": 150,
+          "score_type": "benefit",
+          "severity_level": "unknown"
+        }
+      },
+      "rmf": {
+        "error": "Analysis returned no results"
+      }
+    }
+  },
+  "benefit_risk_ratio": {
+    "total_benefit_score": 520,
+    "total_risk_score": 50,
+    "brr": 10.4,
+    "interpretation": "Excellent - Benefits strongly outweigh risks",
+    "benefit_components": 4,
+    "risk_components": 4
+  }
+}

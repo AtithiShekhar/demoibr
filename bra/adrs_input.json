@@ -1,13 +1,56 @@
 {
   "patient": {
-    "age": 60,
+    "age": 65,
     "gender": "Male",
-    "condition": "dizziness",
+    "condition": "Severe dizziness",
     "diagnosis": "Upper Gastrointestinal Bleeding",
-    "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-31"
+    "social_risk_factors": "smoking/alcohol",
+    "date_of_assessment": "2026-02-04",
+    "MedicalHistory": [
+      {
+        "diagnosisName": "Upper Gastrointestinal Bleeding",
+        "diagnosisDate": "2026-01-28",
+        "severity": "Severe",
+        "status": "Active",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Ibuprofen",
+              "dosage": "400mg",
+              "route": "Oral",
+              "frequency": "TID",
+              "timing": "PC",
+              "startDate": "2026-01-20",
+              "status": "Stopped"
+            }
+          ]
+        }
+      },
+      {
+        "diagnosisName": "Hypertension",
+        "diagnosisDate": "2020-03-15",
+        "severity": "Moderate",
+        "status": "Chronic",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Lisinopril",
+              "dosage": "10mg",
+              "route": "Oral",
+              "frequency": "Once daily",
+              "timing": "Morning",
+              "startDate": "2020-03-15",
+              "status": "Active"
+            }
+          ]
+        }
+      }
+    ]
   },
   "prescription": [
+    "Lisinopril",
     "Ibuprofen"
   ]
 }

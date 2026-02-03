@@ -29,7 +29,7 @@ class Step4_RMM_Generator:
             raise ValueError("GEMINI_API_KEY not found in environment variables!")
         
         genai.configure(api_key=self.gemini_api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
         
         print(f"✓ Gemini Flash 2.0 initialized")
     

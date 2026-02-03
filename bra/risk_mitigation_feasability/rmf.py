@@ -11,10 +11,11 @@ load_dotenv()
 
 class Factor_3_4_Risk_Mitigation_Feasibility:
     """
-    Factor 3.4: Risk Mitigation Feasibility
+    Factor 3.4: Risk Mitigation Feasibility (Patient-Context-Aware)
     Classifies ADRs based on:
     - Risk Reversibility/Tolerability (Irreversible, Reversible, Tolerable)
     - Risk Preventability (Non-Tolerable, Non-preventable, Preventable)
+    Now considers patient-specific factors (age, immunosuppression, comorbidities)
     """
     
     def __init__(self):
@@ -80,6 +81,102 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
         print(f"✓ Factor 3.4 Analyzer initialized")
     
     # ============================================================================
+    # NEW: BUILD PATIENT CONTEXT
+    # ============================================================================
+    
+    def build_patient_context(self, patient_data: Dict[str, Any]) -> str:
+        """
+        Build patient context string for enhanced ADR risk assessment
+        """
+        if not patient_data:
+            return ""
+        
+        # Support both simple and complex patient data formats
+        if "patient" in patient_data:
+            patient = patient_data["patient"]
+        else:
+            patient = patient_data
+        
+        age = patient.get("age", "unknown")
+        gender = patient.get("gender", "unknown")
+        diagnosis = patient.get("diagnosis", "")
+        social_risk = patient.get("social_risk_factors", "")
+        
+        # Extract medical history
+        medical_history = patient_data.get("MedicalHistory", [])
+        active_conditions = []
+        severe_conditions = []
+        previous_adrs = []
+        
+        for history in medical_history:
+            condition_name = history.get("diagnosisName", "")
+            status = history.get("status", "")
+            severity = history.get("severity", "")
+            
+            if status == "Active":
+                active_conditions.append(condition_name)
+                if severity in ["Severe", "Critical"]:
+                    severe_conditions.append(f"{condition_name} ({severity})")
+            
+            # Extract stopped medications (potential ADRs)
+            treatment = history.get("treatment", {})
+            medications = treatment.get("medications", [])
+            for med in medications:
+                med_name = med.get("name", "")
+                med_status = med.get("status", "")
+                if med_name and med_status == "Stopped":
+                    previous_adrs.append(f"{med_name} (previously stopped)")
+        
+        # Determine patient characteristics
+        is_post_transplant = "transplant" in diagnosis.lower()
+        is_immunosuppressed = is_post_transplant or "immunosuppressed" in diagnosis.lower()
+        has_hematologic_malignancy = any(term in diagnosis.lower() for term in ["leukemia", "aml", "lymphoma", "myeloma"])
+        age_category = "pediatric" if age != "unknown" and age < 18 else ("geriatric" if age != "unknown" and age >= 65 else "adult")
+        
+        context = f"""Patient Profile:
+- Age: {age} years ({age_category})
+- Gender: {gender}
+- Primary Diagnosis: {diagnosis}
+- Social Risk Factors: {social_risk}
+- Post-Transplant: {'Yes' if is_post_transplant else 'No'}
+- Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}
+- Hematologic Malignancy: {'Yes' if has_hematologic_malignancy else 'No'}"""
+
+        if active_conditions:
+            context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
+        
+        if severe_conditions:
+            context += f"\n- Severe/Critical Conditions: {', '.join(severe_conditions)}"
+        
+        if previous_adrs:
+            context += f"\n- Previous Medication Discontinuations: {', '.join(set(previous_adrs))}"
+
+        context += """
+
+PATIENT-SPECIFIC RISK FACTORS:
+"""
+        
+        # Add age-related risks
+        if age != "unknown" and age >= 65:
+            context += "- Elderly patient: Higher risk of ADRs, slower recovery, reduced organ reserve\n"
+        elif age != "unknown" and age < 18:
+            context += "- Pediatric patient: Different pharmacokinetics, developmental considerations\n"
+        
+        # Add immunosuppression risks
+        if is_immunosuppressed:
+            context += "- Immunosuppressed: Higher infection risk, impaired healing, drug interactions\n"
+        
+        # Add hematologic malignancy risks
+        if has_hematologic_malignancy:
+            context += "- Hematologic malignancy: Bone marrow compromise, higher bleeding/infection risk\n"
+        
+        # Add comorbidity risks
+        if severe_conditions:
+            context += f"- Multiple severe comorbidities increase ADR risk and reduce reversibility\n"
+        
+        return context
+    
+    # ============================================================================
     # PART 1: LOAD FACTOR 3.2 OUTPUT
     # ============================================================================
     
@@ -126,16 +223,18 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
         return all_adrs
     
     # ============================================================================
-    # PART 2: CLASSIFY RISK REVERSIBILITY/TOLERABILITY
+    # PART 2: CLASSIFY RISK REVERSIBILITY/TOLERABILITY (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def classify_reversibility_tolerability(
         self,
         adr: Dict[str, Any],
-        fda_sections: Dict[str, Any]
+        fda_sections: Dict[str, Any],
+        patient_context: str = ""
     ) -> Dict[str, Any]:
         """
         Classify ADR as: Irreversible, Reversible, or Tolerable
+        Now considers patient-specific factors
         """
         
         adr_name = adr['adr_name']
@@ -145,11 +244,16 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
         # STRICT RULES: Check if ADR is in strict irreversible list
         for strict_adr in self.strict_irreversible:
             if strict_adr in adr_lower:
+                reason = f'{adr_name} is a known irreversible condition with permanent consequences'
+                if patient_context and ("immunosuppressed" in patient_context.lower() or "elderly" in patient_context.lower()):
+                    reason += ". Risk is ELEVATED in this patient due to age/immunosuppression."
+                
                 return {
                     'classification': 'Irreversible ADR',
-                    'reasoning': f'{adr_name} is a known irreversible condition with permanent consequences',
+                    'reasoning': reason,
                     'fda_evidence': 'Documented as irreversible in medical literature',
-                    'keywords_found': [strict_adr]
+                    'keywords_found': [strict_adr],
+                    'patient_specific_notes': 'Patient factors increase severity/recovery time' if patient_context else None
                 }
         
         # Search FDA sections for keywords
@@ -163,6 +267,9 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
         irreversible_matches = [kw for kw in self.irreversible_keywords if kw in fda_text_lower]
         reversible_matches = [kw for kw in self.reversible_keywords if kw in fda_text_lower]
         
+        # Enhanced prompt with patient context
+        patient_section = f"\n\n{patient_context}" if patient_context else ""
+        
         # Use AI for classification
         prompt = f"""You are a medical expert analyzing adverse drug reactions (ADRs) for reversibility.
 
@@ -170,7 +277,8 @@ MEDICINE: {medicine}
 ADR: {adr_name}
 
 FDA USPI CONTEXT:
-{fda_text[:3000] if fda_text else 'Limited FDA information available'}
+{fda_text[:2500] if fda_text else 'Limited FDA information available'}
+{patient_section}
 
 TASK: Classify this ADR into ONE of these categories:
 
@@ -191,13 +299,15 @@ CLASSIFICATION CRITERIA:
 - If ADR causes permanent damage → Irreversible
 - If ADR resolves/improves after stopping drug → Reversible  
 - If ADR is minor and disease is severe → Tolerable
+{"- CONSIDER patient age, immunosuppression status when assessing recovery potential" if patient_context else ""}
 
 RESPOND IN THIS EXACT JSON FORMAT:
 {{
   "classification": "Irreversible ADR" OR "Reversible ADR" OR "Tolerable ADR",
   "reasoning": "Brief explanation why",
   "fda_evidence": "Quote from FDA text or 'Based on medical knowledge'",
-  "keywords_found": ["keyword1", "keyword2"]
+  "keywords_found": ["keyword1", "keyword2"]{"," if patient_context else ""}
+  {"\"patient_specific_notes\": \"How patient factors affect reversibility/recovery\"" if patient_context else ""}
 }}
 
 Return ONLY valid JSON, no additional text.
@@ -243,16 +353,18 @@ Your JSON response:"""
                 }
     
     # ============================================================================
-    # PART 3: CLASSIFY RISK PREVENTABILITY
+    # PART 3: CLASSIFY RISK PREVENTABILITY (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def classify_preventability(
         self,
         adr: Dict[str, Any],
-        fda_sections: Dict[str, Any]
+        fda_sections: Dict[str, Any],
+        patient_context: str = ""
     ) -> Dict[str, Any]:
         """
         Classify ADR as: Non-Tolerable, Non-preventable, or Preventable
+        Now considers patient-specific monitoring needs
         """
         
         adr_name = adr['adr_name']
@@ -266,7 +378,8 @@ Your JSON response:"""
                     'classification': 'Non-preventable ADR',
                     'reasoning': f'{adr_name} is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring',
                     'fda_evidence': 'Documented as unpredictable reaction',
-                    'prevention_measures': []
+                    'prevention_measures': [],
+                    'patient_specific_notes': 'Requires immediate discontinuation if occurs' if patient_context else None
                 }
         
         # Search FDA sections for prevention keywords
@@ -279,6 +392,9 @@ Your JSON response:"""
         # Count keyword matches
         preventable_matches = [kw for kw in self.preventable_keywords if kw in fda_text_lower]
         
+        # Enhanced prompt with patient context
+        patient_section = f"\n\n{patient_context}" if patient_context else ""
+        
         # Use AI for classification
         prompt = f"""You are a medical expert analyzing adverse drug reactions (ADRs) for preventability.
 
@@ -286,7 +402,8 @@ MEDICINE: {medicine}
 ADR: {adr_name}
 
 FDA USPI CONTEXT:
-{fda_text[:3000] if fda_text else 'Limited FDA information available'}
+{fda_text[:2500] if fda_text else 'Limited FDA information available'}
+{patient_section}
 
 TASK: Classify this ADR into ONE of these categories:
 
@@ -312,13 +429,15 @@ CLASSIFICATION CRITERIA:
 - If ADR is unpredictable/idiosyncratic → Non-preventable
 - If monitoring/dose adjustment can prevent → Preventable
 - If ADR risk too high for disease benefit → Non-Tolerable
+{"- CONSIDER patient's age/immunosuppression may require MORE FREQUENT monitoring" if patient_context else ""}
 
 RESPOND IN THIS EXACT JSON FORMAT:
 {{
   "classification": "Non-Tolerable ADR" OR "Non-preventable ADR" OR "Preventable ADR",
   "reasoning": "Brief explanation why",
   "fda_evidence": "Quote from FDA text or 'Based on medical knowledge'",
-  "prevention_measures": ["measure 1", "measure 2"]
+  "prevention_measures": ["measure 1", "measure 2"]{"," if patient_context else ""}
+  {"\"patient_specific_notes\": \"Special monitoring needs for this patient\"" if patient_context else ""}
 }}
 
 Return ONLY valid JSON, no additional text.
@@ -432,11 +551,11 @@ Your JSON response:"""
         return None
     
     # ============================================================================
-    # PART 5: MAIN ANALYSIS
+    # PART 5: MAIN ANALYSIS (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
-    def analyze(self, factor_3_2_file: str) -> Dict[str, Any]:
-        """Main analysis workflow"""
+    def analyze(self, factor_3_2_file: str, patient_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Main analysis workflow with patient context"""
         
         print("\n" + "=" * 80)
         print("FACTOR 3.4: RISK MITIGATION FEASIBILITY ANALYSIS")
@@ -447,6 +566,14 @@ Your JSON response:"""
         
         if not factor_3_2_data:
             return {}
+        
+        # Build patient context string
+        patient_context = ""
+        if patient_data:
+            patient_context = self.build_patient_context(patient_data)
+            print("Patient context identified:")
+            print(patient_context)
+            print()
         
         # Extract all ADRs
         all_adrs = self.extract_all_adrs(factor_3_2_data)
@@ -467,7 +594,7 @@ Your JSON response:"""
             fda_data[medicine] = self.extract_fda_sections(medicine)
             time.sleep(0.3)
         
-        print("\nAnalyzing ADRs...\n")
+        print("\nAnalyzing ADRs with patient context...\n")
         
         # Analyze each ADR
         reversibility_results = {}
@@ -481,13 +608,17 @@ Your JSON response:"""
             
             fda_sections = fda_data.get(medicine)
             
-            # Classify reversibility/tolerability
-            reversibility = self.classify_reversibility_tolerability(adr, fda_sections)
+            # Classify reversibility/tolerability (with patient context)
+            reversibility = self.classify_reversibility_tolerability(adr, fda_sections, patient_context)
             print(f"  → Reversibility: {reversibility['classification']}")
+            if reversibility.get('patient_specific_notes'):
+                print(f"     Patient Note: {reversibility['patient_specific_notes'][:80]}...")
             
-            # Classify preventability
-            preventability = self.classify_preventability(adr, fda_sections)
+            # Classify preventability (with patient context)
+            preventability = self.classify_preventability(adr, fda_sections, patient_context)
             print(f"  → Preventability: {preventability['classification']}")
+            if preventability.get('patient_specific_notes'):
+                print(f"     Patient Note: {preventability['patient_specific_notes'][:80]}...")
             
             # Store results
             key = f"{medicine} - {adr_name}"
@@ -514,6 +645,7 @@ Your JSON response:"""
             'patient': factor_3_2_data.get('patient', {}),
             'medications': factor_3_2_data.get('medications', []),
             'total_adrs_analyzed': len(all_adrs),
+            'patient_context_applied': bool(patient_context),
             'factor_3_4_risk_mitigation_feasibility': {
                 'risk_reversibility_risk_tolerability': reversibility_results,
                 'risk_preventability': preventability_results
@@ -533,6 +665,7 @@ Your JSON response:"""
         print(f"\nPatient: {patient.get('age')}y {patient.get('gender')}")
         print(f"Medications: {', '.join(results.get('medications', []))}")
         print(f"Total ADRs Analyzed: {results.get('total_adrs_analyzed', 0)}")
+        print(f"Patient Context Applied: {'Yes' if results.get('patient_context_applied') else 'No'}")
         
         factor_3_4 = results.get('factor_3_4_risk_mitigation_feasibility', {})
         
@@ -547,6 +680,8 @@ Your JSON response:"""
             print(f"\n{data['medicine']} - {data['adr_name']}")
             print(f"  Classification: {data['classification']}")
             print(f"  Reasoning: {data['reasoning']}")
+            if data.get('patient_specific_notes'):
+                print(f"  Patient-Specific: {data['patient_specific_notes']}")
             if data.get('fda_evidence'):
                 print(f"  FDA Evidence: {data['fda_evidence'][:200]}...")
         
@@ -561,16 +696,25 @@ Your JSON response:"""
             print(f"\n{data['medicine']} - {data['adr_name']}")
             print(f"  Classification: {data['classification']}")
             print(f"  Reasoning: {data['reasoning']}")
+            if data.get('patient_specific_notes'):
+                print(f"  Patient-Specific: {data['patient_specific_notes']}")
             if data.get('prevention_measures'):
                 print(f"  Prevention Measures: {', '.join(data['prevention_measures'][:3])}")
         
         print("\n" + "=" * 80 + "\n")
 
 
-def start(input_file: Optional[str] = None,scoring_system=None) -> Dict[str, Any]:
+def start(input_file: Optional[str] = None, scoring_system=None) -> Dict[str, Any]:
     """
-    Entry point for Factor 3.4: Risk Mitigation Feasibility.
-    Waits for ADR output, analyzes feasibility, cleans up, and returns results.
+    Entry point for Factor 3.4: Risk Mitigation Feasibility (Patient-Context-Aware)
+    Waits for ADR output, analyzes feasibility with patient context, and returns results.
+    
+    Args:
+        input_file: Path to Factor 3.2 output file
+        scoring_system: Scoring system object (contains patient_data)
+    
+    Returns:
+        Risk mitigation feasibility results with patient context
     """
     print("\n" + "=" * 80)
     print("FACTOR 3.4: RISK MITIGATION FEASIBILITY ANALYZER")
@@ -584,8 +728,13 @@ def start(input_file: Optional[str] = None,scoring_system=None) -> Dict[str, Any
         print(f"\n❌ {str(e)}")
         return {"error": "API Key missing"}
     
-    # 2. Polling Logic: Wait up to 30s for the ADR output file
-    # Using the standardized naming convention established in your previous modules
+    # 2. Extract patient_data from scoring_system if available
+    patient_data = None
+    if scoring_system and hasattr(scoring_system, 'patient_data'):
+        patient_data = scoring_system.patient_data
+        print("✓ Patient context extracted from scoring system")
+    
+    # 3. Polling Logic: Wait up to 30s for the ADR output file
     target_file = input_file if input_file else '../adrs_output.json'
     timeout = 30
     elapsed = 0
@@ -602,25 +751,28 @@ def start(input_file: Optional[str] = None,scoring_system=None) -> Dict[str, Any
         print(f"\n❌ Timeout: {target_file} not found!")
         return {"error": "Input file not found"}
 
-    # 3. Perform Analysis
+    # 4. Perform Analysis with patient context
     try:
-        results = analyzer.analyze(target_file)
+        results = analyzer.analyze(target_file, patient_data)
         
         if not results:
             return {"error": "Analysis returned no results"}
         
-        # 4. Print formatted report to console
+        # 5. Print formatted report to console
         analyzer.print_report(results)
+        
+        # 6. Generate scoring data
         rmf_score = get_mitigation_feasibility_data(results, scoring_system=scoring_system)
         results['mitigation_score'] = rmf_score
-        # 5. Persist results to local JSON for logging
+        
+        # 7. Persist results to local JSON for logging
         output_file = "../risk_mitigation_output.json"
         with open(output_file, 'w') as f:
             json.dump(results, f, indent=2)
         
         print(f"✓ Mitigation feasibility results saved to: {output_file}")
 
-        # 6. Cleanup: Delete the input file before returning
+        # 8. Cleanup: Delete the input file before returning
         try:
             # os.remove(target_file)
             print(f"🗑️ Original file {target_file} deleted successfully.")
@@ -634,7 +786,3 @@ def start(input_file: Optional[str] = None,scoring_system=None) -> Dict[str, Any
         import traceback
         traceback.print_exc()
         return {"error": str(e)}
-
-if __name__ == "__main__":
-    # Standard local execution for testing
-    start()

@@ -1,3 +1,4 @@
+# analyzer.py
 import json
 import requests
 from typing import Dict, List, Any, Optional
@@ -37,7 +38,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
     """
     Factor 3.2: Life-Threatening ADRs/Interactions
     Factor 3.3: Serious ADRs/Interactions
-    CORRECTED VERSION - Fixes all identified issues
+    WITH MEDICAL HISTORY INTEGRATION
     """
     
     def __init__(self):
@@ -110,7 +111,9 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             'metabolic': ['diabetes', 'diabetic', 'metabolic acidosis', 'hyperglycemia', 'hypoglycemia'],
             'respiratory': ['copd', 'asthma', 'respiratory disease', 'pulmonary disease'],
             'vascular': ['deep vein thrombosis', 'dvt', 'pulmonary embolism', 'thrombosis', 'venous thrombosis'],
-            'lipid': ['hyperlipidemia', 'hypertriglyceridemia', 'high cholesterol', 'dyslipidemia']
+            'lipid': ['hyperlipidemia', 'hypertriglyceridemia', 'high cholesterol', 'dyslipidemia'],
+            'gastrointestinal': ['gi bleed', 'gastrointestinal bleeding', 'peptic ulcer', 'ulcer'],
+            'hematologic': ['anemia', 'thrombocytopenia', 'neutropenia', 'leukopenia']
         }
     
     # ============================================================================
@@ -196,6 +199,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
         except Exception as e:
             print(f"Error extracting data for {medicine_name}: {str(e)}")
             return None
+    
     # ============================================================================
     # FACTOR 3.2.1: LIFE-THREATENING ADRs
     # ============================================================================
@@ -499,7 +503,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
     
     
     # ============================================================================
-    # HELPER METHODS
+    # HELPER METHODS (WITH MEDICAL HISTORY)
     # ============================================================================
     
     def _match_patient_risk_factors(
@@ -508,7 +512,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
         patient_data: Dict[str, Any],
         fda_sections: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Match patient conditions to risk factors"""
+        """Match patient conditions to risk factors (includes medical history)"""
         
         patient = patient_data.get('patient', {})
         context_lower = adr['context'].lower()
@@ -533,7 +537,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
                    for kw in self.risk_factor_patterns['age']):
                 matched_factors.append(f"age >65 (patient age: {patient_age})")
         
-        # Check CONDITIONS
+        # Check CONDITIONS from patient data
         patient_conditions = []
         if patient.get('condition'):
             patient_conditions.append(patient['condition'].lower())
@@ -541,6 +545,14 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             # Split diagnosis by commas
             diagnoses = [d.strip() for d in patient['diagnosis'].lower().split(',')]
             patient_conditions.extend(diagnoses)
+        
+        # Extract conditions from MedicalHistory
+        medical_history = patient_data.get('MedicalHistory', [])
+        for history in medical_history:
+            if history.get('status') == 'Active':
+                condition_name = history.get('diagnosisName', '').lower()
+                if condition_name:
+                    patient_conditions.append(condition_name)
         
         for condition in patient_conditions:
             for risk_type, keywords in self.risk_factor_patterns.items():
@@ -641,7 +653,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             }
         
         print("\n" + "=" * 80)
-        print("FACTOR 3.2 & 3.3 ANALYSIS (CORRECTED)")
+        print("FACTOR 3.2 & 3.3 ANALYSIS (WITH MEDICAL HISTORY)")
         print("=" * 80 + "\n")
         
         # Extract FDA data
@@ -653,7 +665,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             extracted_data[medicine] = sections
             time.sleep(0.3)
         
-        print("\nAnalyzing...")
+        print("\nAnalyzing with medical history...")
         
         results_3_2_lt = {}
         results_3_2_serious = {}
@@ -684,6 +696,7 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'patient': patient_data.get('patient', {}),
             'medications': medicines,
+            'medical_history_analyzed': len(patient_data.get('MedicalHistory', [])) > 0,
             'factor_3_2': {
                 'LT_ADRs': results_3_2_lt,
                 'Serious_ADRs': results_3_2_serious
@@ -697,13 +710,14 @@ class Factor_3_2_3_3_Analyzer_Fixed:
         """Print formatted report"""
         
         print("\n" + "=" * 80)
-        print("FACTOR 3.2 & 3.3 ANALYSIS REPORT (CORRECTED)")
+        print("FACTOR 3.2 & 3.3 ANALYSIS REPORT (WITH MEDICAL HISTORY)")
         print("=" * 80)
         
         patient = results.get('patient', {})
         print(f"\nPatient: {patient.get('age')}y {patient.get('gender')}")
         print(f"Diagnosis: {patient.get('diagnosis')}")
         print(f"Condition: {patient.get('condition')}")
+        print(f"Medical History Analyzed: {'Yes' if results.get('medical_history_analyzed') else 'No'}")
         print(f"Medications: {', '.join(results.get('medications', []))}")
         
         # Factor 3.2.1: Life-Threatening ADRs
@@ -826,4 +840,3 @@ class Factor_3_2_3_3_Analyzer_Fixed:
             print("\n✓ No life-threatening ADRs, serious ADRs, or interactions detected.")
         
         print("\n" + "=" * 80 + "\n")
-

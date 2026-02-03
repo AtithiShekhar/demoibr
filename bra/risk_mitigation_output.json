@@ -1,29 +1,205 @@
 {
-  "date": "2026-01-31 18:52:21",
+  "date": "2026-02-04 02:39:02",
   "patient": {
-    "age": 60,
+    "age": 65,
     "gender": "Male",
-    "condition": "dizziness",
+    "condition": "Severe dizziness",
     "diagnosis": "Upper Gastrointestinal Bleeding",
-    "smoking_alcohol": "Not specified",
-    "date_of_assessment": "2026-01-31"
+    "social_risk_factors": "smoking/alcohol",
+    "date_of_assessment": "2026-02-04",
+    "MedicalHistory": [
+      {
+        "diagnosisName": "Upper Gastrointestinal Bleeding",
+        "diagnosisDate": "2026-01-28",
+        "severity": "Severe",
+        "status": "Active",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Ibuprofen",
+              "dosage": "400mg",
+              "route": "Oral",
+              "frequency": "TID",
+              "timing": "PC",
+              "startDate": "2026-01-20",
+              "status": "Stopped"
+            }
+          ]
+        }
+      },
+      {
+        "diagnosisName": "Hypertension",
+        "diagnosisDate": "2020-03-15",
+        "severity": "Moderate",
+        "status": "Chronic",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Lisinopril",
+              "dosage": "10mg",
+              "route": "Oral",
+              "frequency": "Once daily",
+              "timing": "Morning",
+              "startDate": "2020-03-15",
+              "status": "Active"
+            }
+          ]
+        }
+      }
+    ]
   },
   "medications": [
+    "Lisinopril",
     "Ibuprofen"
   ],
-  "total_adrs_analyzed": 2,
+  "total_adrs_analyzed": 13,
+  "patient_context_applied": false,
   "factor_3_4_risk_mitigation_feasibility": {
     "risk_reversibility_risk_tolerability": {
+      "Lisinopril - Anaphylactic Reaction": {
+        "medicine": "Lisinopril",
+        "adr_name": "Anaphylactic Reaction",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Reversible ADR",
+        "reasoning": "Anaphylactic reactions, while severe, are generally reversible with immediate treatment (e.g., epinephrine, antihistamines, corticosteroids) and avoidance of the drug. The reaction itself is not a permanent condition after the acute phase is managed.",
+        "fda_evidence": "Based on medical knowledge",
+        "keywords_found": [
+          "anaphylactic",
+          "reaction"
+        ]
+      },
+      "Lisinopril - Stevens-Johnson Syndrome": {
+        "medicine": "Lisinopril",
+        "adr_name": "Stevens-Johnson Syndrome",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Stevens-Johnson Syndrome is a known irreversible condition with permanent consequences",
+        "fda_evidence": "Documented as irreversible in medical literature",
+        "keywords_found": [
+          "stevens-johnson syndrome"
+        ],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Toxic Epidermal Necrolysis": {
+        "medicine": "Lisinopril",
+        "adr_name": "Toxic Epidermal Necrolysis",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Toxic Epidermal Necrolysis is a known irreversible condition with permanent consequences",
+        "fda_evidence": "Documented as irreversible in medical literature",
+        "keywords_found": [
+          "toxic epidermal necrolysis"
+        ],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Hepatic Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Hepatic Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Hepatic Failure is a known irreversible condition with permanent consequences",
+        "fda_evidence": "Documented as irreversible in medical literature",
+        "keywords_found": [
+          "hepatic failure"
+        ],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Agranulocytosis": {
+        "medicine": "Lisinopril",
+        "adr_name": "Agranulocytosis",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Agranulocytosis is a known irreversible condition with permanent consequences",
+        "fda_evidence": "Documented as irreversible in medical literature",
+        "keywords_found": [
+          "agranulocytosis"
+        ],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Aplastic Anemia": {
+        "medicine": "Lisinopril",
+        "adr_name": "Aplastic Anemia",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Aplastic Anemia is a known irreversible condition with permanent consequences",
+        "fda_evidence": "Documented as irreversible in medical literature",
+        "keywords_found": [
+          "aplastic anemia"
+        ],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Cardiac Arrest": {
+        "medicine": "Lisinopril",
+        "adr_name": "Cardiac Arrest",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Cardiac arrest is a life-threatening event that can result in irreversible damage or death. While the immediate cause might be treatable, the long-term consequences can be permanent, making it an irreversible ADR in many cases.",
+        "fda_evidence": "Based on medical knowledge",
+        "keywords_found": [
+          "Cardiac Arrest"
+        ]
+      },
+      "Lisinopril - Heart Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Heart Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Heart failure is a serious condition that, while sometimes manageable, often results in irreversible damage to the heart muscle and impaired cardiac function. It does not reliably resolve completely upon discontinuation of the medication. While ACE inhibitors like lisinopril are used to treat heart failure, they can also, in some instances, contribute to its development or worsening, particularly in susceptible individuals.",
+        "fda_evidence": "Based on medical knowledge",
+        "keywords_found": [
+          "Heart Failure",
+          "irreversible damage",
+          "cardiac function"
+        ]
+      },
+      "Lisinopril - Renal Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Renal Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Reversible ADR",
+        "reasoning": "Renal failure caused by ACE inhibitors like lisinopril is often reversible upon discontinuation of the drug, especially if addressed promptly. The provided FDA USPI does not mention renal failure, and medical knowledge suggests it can be reversible. However, in some instances it can lead to irreversible damage.",
+        "fda_evidence": "Based on medical knowledge",
+        "keywords_found": [
+          "Lisinopril",
+          "Adverse Reactions"
+        ]
+      },
+      "Lisinopril - Angioedema": {
+        "medicine": "Lisinopril",
+        "adr_name": "Angioedema",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Reversible ADR",
+        "reasoning": "Angioedema associated with ACE inhibitors like Lisinopril is generally reversible upon discontinuation of the drug. While it can be life-threatening if not promptly treated, the reaction typically resolves after the medication is stopped and appropriate medical intervention is provided.",
+        "fda_evidence": "Generally, adverse experiences were mild and transient in nature; but see WARNINGS regarding angioedema and excessive hypotension or syncope.",
+        "keywords_found": [
+          "angioedema",
+          "WARNINGS",
+          "transient"
+        ]
+      },
+      "Lisinopril - Injury And Death To The Developing Fetus": {
+        "medicine": "Lisinopril",
+        "adr_name": "Injury And Death To The Developing Fetus",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Irreversible ADR",
+        "reasoning": "Injury and death to the developing fetus (teratogenicity) is an irreversible ADR, as the damage is already done and cannot be reversed after drug discontinuation.",
+        "fda_evidence": "Based on medical knowledge",
+        "keywords_found": [
+          "Injury And Death To The Developing Fetus"
+        ]
+      },
       "Ibuprofen - Heart Failure": {
         "medicine": "Ibuprofen",
         "adr_name": "Heart Failure",
         "adr_type": "LT/Fatal ADR",
         "classification": "Reversible ADR",
-        "reasoning": "While heart failure is a serious condition, in the context of NSAID-induced heart failure, it is often reversible with discontinuation of the drug and appropriate medical management to address the heart failure symptoms. The heart failure is typically due to fluid retention and increased afterload, which can be reversed.",
+        "reasoning": "While heart failure can be a serious condition, heart failure induced by NSAIDs like ibuprofen is often reversible upon discontinuation of the drug. The mechanism typically involves sodium and fluid retention, which can be managed. Although chronic NSAID use could potentially contribute to irreversible cardiac damage over a long period, acute heart failure related to ibuprofen is typically reversible.",
         "fda_evidence": "Based on medical knowledge",
         "keywords_found": [
           "heart failure",
-          "Ibuprofen"
+          "ibuprofen"
         ]
       },
       "Ibuprofen - Stroke": {
@@ -31,28 +207,168 @@
         "adr_name": "Stroke",
         "adr_type": "LT/Fatal ADR",
         "classification": "Irreversible ADR",
-        "reasoning": "Stroke can cause permanent neurological damage, leading to long-term disability or death, even after discontinuing the medication.",
+        "reasoning": "Stroke can cause permanent neurological damage and disability, making it an irreversible adverse drug reaction.",
         "fda_evidence": "Based on medical knowledge",
         "keywords_found": [
-          "Stroke",
-          "permanent"
+          "stroke",
+          "neurological damage"
         ]
       }
     },
     "risk_preventability": {
+      "Lisinopril - Anaphylactic Reaction": {
+        "medicine": "Lisinopril",
+        "adr_name": "Anaphylactic Reaction",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-preventable ADR",
+        "reasoning": "Anaphylactic Reaction is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
+        "fda_evidence": "Documented as unpredictable reaction",
+        "prevention_measures": [],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Stevens-Johnson Syndrome": {
+        "medicine": "Lisinopril",
+        "adr_name": "Stevens-Johnson Syndrome",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-preventable ADR",
+        "reasoning": "Stevens-Johnson Syndrome is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
+        "fda_evidence": "Documented as unpredictable reaction",
+        "prevention_measures": [],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Toxic Epidermal Necrolysis": {
+        "medicine": "Lisinopril",
+        "adr_name": "Toxic Epidermal Necrolysis",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-preventable ADR",
+        "reasoning": "Toxic Epidermal Necrolysis is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
+        "fda_evidence": "Documented as unpredictable reaction",
+        "prevention_measures": [],
+        "patient_specific_notes": null
+      },
+      "Lisinopril - Hepatic Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Hepatic Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Preventable ADR",
+        "reasoning": "Hepatotoxicity, leading to hepatic failure, is a known potential adverse effect of some medications. While the USPI for lisinopril/hydrochlorothiazide does not specifically mention hepatic failure as an adverse reaction, liver function tests (LFTs) can be monitored periodically, especially in patients with risk factors for liver disease. Early detection of elevated liver enzymes could lead to dose adjustment or discontinuation of the medication, potentially preventing hepatic failure.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Baseline and periodic liver function tests (LFTs)",
+          "Dose adjustment or discontinuation based on LFT results",
+          "Assessment of risk factors for liver disease",
+          "Monitor for signs and symptoms of liver dysfunction (jaundice, abdominal pain, fatigue)"
+        ]
+      },
+      "Lisinopril - Agranulocytosis": {
+        "medicine": "Lisinopril",
+        "adr_name": "Agranulocytosis",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Preventable ADR",
+        "reasoning": "Agranulocytosis is a potentially life-threatening condition characterized by a severe decrease in white blood cells, specifically neutrophils. While the FDA label doesn't explicitly mention routine monitoring for agranulocytosis with lisinopril, it is a known potential adverse effect of ACE inhibitors, including lisinopril. Regular monitoring of complete blood counts (CBC) with differential, especially in patients with risk factors such as autoimmune disorders or those taking other medications known to affect blood cell counts, can help detect early signs of agranulocytosis. Early detection allows for prompt discontinuation of the drug and supportive care, improving outcomes. Dose adjustments may be needed based on renal function, which is another way to prevent ADRs in patients who have renal impairment.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Baseline and periodic CBC monitoring, especially in high-risk patients",
+          "Monitoring for signs and symptoms of infection (e.g., fever, sore throat) and prompt investigation",
+          "Dose adjustment based on renal function"
+        ]
+      },
+      "Lisinopril - Aplastic Anemia": {
+        "medicine": "Lisinopril",
+        "adr_name": "Aplastic Anemia",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-preventable ADR",
+        "reasoning": "Aplastic anemia is a rare and serious blood disorder that is difficult to predict. The FDA label does not list it as a known adverse reaction, suggesting it is idiosyncratic and not readily preventable through routine monitoring or dose adjustments. The exact mechanism leading to aplastic anemia is often unknown or multifactorial, making targeted prevention strategies challenging.",
+        "fda_evidence": "None ADVERSE REACTIONS Lisinopril and hydrochlorothiazide tablets have been evaluated for safety in 930 patients including 100 patients treated for 50 weeks or more. In clinical trials with lisinopril and hydrochlorothiazide tablets no adverse experiences peculiar to this combination drug have been observed.",
+        "prevention_measures": [
+          "Monitor for signs and symptoms of blood dyscrasias (e.g., fatigue, pallor, infections, bleeding)",
+          "Promptly investigate any abnormal blood counts",
+          "Consider alternative medication if risk factors for aplastic anemia are present"
+        ]
+      },
+      "Lisinopril - Cardiac Arrest": {
+        "medicine": "Lisinopril",
+        "adr_name": "Cardiac Arrest",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Preventable ADR",
+        "reasoning": "Cardiac arrest, while a serious event, can potentially be linked to electrolyte imbalances (e.g., hypokalemia, hypomagnesemia) induced by the hydrochlorothiazide component of the Lisinopril-Hydrochlorothiazide combination, or severe hypotension induced by Lisinopril, particularly in susceptible individuals (e.g., those with pre-existing cardiovascular conditions, the elderly, or patients on other medications that lower blood pressure). Close monitoring of electrolytes and blood pressure, especially at the initiation of therapy and with dose adjustments, could help prevent such an outcome.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Monitor serum electrolytes (potassium, magnesium, sodium) at baseline and periodically during treatment, especially in patients at risk for electrolyte imbalances.",
+          "Monitor blood pressure regularly, particularly during the initial phase of treatment and after dosage adjustments. Adjust dose if hypotension occurs.",
+          "Assess for and manage risk factors such as pre-existing cardiovascular conditions, concomitant medications that lower blood pressure, and renal impairment."
+        ]
+      },
+      "Lisinopril - Heart Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Heart Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Preventable ADR",
+        "reasoning": "Heart failure with Lisinopril can be preventable through careful patient selection, dose titration, and monitoring for signs and symptoms of fluid overload or hypotension.  Patients with pre-existing heart conditions, renal impairment, or those taking other medications that affect blood pressure are at higher risk and require closer monitoring.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Baseline assessment of cardiac function and renal function",
+          "Cautious dose titration, especially in patients with pre-existing heart conditions or renal impairment",
+          "Monitoring for signs and symptoms of heart failure (e.g., edema, dyspnea, weight gain)",
+          "Monitoring blood pressure regularly and adjusting dose accordingly",
+          "Avoiding concurrent use of other medications that may worsen heart failure or hypotension",
+          "Patient education on recognizing and reporting symptoms of heart failure"
+        ]
+      },
+      "Lisinopril - Renal Failure": {
+        "medicine": "Lisinopril",
+        "adr_name": "Renal Failure",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Preventable ADR",
+        "reasoning": "Renal failure with Lisinopril is often related to hypotension, dehydration, or pre-existing renal artery stenosis. Monitoring renal function (e.g., serum creatinine, BUN) and blood pressure, especially in high-risk patients (elderly, patients with renal artery stenosis, heart failure, or volume depletion), can help prevent or mitigate this ADR. Dose adjustments may be needed.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Monitor renal function (serum creatinine, BUN) at baseline and periodically",
+          "Monitor blood pressure, especially after the initial dose and dose increases",
+          "Assess for and correct volume depletion before initiating therapy",
+          "Avoid concomitant use of NSAIDs, which can worsen renal function",
+          "Use lower starting doses in elderly patients and patients with renal impairment",
+          "Consider renal artery stenosis, especially in patients with renovascular hypertension"
+        ]
+      },
+      "Lisinopril - Angioedema": {
+        "medicine": "Lisinopril",
+        "adr_name": "Angioedema",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-preventable ADR",
+        "reasoning": "Angioedema is an unpredictable and potentially life-threatening reaction that is difficult to predict. While the FDA label mentions angioedema in the WARNINGS section, it doesn't provide specific guidance on how to prevent it through routine monitoring or dose adjustments. It's largely an idiosyncratic reaction.",
+        "fda_evidence": "Generally, adverse experiences were mild and transient in nature; but see WARNINGS regarding angioedema and excessive hypotension or syncope.",
+        "prevention_measures": [
+          "Patient education about symptoms of angioedema",
+          "Avoidance of ACE inhibitors in patients with a history of angioedema",
+          "Careful monitoring after the first dose of ACE inhibitor"
+        ]
+      },
+      "Lisinopril - Injury And Death To The Developing Fetus": {
+        "medicine": "Lisinopril",
+        "adr_name": "Injury And Death To The Developing Fetus",
+        "adr_type": "LT/Fatal ADR",
+        "classification": "Non-Tolerable ADR",
+        "reasoning": "The ADR of injury and death to the developing fetus is a severe and unacceptable risk, making the use of Lisinopril contraindicated in pregnancy.",
+        "fda_evidence": "Based on medical knowledge",
+        "prevention_measures": [
+          "Avoid prescribing Lisinopril to pregnant women or women planning to become pregnant",
+          "Counsel women of childbearing potential about the risks of Lisinopril during pregnancy and the need for effective contraception",
+          "Consider alternative antihypertensive medications with a better safety profile during pregnancy"
+        ]
+      },
       "Ibuprofen - Heart Failure": {
         "medicine": "Ibuprofen",
         "adr_name": "Heart Failure",
         "adr_type": "LT/Fatal ADR",
         "classification": "Preventable ADR",
-        "reasoning": "Ibuprofen, an NSAID, can exacerbate or induce heart failure, especially in patients with pre-existing cardiovascular conditions or renal impairment. This risk can be mitigated through careful patient selection, dose adjustment, and monitoring for signs of fluid retention or worsening heart failure symptoms.",
-        "fda_evidence": "None None Directions do not take more than directed the smallest effective dose should be used adults and children 12 years and over: take 1 tablet every 4 to 6 hours while symptoms persist if pain or fever does not respond to 1 tablet, 2 tablets may be used do not exceed 6 tablets in 24 hours, unless directed by a doctor children under 12 years: ask a doctor",
+        "reasoning": "Ibuprofen, like other NSAIDs, can exacerbate or lead to heart failure, especially in patients with pre-existing heart conditions or risk factors. This risk can be mitigated through careful patient selection (avoiding NSAIDs in patients with heart failure or those at high risk), using the lowest effective dose for the shortest duration, and monitoring for signs and symptoms of fluid retention and heart failure. The FDA directions mention using the smallest effective dose.",
+        "fda_evidence": "Directions do not take more than directed the smallest effective dose should be used",
         "prevention_measures": [
-          "Screen patients for pre-existing heart conditions and renal impairment",
-          "Use the lowest effective dose for the shortest duration",
-          "Monitor for signs and symptoms of fluid retention (edema, weight gain) and worsening heart failure",
-          "Educate patients about the risk of heart failure and the importance of reporting symptoms",
-          "Consider alternative analgesics in high-risk patients"
+          "Careful patient selection (avoid in patients with known heart failure or high risk)",
+          "Use lowest effective dose for shortest duration",
+          "Monitor for signs/symptoms of fluid retention and heart failure",
+          "Counsel patients about potential cardiovascular risks"
         ]
       },
       "Ibuprofen - Stroke": {
@@ -60,13 +376,13 @@
         "adr_name": "Stroke",
         "adr_type": "LT/Fatal ADR",
         "classification": "Preventable ADR",
-        "reasoning": "Stroke risk with NSAIDs like ibuprofen is dose-dependent and related to cardiovascular risk factors. The USPI emphasizes using the lowest effective dose and avoiding exceeding the recommended dosage. Therefore, adherence to dosing guidelines and consideration of patient-specific cardiovascular risk factors can potentially reduce the risk.",
+        "reasoning": "Stroke associated with ibuprofen use may be preventable by adhering to the lowest effective dose and avoiding use in patients with cardiovascular risk factors. While stroke is a complex event, exceeding recommended doses increases risk. The FDA label emphasizes using the 'smallest effective dose' which helps prevent exceeding the safe exposure level.",
         "fda_evidence": "Directions do not take more than directed the smallest effective dose should be used",
         "prevention_measures": [
-          "Use lowest effective dose",
-          "Assess cardiovascular risk factors before prescribing",
-          "Monitor blood pressure",
-          "Educate patients on signs and symptoms of stroke"
+          "Use the lowest effective dose for the shortest duration",
+          "Screen patients for cardiovascular risk factors before initiating treatment",
+          "Educate patients about the signs and symptoms of stroke and when to seek medical attention",
+          "Avoid concomitant use of other NSAIDs or antiplatelet agents without careful consideration"
         ]
       }
     }

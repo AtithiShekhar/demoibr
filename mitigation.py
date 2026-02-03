@@ -206,7 +206,7 @@ Your JSON response:"""
 
         try:
             response = self.client.models.generate_content(
-                model='gemini-2.0-flash-exp',
+                model='gemini-2.0-flash',
                 contents=prompt
             )
             
@@ -327,7 +327,7 @@ Your JSON response:"""
 
         try:
             response = self.client.models.generate_content(
-                model='gemini-2.0-flash-exp',
+                model='gemini-2.0-flash',
                 contents=prompt
             )
             

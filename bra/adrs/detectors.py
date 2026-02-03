@@ -1,3 +1,4 @@
+# detectors.py
 import re
 from typing import Dict, Any, List
 from adrs.helpers import (
@@ -195,6 +196,7 @@ def _extract_adr_name(self,context: str, keyword: str):
                 return adr_name.title()
 
     return None
+
 def find_drug_interactions(
         self,
         medicine_name: str,
@@ -304,6 +306,7 @@ def find_drug_interactions(
             'serious_interactions': serious_interactions,
             'non_serious_interactions': non_serious_interactions
         }
+
 def _clean_serious_adr_name(self, text: str) -> str:
         """Clean up serious ADR name from statement"""
         text = text.strip()
@@ -331,22 +334,35 @@ def _clean_serious_adr_name(self, text: str) -> str:
     
     
 def _extract_interaction_risk_factors(self, context: str, patient_data: Dict[str, Any]) -> List[str]:
-        """Extract risk factors for interactions"""
+        """Extract risk factors for interactions (includes medical history)"""
         
         patient = patient_data.get('patient', {})
         context_lower = context.lower()
         
         risk_factors = []
         
-        # Check for medical conditions mentioned
+        # Build list of patient conditions
+        patient_conditions = []
+        if patient.get('condition'):
+            patient_conditions.append(patient.get('condition', '').lower())
+        if patient.get('diagnosis'):
+            patient_conditions.append(patient.get('diagnosis', '').lower())
+        
+        # Extract from MedicalHistory
+        medical_history = patient_data.get('MedicalHistory', [])
+        for history in medical_history:
+            if history.get('status') == 'Active':
+                condition_name = history.get('diagnosisName', '').lower()
+                if condition_name:
+                    patient_conditions.append(condition_name)
+        
+        # Check for medical conditions mentioned in FDA context
         for risk_type, keywords in self.risk_factor_patterns.items():
             if any(kw in context_lower for kw in keywords):
                 # Check if patient has this condition
-                patient_condition = patient.get('condition', '').lower()
-                patient_diagnosis = patient.get('diagnosis', '').lower()
-                
-                if any(kw in patient_condition or kw in patient_diagnosis for kw in keywords):
-                    risk_factors.append(f"{risk_type} condition")
+                for patient_condition in patient_conditions:
+                    if any(kw in patient_condition for kw in keywords):
+                        risk_factors.append(f"{risk_type} condition")
+                        break
         
         return list(set(risk_factors))
-    

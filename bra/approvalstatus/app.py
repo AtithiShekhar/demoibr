@@ -44,6 +44,154 @@ class BedrockDrugChecker:
         except Exception:
             return ""
 
+    def retrieve_contraindication_docs(self, drug: str) -> str:
+        """Retrieve contraindication and safety information from Knowledge Base"""
+        query = f"Contraindications, warnings, precautions, and safety information for {drug}"
+        try:
+            response = self.kb_client.retrieve(
+                knowledgeBaseId=KNOWLEDGE_BASE_ID,
+                retrievalQuery={"text": query},
+                retrievalConfiguration={
+                    "vectorSearchConfiguration": {
+                        "numberOfResults": 10,
+                        "filter": {"equals": {"key": "drug_name", "value": drug.lower().strip()}}
+                    }
+                }
+            )
+            results = response.get("retrievalResults", [])
+            return "\n\n".join([r["content"]["text"] for r in results])
+        except Exception:
+            return ""
+
+    def check_patient_safety(self, drug: str, condition: str, patient_data: dict, context: str) -> Tuple[bool, list]:
+        """
+        Check if drug is safe for the specific patient based on contraindications
+        
+        Args:
+            drug: Drug name
+            condition: Condition being treated
+            patient_data: Patient information dict
+            context: Contraindication information from knowledge base
+            
+        Returns:
+            Tuple of (is_safe: bool, warnings: list)
+        """
+        if not context.strip() or not patient_data:
+            return True, []
+        
+        # Build patient context string
+        age = patient_data.get("age", "unknown")
+        gender = patient_data.get("gender", "unknown")
+        diagnosis = patient_data.get("diagnosis", "")
+        social_risk = patient_data.get("social_risk_factors", "")
+        
+        # Extract medical history
+        medical_history = patient_data.get("MedicalHistory", [])
+        active_conditions = []
+        previous_medications = []
+        
+        for history in medical_history:
+            condition_name = history.get("diagnosisName", "")
+            status = history.get("status", "")
+            severity = history.get("severity", "")
+            
+            if status == "Active":
+                active_conditions.append(f"{condition_name} ({severity})")
+            
+            # Extract previous medications
+            treatment = history.get("treatment", {})
+            medications = treatment.get("medications", [])
+            for med in medications:
+                med_name = med.get("name", "")
+                med_status = med.get("status", "")
+                if med_name and med_status == "Stopped":
+                    previous_medications.append(med_name)
+        
+        # Determine patient characteristics
+        is_post_transplant = "transplant" in diagnosis.lower()
+        is_immunosuppressed = is_post_transplant or "immunosuppressed" in diagnosis.lower()
+        age_category = "pediatric" if age != "unknown" and age < 18 else ("geriatric" if age != "unknown" and age >= 65 else "adult")
+        
+        patient_context = f"""Patient Profile:
+- Age: {age} years ({age_category})
+- Gender: {gender}
+- Primary Diagnosis: {diagnosis}
+- Social Risk Factors: {social_risk}
+- Post-Transplant: {'Yes' if is_post_transplant else 'No'}
+- Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}"""
+
+        if active_conditions:
+            patient_context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
+        
+        if previous_medications:
+            patient_context += f"\n- Previously Stopped Medications: {', '.join(set(previous_medications))}"
+
+        prompt = f"""You are a clinical pharmacology expert. Analyze if {drug} is safe for this specific patient.
+
+{patient_context}
+
+Drug Safety Information:
+{context}
+
+Analyze contraindications and respond in JSON format:
+{{
+    "has_absolute_contraindication": true/false,
+    "has_relative_contraindication": true/false,
+    "age_appropriate": true/false,
+    "transplant_safe": true/false,
+    "warnings": ["specific warning 1", "specific warning 2"]
+}}
+
+Consider:
+1. Age-specific contraindications
+2. Gender-specific contraindications
+3. Immunosuppressant interactions (for transplant patients)
+4. Bone marrow suppression risks (critical for hematologic malignancies)
+5. Social risk factor interactions (smoking/alcohol)
+
+Respond ONLY with valid JSON."""
+
+        try:
+            body = json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 500,
+                "temperature": 0,
+                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+            })
+            response = self.runtime.invoke_model(modelId=MODEL_ARN, body=body)
+            answer = json.loads(response.get("body").read())["content"][0]["text"]
+            
+            # Extract JSON
+            json_match = re.search(r'\{.*\}', answer, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+                
+                warnings = []
+                
+                # Check for absolute contraindication
+                if result.get("has_absolute_contraindication"):
+                    warnings.append("ABSOLUTE CONTRAINDICATION: This drug is contraindicated for this patient")
+                    return False, warnings
+                
+                # Collect warnings
+                if result.get("has_relative_contraindication"):
+                    warnings.append("Relative contraindication present - use with extreme caution")
+                
+                if not result.get("age_appropriate", True):
+                    warnings.append(f"Age-related concerns for {age_category} patients")
+                
+                if is_post_transplant and not result.get("transplant_safe", True):
+                    warnings.append("May not be safe for post-transplant/immunosuppressed patients")
+                
+                warnings.extend(result.get("warnings", []))
+                
+                return not result.get("has_absolute_contraindication", False), warnings
+        
+        except Exception:
+            pass
+        
+        return True, ["Unable to verify patient-specific safety"]
+
     def generate_answer(self, drug: str, condition: str, context: str) -> Tuple[bool, bool]:
         """
         Generate approval status for both CDSCO and USFDA
@@ -156,7 +304,8 @@ class USFDAChecker:
         return False
 
 
-def format_bedrock_output(cdsco_approved: bool, usfda_approved: bool, drug: str, condition: str) -> str:
+def format_bedrock_output(cdsco_approved: bool, usfda_approved: bool, drug: str, condition: str, 
+                          patient_safe: bool = True, patient_warnings: list = None) -> str:
     """
     Format regulatory approval output
     
@@ -165,36 +314,56 @@ def format_bedrock_output(cdsco_approved: bool, usfda_approved: bool, drug: str,
         usfda_approved: Whether approved by USFDA
         drug: Generic name of medicine
         condition: Indication/condition
+        patient_safe: Whether safe for specific patient (optional)
+        patient_warnings: List of patient-specific warnings (optional)
         
     Returns:
         Formatted output string
     """
     # Both approved
     if cdsco_approved and usfda_approved:
-        return (f"{drug} is approved for use in {condition} as per the CDSCO "
+        approval_msg = (f"{drug} is approved for use in {condition} as per the CDSCO "
                f"(Indian health regulatory body) and also as per USFDA's USPI "
                f"(United States Prescriber information).")
     
     # Only CDSCO approved
     elif cdsco_approved and not usfda_approved:
-        return (f"{drug} is approved for use in {condition} as per the CDSCO "
+        approval_msg = (f"{drug} is approved for use in {condition} as per the CDSCO "
                f"(Indian health regulatory body) but not as per USFDA's USPI "
                f"(United States Prescriber information).")
     
     # Only USFDA approved
     elif not cdsco_approved and usfda_approved:
-        return (f"{drug} is approved for use in {condition} as per USFDA's USPI "
+        approval_msg = (f"{drug} is approved for use in {condition} as per USFDA's USPI "
                f"(United States Prescriber information) but not as per the CDSCO "
                f"(Indian health regulatory body).")
     
     # Neither approved (off-label)
     else:
-        return (f"{drug} is not approved for use in {condition} as per the CDSCO "
+        approval_msg = (f"{drug} is not approved for use in {condition} as per the CDSCO "
                f"(Indian health regulatory body) and also as per USFDA's USPI "
                f"(United States Prescriber information). Please review the iBR score "
                f"and consider alternative medications that are approved by regulatory "
                f"bodies for treating {condition}.")
-def start(drug: str, condition: str, scoring_system=None) -> dict:
+    
+    # Add patient safety information if provided
+    if patient_warnings is not None:
+        if not patient_safe:
+            safety_msg = (f"\n\n⚠️ PATIENT SAFETY ALERT: {drug} has contraindications "
+                         f"for this patient profile. This medication should NOT be used.")
+        elif patient_warnings:
+            safety_msg = (f"\n\n⚠️ PATIENT SAFETY WARNINGS for {drug}:\n" + 
+                         "\n".join([f"• {w}" for w in patient_warnings]))
+        else:
+            safety_msg = (f"\n\n✓ No specific contraindications identified for this "
+                         f"patient profile based on available data.")
+        
+        return approval_msg + safety_msg
+    
+    return approval_msg
+
+
+def start(drug: str, condition: str, scoring_system=None, patient_data: dict = None) -> dict:
     """
     Main entry point for regulatory approval checking (CDSCO + USFDA)
 
@@ -202,6 +371,7 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
         drug: Generic name of medicine
         condition: Indication / disease
         scoring_system: Optional scoring system to add results to
+        patient_data: Optional patient context dict with keys: age, gender, diagnosis, social_risk_factors
 
     Returns:
         Dictionary with approval status, formatted output, and benefit factor score
@@ -219,11 +389,28 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
         context=context
     )
 
+    # -------------------------------
+    # Patient safety check (if patient_data provided)
+    # -------------------------------
+    patient_safe = True
+    patient_warnings = None
+    
+    if patient_data:
+        contraindication_context = checker.retrieve_contraindication_docs(drug)
+        patient_safe, patient_warnings = checker.check_patient_safety(
+            drug=drug,
+            condition=condition,
+            patient_data=patient_data,
+            context=contraindication_context
+        )
+
     output_text = format_bedrock_output(
         cdsco_approved=cdsco_approved,
         usfda_approved=usfda_approved,
         drug=drug,
-        condition=condition
+        condition=condition,
+        patient_safe=patient_safe,
+        patient_warnings=patient_warnings
     )
 
     # -------------------------------
@@ -240,7 +427,8 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
     else:
         evidence_score = None
 
-    return {
+    # Build return dictionary (maintain original structure + add patient safety fields)
+    result = {
         "drug": drug,
         "condition": condition,
         "cdsco_approved": cdsco_approved,
@@ -248,3 +436,10 @@ def start(drug: str, condition: str, scoring_system=None) -> dict:
         "output": output_text,
         "evidence_score": evidence_score
     }
+    
+    # Add patient safety fields only if patient_data was provided
+    if patient_data:
+        result["patient_safe"] = patient_safe
+        result["patient_warnings"] = patient_warnings if patient_warnings else []
+    
+    return result

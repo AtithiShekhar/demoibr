@@ -1,0 +1,84 @@
+{
+  "patientInfo": {
+    "age": 65,
+    "gender": "Male",
+    "diagnosis": "Acute Myeloid Leukemia, s/p Stem Cell Transplant (Day +8)",
+    "social_risk_factors": "smoking/alcohol",
+    "date_of_assessment": "2025-09-17"
+  },
+  "chiefComplaints": [
+    {
+      "complaint": "Severe dizziness",
+      "duration": "2d",
+      "severity": "Life-threatening"
+    }
+  ],
+  "currentDiagnoses": [
+    {
+      "diagnosisName": "Upper Gastrointestinal Bleeding",
+      "diagnosisDate": "2026-01-28",
+      "severity": "Severe",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Ibuprofen",
+            "dosage": "400mg",
+            "route": "Oral",
+            "frequency": "TID",
+            "timing": "PC",
+            "startDate": "2026-01-20",
+            "status": "Stopped"
+          }
+        ]
+      }
+    }
+  ],
+  "MedicalHistory": [
+    {
+      "diagnosisName": "Upper Gastrointestinal Bleeding",
+      "diagnosisDate": "2026-01-28",
+      "severity": "Severe",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Ibuprofen",
+            "dosage": "400mg",
+            "route": "Oral",
+            "frequency": "TID",
+            "timing": "PC",
+            "startDate": "2026-01-20",
+            "status": "Stopped"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Hypertension",
+      "diagnosisDate": "2020-03-15",
+      "severity": "Moderate",
+      "status": "Chronic",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Lisinopril",
+            "dosage": "10mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Morning",
+            "startDate": "2020-03-15",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "clinicalNotes": {
+    "physicianNotes": "Patient developed severe GI bleeding with hypotension and syncope following NSAID use. Laboratory findings suggest metformin-associated lactic acidosis with pH 7.1 and elevated lactate. Condition considered life-threatening and required emergency hospitalization.",
+    "followUpDate": "2026-02-05"
+  }
+}

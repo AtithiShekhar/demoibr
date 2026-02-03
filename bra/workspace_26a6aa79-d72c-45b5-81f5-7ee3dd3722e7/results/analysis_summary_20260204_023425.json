@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "analysis_timestamp": "2026-02-04T02:34:25.121185",
+    "execution_time_seconds": 11.32,
+    "system_version": "2.0",
+    "scoring_system": "Centralized Configuration"
+  },
+  "patient_info": {
+    "name": "Unknown",
+    "mrn": "Unknown",
+    "age": 65,
+    "gender": "Male"
+  },
+  "analysis_summary": {
+    "total_tasks": 1,
+    "successful": 1,
+    "failed": 0,
+    "duplication_checks_performed": 0,
+    "alternatives_searches_performed": 0
+  },
+  "risk_analysis": {
+    "highest_risk_medication": "Ibuprofen_Upper Gastrointestinal Bleeding",
+    "highest_risk_score": 570,
+    "lowest_risk_medication": "Ibuprofen_Upper Gastrointestinal Bleeding",
+    "lowest_risk_score": 570,
+    "average_risk_score": 570.0
+  },
+  "detailed_results": [
+    {
+      "drug": "Ibuprofen",
+      "diagnosis": "Upper Gastrointestinal Bleeding",
+      "success": true,
+      "total_score": 570,
+      "rct_count": 0,
+      "duplication_checked": false,
+      "alternatives_found": false,
+      "output_file": "results/Ibuprofen_Upper_Gastrointestinal_Bleeding_result.json",
+      "error": null
+    }
+  ],
+  "failed_analyses": []
+}

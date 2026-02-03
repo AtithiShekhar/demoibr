@@ -15,8 +15,9 @@ load_dotenv()
 
 class Step4_RMM_Generator:
     """
-    Step 4: Risk Minimization Measures (RMM) Generator
+    Step 4: Risk Minimization Measures (RMM) Generator (Patient-Context-Aware)
     Uses Factor 3.2 & 3.3 output + FDA USPI + Gemini Flash 2.0 AI
+    Now considers patient-specific factors for tailored monitoring recommendations
     """
     
     def __init__(self):
@@ -35,9 +36,107 @@ class Step4_RMM_Generator:
         max_output_tokens=1000,
         response_mime_type="application/json"
     )   
-        # self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
         
         print(f"✓ Gemini Flash 2.0 initialized")
+    
+    # ============================================================================
+    # NEW: BUILD PATIENT CONTEXT
+    # ============================================================================
+    
+    def build_patient_context(self, patient_data: Dict[str, Any]) -> str:
+        """
+        Build patient context string for personalized RMM recommendations
+        """
+        if not patient_data:
+            return ""
+        
+        # Support both simple and complex patient data formats
+        if "patient" in patient_data:
+            patient = patient_data["patient"]
+        else:
+            patient = patient_data
+        
+        age = patient.get("age", "unknown")
+        gender = patient.get("gender", "unknown")
+        diagnosis = patient.get("diagnosis", "")
+        social_risk = patient.get("social_risk_factors", "")
+        
+        # Extract medical history
+        medical_history = patient_data.get("MedicalHistory", [])
+        active_conditions = []
+        severe_conditions = []
+        previous_adrs = []
+        
+        for history in medical_history:
+            condition_name = history.get("diagnosisName", "")
+            status = history.get("status", "")
+            severity = history.get("severity", "")
+            
+            if status == "Active":
+                active_conditions.append(condition_name)
+                if severity in ["Severe", "Critical"]:
+                    severe_conditions.append(f"{condition_name} ({severity})")
+            
+            # Extract stopped medications (may indicate ADRs)
+            treatment = history.get("treatment", {})
+            medications = treatment.get("medications", [])
+            for med in medications:
+                med_name = med.get("name", "")
+                med_status = med.get("status", "")
+                if med_name and med_status == "Stopped":
+                    previous_adrs.append(f"{med_name} (stopped)")
+        
+        # Determine patient characteristics
+        is_post_transplant = "transplant" in diagnosis.lower()
+        is_immunosuppressed = is_post_transplant or "immunosuppressed" in diagnosis.lower()
+        has_hematologic_malignancy = any(term in diagnosis.lower() for term in ["leukemia", "aml", "lymphoma", "myeloma"])
+        age_category = "pediatric" if age != "unknown" and age < 18 else ("geriatric" if age != "unknown" and age >= 65 else "adult")
+        
+        context = f"""Patient Profile:
+- Age: {age} years ({age_category})
+- Gender: {gender}
+- Primary Diagnosis: {diagnosis}
+- Social Risk Factors: {social_risk}
+- Post-Transplant: {'Yes' if is_post_transplant else 'No'}
+- Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}
+- Hematologic Malignancy: {'Yes' if has_hematologic_malignancy else 'No'}"""
+
+        if active_conditions:
+            context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
+        
+        if severe_conditions:
+            context += f"\n- Severe/Critical Conditions: {', '.join(severe_conditions)}"
+        
+        if previous_adrs:
+            context += f"\n- Previous Medication Discontinuations: {', '.join(set(previous_adrs))} (possible ADR history)"
+
+        context += """
+
+PATIENT-SPECIFIC MONITORING CONSIDERATIONS:
+"""
+        
+        # Add age-related monitoring needs
+        if age != "unknown" and age >= 65:
+            context += "- Elderly: Requires MORE FREQUENT monitoring (reduced organ reserve, polypharmacy)\n"
+        elif age != "unknown" and age < 18:
+            context += "- Pediatric: Age-appropriate dosing, developmental monitoring\n"
+        
+        # Add immunosuppression monitoring needs
+        if is_immunosuppressed:
+            context += "- Immunosuppressed: Higher infection risk, impaired healing, closer monitoring needed\n"
+        
+        # Add hematologic malignancy monitoring needs
+        if has_hematologic_malignancy:
+            context += "- Hematologic malignancy: Baseline bone marrow compromise, frequent CBC monitoring\n"
+        
+        # Add comorbidity monitoring needs
+        if len(active_conditions) >= 3:
+            context += "- Multiple comorbidities: Increased drug interaction risk, closer monitoring required\n"
+        
+        if previous_adrs:
+            context += "- Previous ADR history: Heightened vigilance for similar reactions\n"
+        
+        return context
     
     # ============================================================================
     # PART 1: EXTRACT FDA SECTIONS
@@ -204,29 +303,34 @@ class Step4_RMM_Generator:
         return "NA"
     
     # ============================================================================
-    # PART 3: AI-GENERATED PROACTIVE ACTIONS (SYMPTOMS TO MONITOR)
+    # PART 3: AI-GENERATED PROACTIVE ACTIONS (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def generate_proactive_actions(
         self,
         medicine: str,
         adr_name: str,
-        fda_sections: Dict[str, Any]
+        fda_sections: Dict[str, Any],
+        patient_context: str = ""
     ) -> str:
         """
-        Use Gemini Flash 2.0 to generate symptoms to monitor
+        Use Gemini Flash 2.0 to generate symptoms to monitor (patient-specific)
         """
         
         section_5 = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
         section_6 = fda_sections.get('adverse_reactions', '')
         
+        # Enhanced prompt with patient context
+        patient_section = f"\n\n{patient_context}" if patient_context else ""
+        
         prompt = f"""You are a clinical pharmacovigilance expert. Based on the FDA USPI documentation for {medicine}, identify the specific clinical signs and symptoms that healthcare providers and patients should monitor for the adverse drug reaction: {adr_name}.
 
 FDA Section 5 Warnings and Precautions (excerpt):
-{section_5[:3000] if section_5 else 'Not available'}
+{section_5[:2500] if section_5 else 'Not available'}
 
 FDA Section 6 Adverse Reactions (excerpt):
-{section_6[:3000] if section_6 else 'Not available'}
+{section_6[:2500] if section_6 else 'Not available'}
+{patient_section}
 
 ADR to monitor: {adr_name}
 
@@ -235,6 +339,7 @@ TASK: Provide a comprehensive, comma-separated list of specific symptoms and sig
 2. Key clinical manifestations
 3. Observable physical signs
 4. Laboratory abnormalities (if mentioned)
+{"5. Patient-specific considerations (age-related, immunosuppression-related symptoms)" if patient_context else ""}
 
 EXAMPLES:
 - For Hepatotoxicity: Fatigue, Malaise, Anorexia (loss of appetite), Nausea, Vomiting, Right upper quadrant abdominal pain or discomfort, Low-grade fever, Jaundice (yellowing of skin or eyes), Dark urine, Pale / Clay-colored stools, Pruritus (itching)
@@ -248,12 +353,13 @@ CRITICAL RULES:
 3. Use proper medical terminology with clarifications in parentheses when helpful
 4. Be comprehensive but focused on clinically observable/reportable symptoms
 5. Order symptoms from early/common to severe/less common
+{"6. For elderly/immunosuppressed patients, include subtle early warning signs that may present atypically" if patient_context else ""}
 
 Your response (symptoms only):"""
 
         try:
             response = self.gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             contents=prompt,
             config=self.config
         )
@@ -274,7 +380,7 @@ Your response (symptoms only):"""
             return f"Monitor patient for signs and symptoms of {adr_name}"
     
     # ============================================================================
-    # PART 4: AI-SELECTED IMMEDIATE ACTIONS
+    # PART 4: AI-SELECTED IMMEDIATE ACTIONS (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def select_immediate_actions(
@@ -283,10 +389,11 @@ Your response (symptoms only):"""
         adr_name: str,
         risk_type: str,
         fda_sections: Dict[str, Any],
+        patient_context: str = "",
         is_drug_interaction: bool = False
     ) -> Dict[str, str]:
         """
-        Use Gemini Flash 2.0 + Rules to select appropriate immediate actions
+        Use Gemini Flash 2.0 + Rules to select appropriate immediate actions (patient-aware)
         """
         
         section_5 = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
@@ -312,10 +419,17 @@ Your response (symptoms only):"""
         adr_lower = adr_name.lower()
         for key, action in strict_rules.items():
             if key in adr_lower:
+                reasoning = f'{adr_name} is a life-threatening emergency requiring immediate intervention as per FDA guidelines.'
+                if patient_context and ("immunosuppressed" in patient_context.lower() or "elderly" in patient_context.lower()):
+                    reasoning += " Patient's age/immunosuppression increases risk severity."
+                
                 return {
                     'action': action,
-                    'reasoning': f'{adr_name} is a life-threatening emergency requiring immediate intervention as per FDA guidelines.'
+                    'reasoning': reasoning
                 }
+        
+        # Enhanced prompt with patient context
+        patient_section = f"\n\n{patient_context}" if patient_context else ""
         
         # Use AI for other cases
         prompt = f"""You are a clinical pharmacology expert. Recommend the appropriate immediate action(s) for managing this adverse drug reaction.
@@ -326,10 +440,11 @@ Risk Type: {risk_type}
 Is Drug-Drug Interaction: {is_drug_interaction}
 
 FDA Section 5 Warnings and Precautions (excerpt):
-{section_5[:2000] if section_5 else 'Not available'}
+{section_5[:1800] if section_5 else 'Not available'}
 
 FDA Dosage and Administration (excerpt):
-{dosage_info[:1000] if dosage_info else 'Not available'}
+{dosage_info[:800] if dosage_info else 'Not available'}
+{patient_section}
 
 AVAILABLE OPTIONS (select one or more):
 1. Dose optimisation
@@ -342,6 +457,7 @@ SELECTION CRITERIA:
 - **Temporary interruption**: Choose if the ADR resolves upon temporary drug withdrawal and can be restarted later
 - **Discontinuation**: Choose if the ADR is irreversible, life-threatening, or severe enough to warrant permanent cessation
 - **Supplementations**: Choose if the ADR is due to drug-induced deficiency (e.g., Vitamin B12 deficiency with Metformin) OR if supportive care is needed (e.g., for TEN/SJS)
+{"- **Patient-specific**: For elderly/immunosuppressed patients, consider LOWER threshold for discontinuation due to reduced tolerance" if patient_context else ""}
 
 COMBINATION RULES:
 - Use "AND/OR" when multiple actions may be appropriate
@@ -357,13 +473,13 @@ EXAMPLES:
 
 RESPOND IN THIS EXACT FORMAT:
 ACTION: [Your selected action(s) using exact phrasing from options above]
-REASONING: [One concise sentence explaining why]
+REASONING: [One concise sentence explaining why{"and how patient factors influence decision" if patient_context else ""}]
 
 Your response:"""
 
         try:
             response = self.gemini_client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             contents=prompt,
             config=self.config
         )
@@ -407,15 +523,16 @@ Your response:"""
                 }
     
     # ============================================================================
-    # PART 5: GENERATE RMM TABLE FROM FACTOR 3.2 & 3.3 OUTPUT
+    # PART 5: GENERATE RMM TABLE (PATIENT-CONTEXT-AWARE)
     # ============================================================================
     
     def generate_rmm_table(
         self,
-        factor_output_file: str
+        factor_output_file: str,
+        patient_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Main function: Generate complete RMM table from Factor 3.2 & 3.3 output
+        Main function: Generate complete RMM table with patient context
         """
         
         print("\n" + "=" * 80)
@@ -430,7 +547,15 @@ Your response:"""
             print(f"❌ Error: {factor_output_file} not found!")
             return {}
         
-        patient_data = factor_output.get('patient', {})
+        # Build patient context
+        patient_context = ""
+        if patient_data:
+            patient_context = self.build_patient_context(patient_data)
+            print("Patient context for RMM personalization:")
+            print(patient_context)
+            print()
+        
+        patient_data_output = factor_output.get('patient', {})
         medications = factor_output.get('medications', [])
         
         # Extract FDA sections for all medications
@@ -442,7 +567,7 @@ Your response:"""
             fda_data[med] = sections
             time.sleep(0.3)
         
-        print("\nGenerating RMM entries with AI...\n")
+        print("\nGenerating RMM entries with AI and patient context...\n")
         
         rmm_entries = []
         
@@ -467,13 +592,13 @@ Your response:"""
                 section_5_text = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
                 section_5_extract = self.extract_section_5_monitoring(adr_name, section_5_text)
                 
-                # Generate proactive actions (symptoms to monitor)
-                proactive_actions = self.generate_proactive_actions(medicine, adr_name, fda_sections)
+                # Generate proactive actions with patient context
+                proactive_actions = self.generate_proactive_actions(medicine, adr_name, fda_sections, patient_context)
                 time.sleep(1)  # Rate limiting for Gemini API
                 
-                # Select immediate actions
+                # Select immediate actions with patient context
                 immediate_actions_result = self.select_immediate_actions(
-                    medicine, adr_name, 'LT/Fatal ADR', fda_sections
+                    medicine, adr_name, 'LT/Fatal ADR', fda_sections, patient_context
                 )
                 time.sleep(1)  # Rate limiting
                 
@@ -484,7 +609,8 @@ Your response:"""
                     'section_5_warnings_and_precautions_extract': section_5_extract,
                     'proactive_actions_symptoms_to_monitor': proactive_actions,
                     'immediate_actions_required': immediate_actions_result['action'],
-                    'immediate_actions_reasoning': immediate_actions_result['reasoning']
+                    'immediate_actions_reasoning': immediate_actions_result['reasoning'],
+                    'patient_context_applied': bool(patient_context)
                 }
                 
                 rmm_entries.append(rmm_entry)
@@ -510,13 +636,13 @@ Your response:"""
                 section_5_text = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
                 section_5_extract = self.extract_section_5_monitoring(adr_name, section_5_text)
                 
-                # Generate proactive actions
-                proactive_actions = self.generate_proactive_actions(medicine, adr_name, fda_sections)
+                # Generate proactive actions with patient context
+                proactive_actions = self.generate_proactive_actions(medicine, adr_name, fda_sections, patient_context)
                 time.sleep(1)
                 
-                # Select immediate actions
+                # Select immediate actions with patient context
                 immediate_actions_result = self.select_immediate_actions(
-                    medicine, adr_name, 'Non-LT/Fatal, But Serious ADR', fda_sections
+                    medicine, adr_name, 'Non-LT/Fatal, But Serious ADR', fda_sections, patient_context
                 )
                 time.sleep(1)
                 
@@ -527,7 +653,8 @@ Your response:"""
                     'section_5_warnings_and_precautions_extract': section_5_extract,
                     'proactive_actions_symptoms_to_monitor': proactive_actions,
                     'immediate_actions_required': immediate_actions_result['action'],
-                    'immediate_actions_reasoning': immediate_actions_result['reasoning']
+                    'immediate_actions_reasoning': immediate_actions_result['reasoning'],
+                    'patient_context_applied': bool(patient_context)
                 }
                 
                 rmm_entries.append(rmm_entry)
@@ -580,7 +707,7 @@ Your response:"""
                         end = min(len(section_7_text), pos + 150)
                         section_5_extract = section_7_text[start:end].strip()
                 
-                # Generate proactive actions for the interaction
+                # Generate proactive actions for the interaction with patient context
                 interaction_prompt_sections = {
                     'warnings_and_cautions': f"Drug Interaction Context: {interaction['context']}",
                     'adverse_reactions': '',
@@ -590,16 +717,18 @@ Your response:"""
                 proactive_actions = self.generate_proactive_actions(
                     medicine, 
                     f"interaction with {interacting_drug}", 
-                    interaction_prompt_sections
+                    interaction_prompt_sections,
+                    patient_context
                 )
                 time.sleep(1)
                 
-                # Select immediate actions for interaction
+                # Select immediate actions for interaction with patient context
                 immediate_actions_result = self.select_immediate_actions(
                     medicine,
                     f"interaction with {interacting_drug}",
                     risk_type,
                     interaction_prompt_sections,
+                    patient_context,
                     is_drug_interaction=True
                 )
                 time.sleep(1)
@@ -611,7 +740,8 @@ Your response:"""
                     'section_5_warnings_and_precautions_extract': section_5_extract,
                     'proactive_actions_symptoms_to_monitor': proactive_actions,
                     'immediate_actions_required': immediate_actions_result['action'],
-                    'immediate_actions_reasoning': immediate_actions_result['reasoning']
+                    'immediate_actions_reasoning': immediate_actions_result['reasoning'],
+                    'patient_context_applied': bool(patient_context)
                 }
                 
                 rmm_entries.append(rmm_entry)
@@ -619,8 +749,9 @@ Your response:"""
 
         rmm_output = {
             'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'patient': patient_data,
+            'patient': patient_data_output,
             'medications': medications,
+            'patient_context_applied': bool(patient_context),
             'rmm_table': rmm_entries,
             'total_rmm_entries': len(rmm_entries)
         }
@@ -637,6 +768,7 @@ Your response:"""
         patient = rmm_output.get('patient', {})
         print(f"\nPatient: {patient.get('age')}y {patient.get('gender')}")
         print(f"Medications: {', '.join(rmm_output.get('medications', []))}")
+        print(f"Patient Context Applied: {'Yes' if rmm_output.get('patient_context_applied') else 'No'}")
         print(f"Total RMM Entries: {rmm_output.get('total_rmm_entries', 0)}")
         
         print("\n" + "=" * 80)
@@ -648,6 +780,8 @@ Your response:"""
             print(f"    Symptoms to Monitor: {entry['proactive_actions_symptoms_to_monitor'][:200]}...")
             print(f"    Immediate Actions: {entry['immediate_actions_required']}")
             print(f"    Reasoning: {entry['immediate_actions_reasoning']}")
+            if entry.get('patient_context_applied'):
+                print(f"    [Patient-specific recommendations included]")
         
         print("\n" + "=" * 80 + "\n")
 
@@ -673,14 +807,20 @@ def find_latest_factor_output():
         # Wait 1 second before retrying
         time.sleep(1)
         elapsed += 1
-    # os.remove(file_path)
+    
     print(f"❌ Timeout: {file_path} not available after {timeout} seconds.")
     return None
 
-def start(input_file: Optional[str] = None) -> List[Dict[str, Any]]:
+def start(input_file: Optional[str] = None, scoring_system=None) -> List[Dict[str, Any]]:
     """
-    RMM entry point that waits for the ADR output, processes it,
-    deletes the source file, and returns the 'rmm_table'.
+    RMM entry point with patient-context-aware recommendations
+    
+    Args:
+        input_file: Path to Factor 3.2 & 3.3 output file
+        scoring_system: Scoring system object (contains patient_data)
+    
+    Returns:
+        RMM table with patient-specific recommendations
     """
     print("\n" + "=" * 80)
     print("STEP 4: RISK MINIMIZATION MEASURES (RMM) GENERATOR")
@@ -693,7 +833,13 @@ def start(input_file: Optional[str] = None) -> List[Dict[str, Any]]:
         print(f"\n❌ {str(e)}")
         return {"error": "API Key missing"}
 
-    # 2. Polling Logic: Wait up to 30s for the file to be available
+    # 2. Extract patient_data from scoring_system if available
+    patient_data = None
+    if scoring_system and hasattr(scoring_system, 'patient_data'):
+        patient_data = scoring_system.patient_data
+        print("✓ Patient context extracted from scoring system")
+
+    # 3. Polling Logic: Wait up to 30s for the file to be available
     file_path = input_file if input_file else '../adrs_output.json'
     timeout = 30
     elapsed = 0
@@ -708,33 +854,32 @@ def start(input_file: Optional[str] = None) -> List[Dict[str, Any]]:
         print(f"❌ Timeout: {file_path} not found.")
         return {"error": "Input file not found"}
 
-    # 3. Process RMM Generation
+    # 4. Process RMM Generation with patient context
     try:
-        # Generate the clinical RMM table
-        # We pass the file path to the generator to process the ADR data
-        full_output = generator.generate_rmm_table(file_path)
+        # Generate the clinical RMM table with patient context
+        full_output = generator.generate_rmm_table(file_path, patient_data)
         
         # Display the formatted clinical findings
         generator.print_rmm_report(full_output)
         
-        # 4. Extract the rmm_table attribute into memory
+        # 5. Extract the rmm_table attribute into memory
         rmm_table_data = full_output.get("rmm_table", [])
         
-        # 5. Persist the RMM results locally for the system log
+        # 6. Persist the RMM results locally for the system log
         output_save_path = "rmm_output.json"
         with open(output_save_path, 'w') as f:
             json.dump(full_output, f, indent=2)
             
         print(f"✓ RMM data processed and saved to local log: {output_save_path}")
 
-        # 6. Delete the original input file before returning
+        # 7. Delete the original input file before returning
         try:
             # os.remove(file_path)
             print(f"🗑️  Original file {file_path} deleted successfully.")
         except Exception as e:
             print(f"⚠️  Warning: Could not delete {file_path}: {str(e)}")
 
-        # 7. Return specifically the rmm_table list
+        # 8. Return specifically the rmm_table list
         return rmm_table_data
         
     except Exception as e:
