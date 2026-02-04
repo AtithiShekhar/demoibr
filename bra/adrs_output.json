@@ -1,163 +1,75 @@
 {
-  "date": "2026-02-04 02:36:36",
+  "date": "2026-02-05 00:10:20",
   "patient": {
-    "age": 65,
+    "age": 32,
     "gender": "Male",
-    "condition": "Severe dizziness",
-    "diagnosis": "Upper Gastrointestinal Bleeding",
-    "social_risk_factors": "smoking/alcohol",
-    "date_of_assessment": "2026-02-04",
-    "MedicalHistory": [
-      {
-        "diagnosisName": "Upper Gastrointestinal Bleeding",
-        "diagnosisDate": "2026-01-28",
-        "severity": "Severe",
-        "status": "Active",
-        "treatment": {
-          "treatmentType": "medication",
-          "medications": [
-            {
-              "name": "Ibuprofen",
-              "dosage": "400mg",
-              "route": "Oral",
-              "frequency": "TID",
-              "timing": "PC",
-              "startDate": "2026-01-20",
-              "status": "Stopped"
-            }
-          ]
-        }
-      },
-      {
-        "diagnosisName": "Hypertension",
-        "diagnosisDate": "2020-03-15",
-        "severity": "Moderate",
-        "status": "Chronic",
-        "treatment": {
-          "treatmentType": "medication",
-          "medications": [
-            {
-              "name": "Lisinopril",
-              "dosage": "10mg",
-              "route": "Oral",
-              "frequency": "Once daily",
-              "timing": "Morning",
-              "startDate": "2020-03-15",
-              "status": "Active"
-            }
-          ]
-        }
-      }
-    ]
+    "condition": "",
+    "diagnosis": "type 2 diabetes",
+    "social_risk_factors": "none",
+    "date_of_assessment": "2026-02-05",
+    "MedicalHistory": []
   },
   "medications": [
-    "Lisinopril",
-    "Ibuprofen"
+    "Metformin"
   ],
   "medical_history_analyzed": false,
   "factor_3_2": {
     "LT_ADRs": {
-      "Lisinopril": {
-        "with_risk_factors": [],
-        "without_risk_factors": [
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Anaphylactic Reaction",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...tosensitivity, urticaria, necrotizing angiitis (vasculitis and cutaneous vasculitis), respiratory distress including pneumonitis and pulmonary edema, anaphylactic reactions. Non-melanoma Skin Cancer Hydrochlorothiazide is associated with an increased risk of non-melanoma skin cancer. In a study cond..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Stevens-Johnson Syndrome",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "..., photosensitivity, skin lesions, skin infections, pemphigus, erythema, psoriasis. Other severe skin reactions (including toxic epidermal necrolysis, Stevens-Johnson syndrome and cutaneous pseudolymphoma) have been reported rarely; causal relationship has not been established; Special Senses: Visual..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Toxic Epidermal Necrolysis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...ria, alopecia, herpes zoster, photosensitivity, skin lesions, skin infections, pemphigus, erythema, psoriasis. Other severe skin reactions (including toxic epidermal necrolysis, Stevens-Johnson syndrome and cutaneous pseudolymphoma) have been reported rarely; causal relationship has not been establi..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Hepatic Failure",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...ts discontinued therapy due to anemia. Liver Function Tests: Rarely, elevations of liver enzymes and/or serum bilirubin have occurred. (See WARNINGS, Hepatic Failure ). Other adverse reactions that have been reported with the individual components are listed below: Lisinopril - In clinical trials ad..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Agranulocytosis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...ng, jaundice (intrahepatic cholestatic jaundice) (See WARNINGS, Hepatic Failure ), pancreatitis, sialadenitis, constipation; Hematologic: Leukopenia, agranulocytosis, thrombocytopenia, aplastic anemia, hemolytic anemia; Musculoskeletal: Muscle spasm; Nervous System/Psychiatric: Restlessness; Renal:..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Aplastic Anemia",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...tic jaundice) (See WARNINGS, Hepatic Failure ), pancreatitis, sialadenitis, constipation; Hematologic: Leukopenia, agranulocytosis, thrombocytopenia, aplastic anemia, hemolytic anemia; Musculoskeletal: Muscle spasm; Nervous System/Psychiatric: Restlessness; Renal: Renal failure, renal dysfunction, i..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Cardiac Arrest",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...s (see WARNINGS, Anaphylactoid and Possibly Related Reactions ), malaise, edema, facial edema, pain, pelvic pain, flank pain, chills; Cardiovascular: Cardiac arrest, myocardial infarction or cerebrovascular accident, possibly secondary to excessive hypotension in high risk patients (see WARNINGS, Hy..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Heart Failure",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...dent, possibly secondary to excessive hypotension in high risk patients (see WARNINGS, Hypotension ), pulmonary embolism and infarction, worsening of heart failure, arrhythmias (including tachycardia, ventricular tachycardia, atrial tachycardia, atrial fibrillation, bradycardia, and premature ventri..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Renal Failure",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...ationship has not been established; Special Senses: Visual loss, diplopia, photophobia, taste disturbances, olfactory disturbances; Urogenital: Acute renal failure, oliguria, anuria, uremia, progressive azotemia, renal dysfunction (see PRECAUTIONS and DOSAGE AND ADMINISTRATION ), pyelonephritis, dys..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Angioedema",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...orted in patients receiving PRINZIDE, with an incidence higher in Black than in non-Black patients. Angioedema associated with laryngeal edema may be fatal. If angioedema of the face, extremities, lips, tongue, glottis and/or larynx occurs, treatment with PRINZIDE should be discontinued and appropri..."
-          },
-          {
-            "medicine": "Lisinopril",
-            "adr_name": "Injury And Death To The Developing Fetus",
-            "section": "Boxed Warning",
-            "risk_factors": [],
-            "fda_context": "...continue lisinopril and hydrochlorothiazide tablets as soon as possible. Drugs that act directly on the renin-angiotensin system can cause injury and death to the developing fetus. See Warnings, Fetal Toxicity ."
-          }
-        ]
-      },
-      "Ibuprofen": {
+      "Metformin": {
         "with_risk_factors": [
           {
-            "medicine": "Ibuprofen",
-            "adr_name": "Heart Failure",
-            "section": "Section 5 Warnings and Precautions",
+            "medicine": "Metformin",
+            "adr_name": "Anaphylaxis",
+            "section": "Section 6 Adverse Reactions",
             "risk_factors": [
-              "gastrointestinal condition (upper gastrointestinal bleeding)"
+              "metabolic condition (type 2 diabetes)"
             ],
-            "fda_context": "...cription NSAIDs [aspirin, ibuprofen, naproxen, or others] Heart attack and stroke warning: NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke. These can be fatal. The risk is higher if you use more than directed or for longer than directed. Do not use if you have ev..."
+            "fda_context": "...ate their frequency or establish a causal relationship to drug exposure. Skin and subcutaneous tissue disorders: hypersensitivity reactions including anaphylaxis, angioedema, rash, urticaria, cutaneous vasculitis, and exfoliative skin conditions including Stevens-Johnson syndrome; bullous pemphigoid..."
           },
           {
-            "medicine": "Ibuprofen",
-            "adr_name": "Stroke",
-            "section": "Section 5 Warnings and Precautions",
+            "medicine": "Metformin",
+            "adr_name": "Stevens-Johnson Syndrome",
+            "section": "Section 6 Adverse Reactions",
             "risk_factors": [
-              "gastrointestinal condition (upper gastrointestinal bleeding)"
+              "metabolic condition (type 2 diabetes)"
             ],
-            "fda_context": "...roxen, or others] Heart attack and stroke warning: NSAIDs, except aspirin, increase the risk of heart attack, heart failure, and stroke. These can be fatal. The risk is higher if you use more than directed or for longer than directed. Do not use if you have ever had an allergic reaction to any other..."
+            "fda_context": "...rders: hypersensitivity reactions including anaphylaxis, angioedema, rash, urticaria, cutaneous vasculitis, and exfoliative skin conditions including Stevens-Johnson syndrome; bullous pemphigoid; Respiratory, thoracic and mediastinal disorders: upper respiratory tract infection; Hepatobiliary disord..."
+          },
+          {
+            "medicine": "Metformin",
+            "adr_name": "Heart Failure",
+            "section": "Section 6 Adverse Reactions",
+            "risk_factors": [
+              "metabolic condition (type 2 diabetes)"
+            ],
+            "fda_context": "...elsewhere in the prescribing information: Lactic Acidosis [see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings a..."
+          },
+          {
+            "medicine": "Metformin",
+            "adr_name": "Renal Failure",
+            "section": "Section 6 Adverse Reactions",
+            "risk_factors": [
+              "metabolic condition (type 2 diabetes)"
+            ],
+            "fda_context": "...[see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings and Precautions ( 5.5 )] Hypoglycemia with Concomitant Use w..."
+          },
+          {
+            "medicine": "Metformin",
+            "adr_name": "Necrotizing Pancreatitis",
+            "section": "Section 6 Adverse Reactions",
+            "risk_factors": [
+              "metabolic condition (type 2 diabetes)"
+            ],
+            "fda_context": "...hepatocellular, and mixed hepatocellular liver injury; Gastrointestinal disorders: acute pancreatitis, including fatal and non-fatal hemorrhagic and necrotizing pancreatitis [see Indications and Usage (1)]; constipation; vomiting; mouth ulceration; stomatitis; Renal and urinary disorders: worsening..."
+          },
+          {
+            "medicine": "Metformin",
+            "adr_name": "Lactic Acidosis",
+            "section": "Section 6 Adverse Reactions",
+            "risk_factors": [
+              "metabolic condition (type 2 diabetes)"
+            ],
+            "fda_context": "6 ADVERSE REACTIONS The following adverse reactions are also discussed elsewhere in the prescribing information: Lactic Acidosis [see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions..."
           }
         ],
         "without_risk_factors": []

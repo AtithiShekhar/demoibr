@@ -1,6 +1,7 @@
 """
 iBR Report Generator
 Generates comprehensive Individual Benefit-Risk (iBR) Assessment reports in the exact UI format
+UPDATED: Enhanced monitoring protocol with categorized symptoms and detailed lab tests
 """
 
 from typing import Dict, List, Any, Optional
@@ -738,43 +739,152 @@ class IBRReportGenerator:
         
         return " ".join(summary_parts)
     
-    @staticmethod
-    def generate_monitoring_protocol(rmm_table: List, conditional_meds: List) -> str:
-        """Generate patient-friendly monitoring protocol"""
+    @classmethod
+    def generate_monitoring_protocol(cls, rmm_table: List, conditional_meds: List) -> str:
+        """Generate patient-friendly monitoring protocol in organized format"""
         
         if not rmm_table:
             return "Continue standard medication regimen as prescribed. Report any unusual symptoms to your healthcare provider."
         
-        protocol = "**Monitoring Protocol:**\n\n"
-        protocol += "Please be aware and monitor for the following signs/symptoms and report immediately to your healthcare provider:\n\n"
+        protocol = "**Monitoring Protocol**\n\n"
+        protocol += "Please be aware and monitor for the following signs or symptoms and report immediately to your healthcare provider:\n\n"
         
-        # Group by medicine
-        medicine_protocols = {}
+        # Categorize symptoms by system/type
+        symptom_categories = {}
+        lab_tests_needed = set()
+        
         for entry in rmm_table:
-            medicine = entry.get("medicine", "Unknown")
+            adr_name = entry.get("adr_name", "")
             symptoms = entry.get("proactive_actions_symptoms_to_monitor", "")
-            
-            if medicine not in medicine_protocols:
-                medicine_protocols[medicine] = []
+            lab_tests = entry.get("lab_tests_required", "")
             
             if symptoms:
-                medicine_protocols[medicine].append(symptoms)
+                # Try to categorize symptoms based on ADR name or symptoms content
+                category = cls._categorize_symptoms(adr_name, symptoms)
+                
+                if category not in symptom_categories:
+                    symptom_categories[category] = []
+                
+                symptom_categories[category].append(symptoms)
+            
+            # Extract lab tests
+            if lab_tests:
+                # Split by common delimiters and clean up
+                tests = [t.strip() for t in lab_tests.replace(',', ';').split(';') if t.strip()]
+                lab_tests_needed.update(tests)
         
-        # Format for each medicine
-        for medicine, symptoms_list in medicine_protocols.items():
-            protocol += f"**{medicine}:**\n"
+        # Format symptom categories
+        for category, symptoms_list in symptom_categories.items():
+            # Combine and deduplicate symptoms for this category
+            all_symptoms = []
             for symptoms in symptoms_list:
-                protocol += f"• {symptoms}\n"
-            protocol += "\n"
+                # Split by common delimiters
+                symptom_parts = [s.strip() for s in symptoms.replace(',', ';').split(';') if s.strip()]
+                all_symptoms.extend(symptom_parts)
+            
+            # Remove duplicates while preserving order
+            unique_symptoms = []
+            seen = set()
+            for symptom in all_symptoms:
+                symptom_lower = symptom.lower()
+                if symptom_lower not in seen:
+                    seen.add(symptom_lower)
+                    unique_symptoms.append(symptom)
+            
+            if unique_symptoms:
+                protocol += f"**{category}:** {', '.join(unique_symptoms)}\n\n"
         
-        protocol += "\n**Lab Tests Required:**\n"
-        protocol += "Please do the following lab tests as recommended by your healthcare provider:\n"
-        protocol += "• Complete Blood Count (CBC)\n"
-        protocol += "• Liver Function Tests (LFTs)\n"
-        protocol += "• Kidney Function Tests (KFTs)\n"
-        protocol += "• Other specific tests as per your medication regimen\n"
+        # Format lab tests section
+        if lab_tests_needed:
+            protocol += "**Please do the following lab tests and share reports with your healthcare provider:**\n\n"
+            
+            # Organize lab tests by category
+            lab_categories = {
+                "Kidney Function Tests (KFTs)": [],
+                "Liver Function Tests (LFTs)": [],
+                "Blood Tests": [],
+                "Other Tests": []
+            }
+            
+            for test in sorted(lab_tests_needed):
+                test_lower = test.lower()
+                if any(keyword in test_lower for keyword in ['creatinine', 'urea', 'bun', 'kidney', 'kft']):
+                    lab_categories["Kidney Function Tests (KFTs)"].append(test)
+                elif any(keyword in test_lower for keyword in ['ast', 'alt', 'sgot', 'sgpt', 'bilirubin', 'liver', 'lft']):
+                    lab_categories["Liver Function Tests (LFTs)"].append(test)
+                elif any(keyword in test_lower for keyword in ['cbc', 'hemoglobin', 'wbc', 'platelet', 'blood count']):
+                    lab_categories["Blood Tests"].append(test)
+                else:
+                    lab_categories["Other Tests"].append(test)
+            
+            # Print non-empty categories
+            for category, tests in lab_categories.items():
+                if tests:
+                    protocol += f"● **{category}**\n"
+                    for test in tests:
+                        protocol += f"  ○ {test}\n"
+            
+            protocol += "\n**Frequency**\n\n"
+            protocol += "● Every 2 weeks, or as advised by your doctor\n"
+        else:
+            # Default lab tests if none specified
+            protocol += "**Please do the following lab tests and share reports with your healthcare provider:**\n\n"
+            protocol += "● **Kidney Function Tests (KFTs)**\n"
+            protocol += "  ○ Serum creatinine\n"
+            protocol += "  ○ Blood urea\n"
+            protocol += "● **Liver Function Tests (LFTs)**\n"
+            protocol += "  ○ AST (SGOT), ALT (SGPT), Bilirubin\n\n"
+            protocol += "**Frequency**\n\n"
+            protocol += "● Every 2 weeks, or as advised by your doctor\n"
         
         return protocol
+    
+    @staticmethod
+    def _categorize_symptoms(adr_name: str, symptoms: str) -> str:
+        """Categorize symptoms based on ADR name or symptom content"""
+        
+        adr_lower = adr_name.lower()
+        symptoms_lower = symptoms.lower()
+        
+        # Check for specific categories
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['breath', 'respiratory', 'lung', 'wheez', 'chest']):
+            return "Breathing Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['kidney', 'renal', 'urine', 'urinary']):
+            return "Urine / Kidney Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['ear', 'hearing', 'tinnitus', 'ototoxic', 'dizz', 'balance']):
+            return "Ear Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['liver', 'hepatic', 'jaundice', 'yellow']):
+            return "Liver Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['heart', 'cardiac', 'arrhythmia', 'palpitation']):
+            return "Heart Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['skin', 'rash', 'dermat', 'itch', 'hives']):
+            return "Skin Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['gastro', 'stomach', 'nausea', 'vomit', 'diarrhea', 'gi']):
+            return "Stomach / Digestive Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['neuro', 'nerve', 'seizure', 'tremor', 'headache']):
+            return "Neurological Problems"
+        
+        if any(keyword in adr_lower or keyword in symptoms_lower 
+               for keyword in ['bleed', 'hemorrh', 'bruise', 'coagulation']):
+            return "Bleeding Problems"
+        
+        # Default category
+        return "General Warning Signs"
 
 
 def format_ibr_response(analysis_results: Dict, input_data: Dict) -> Dict[str, Any]:
