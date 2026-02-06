@@ -1,52 +1,33 @@
 {
-  "date": "2026-02-07 00:04:01",
+  "date": "2026-02-07 01:31:32",
   "patient": {
-    "age": 58,
-    "gender": "Female",
-    "condition": "Shortness of breath on exertion",
-    "diagnosis": "Acute Decompensated Heart Failure",
-    "social_risk_factors": "sedentary lifestyle/poor diet",
+    "age": 64,
+    "gender": "Male",
+    "condition": "",
+    "diagnosis": "type 2 diabetes",
+    "social_risk_factors": "none",
     "date_of_assessment": "2026-02-07",
     "MedicalHistory": []
   },
   "medications": [
-    "Furosemide"
+    "Metformin"
   ],
   "medical_history_analyzed": false,
   "factor_3_2": {
     "LT_ADRs": {
-      "Furosemide": {
-        "with_risk_factors": [],
-        "without_risk_factors": [
+      "Metformin": {
+        "with_risk_factors": [
           {
-            "medicine": "Furosemide",
-            "adr_name": "Stevens-Johnson Syndrome",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...agranulocytosis 4. hemolytic anemia 5. leukopenia 6. anemia 7. eosinophilia Dermatologic-Hypersensitivity Reactions 1. toxic epidermal necrolysis 2. Stevens-Johnson Syndrome 3. erythema multiforme 4. drug rash with eosinophilia and systemic symptoms 5. acute generalized exanthematous pustulosis 6...."
-          },
-          {
-            "medicine": "Furosemide",
-            "adr_name": "Toxic Epidermal Necrolysis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...anemia 2. thrombocytopenia 3. agranulocytosis 4. hemolytic anemia 5. leukopenia 6. anemia 7. eosinophilia Dermatologic-Hypersensitivity Reactions 1. toxic epidermal necrolysis 2. Stevens-Johnson Syndrome 3. erythema multiforme 4. drug rash with eosinophilia and systemic symptoms 5. acute generalize..."
-          },
-          {
-            "medicine": "Furosemide",
-            "adr_name": "Agranulocytosis",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...s 2. paresthesias 3. vertigo 4. dizziness 5. headache 6. blurred vision 7. xanthopsia Hematologic Reactions 1. aplastic anemia 2. thrombocytopenia 3. agranulocytosis 4. hemolytic anemia 5. leukopenia 6. anemia 7. eosinophilia Dermatologic-Hypersensitivity Reactions 1. toxic epidermal necrolysis 2. S..."
-          },
-          {
-            "medicine": "Furosemide",
-            "adr_name": "Aplastic Anemia",
-            "section": "Section 6 Adverse Reactions",
-            "risk_factors": [],
-            "fda_context": "...m Reactions 1. tinnitus and hearing loss 2. paresthesias 3. vertigo 4. dizziness 5. headache 6. blurred vision 7. xanthopsia Hematologic Reactions 1. aplastic anemia 2. thrombocytopenia 3. agranulocytosis 4. hemolytic anemia 5. leukopenia 6. anemia 7. eosinophilia Dermatologic-Hypersensitivity React..."
+            "medicine": "Metformin",
+            "adr_name": "Renal Failure",
+            "section": "Section 6",
+            "risk_factors": [
+              "metabolic condition (type 2 diabetes)"
+            ],
+            "fda_context": "...[see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings and Precautions ( 5.5 )] Hypoglycemia with Concomitant Use w..."
           }
-        ]
+        ],
+        "without_risk_factors": []
       }
     },
     "Serious_ADRs": {}

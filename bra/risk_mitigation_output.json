@@ -1,115 +1,47 @@
 {
-  "date": "2026-02-07 00:04:32",
+  "date": "2026-02-07 01:31:52",
   "patient": {
-    "age": 58,
-    "gender": "Female",
-    "condition": "Shortness of breath on exertion",
-    "diagnosis": "Acute Decompensated Heart Failure",
-    "social_risk_factors": "sedentary lifestyle/poor diet",
+    "age": 64,
+    "gender": "Male",
+    "condition": "",
+    "diagnosis": "type 2 diabetes",
+    "social_risk_factors": "none",
     "date_of_assessment": "2026-02-07",
     "MedicalHistory": []
   },
   "medications": [
-    "Furosemide"
+    "Metformin"
   ],
-  "total_adrs_analyzed": 4,
+  "total_adrs_analyzed": 1,
   "patient_context_applied": false,
   "factor_3_4_risk_mitigation_feasibility": {
     "risk_reversibility_risk_tolerability": {
-      "Furosemide - Stevens-Johnson Syndrome": {
-        "medicine": "Furosemide",
-        "adr_name": "Stevens-Johnson Syndrome",
+      "Metformin - Renal Failure": {
+        "medicine": "Metformin",
+        "adr_name": "Renal Failure",
         "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Stevens-Johnson Syndrome is a known irreversible condition with permanent consequences",
-        "fda_evidence": "Documented as irreversible in medical literature",
+        "classification": "Reversible ADR",
+        "reasoning": "The FDA USPI mentions acute renal failure, sometimes requiring dialysis, which implies that renal function can potentially recover after discontinuation of ZITUVIMET, even if temporary dialysis is required. Therefore, this ADR is considered reversible.",
+        "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis. Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
         "keywords_found": [
-          "stevens-johnson syndrome"
-        ],
-        "patient_specific_notes": null
-      },
-      "Furosemide - Toxic Epidermal Necrolysis": {
-        "medicine": "Furosemide",
-        "adr_name": "Toxic Epidermal Necrolysis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Toxic Epidermal Necrolysis is a known irreversible condition with permanent consequences",
-        "fda_evidence": "Documented as irreversible in medical literature",
-        "keywords_found": [
-          "toxic epidermal necrolysis"
-        ],
-        "patient_specific_notes": null
-      },
-      "Furosemide - Agranulocytosis": {
-        "medicine": "Furosemide",
-        "adr_name": "Agranulocytosis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Agranulocytosis is a known irreversible condition with permanent consequences",
-        "fda_evidence": "Documented as irreversible in medical literature",
-        "keywords_found": [
-          "agranulocytosis"
-        ],
-        "patient_specific_notes": null
-      },
-      "Furosemide - Aplastic Anemia": {
-        "medicine": "Furosemide",
-        "adr_name": "Aplastic Anemia",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Irreversible ADR",
-        "reasoning": "Aplastic Anemia is a known irreversible condition with permanent consequences",
-        "fda_evidence": "Documented as irreversible in medical literature",
-        "keywords_found": [
-          "aplastic anemia"
-        ],
-        "patient_specific_notes": null
+          "Acute Renal Failure",
+          "dialysis"
+        ]
       }
     },
     "risk_preventability": {
-      "Furosemide - Stevens-Johnson Syndrome": {
-        "medicine": "Furosemide",
-        "adr_name": "Stevens-Johnson Syndrome",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Non-preventable ADR",
-        "reasoning": "Stevens-Johnson Syndrome is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
-        "fda_evidence": "Documented as unpredictable reaction",
-        "prevention_measures": [],
-        "patient_specific_notes": null
-      },
-      "Furosemide - Toxic Epidermal Necrolysis": {
-        "medicine": "Furosemide",
-        "adr_name": "Toxic Epidermal Necrolysis",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Non-preventable ADR",
-        "reasoning": "Toxic Epidermal Necrolysis is an idiosyncratic/unpredictable reaction that cannot be prevented by routine monitoring",
-        "fda_evidence": "Documented as unpredictable reaction",
-        "prevention_measures": [],
-        "patient_specific_notes": null
-      },
-      "Furosemide - Agranulocytosis": {
-        "medicine": "Furosemide",
-        "adr_name": "Agranulocytosis",
+      "Metformin - Renal Failure": {
+        "medicine": "Metformin",
+        "adr_name": "Renal Failure",
         "adr_type": "LT/Fatal ADR",
         "classification": "Preventable ADR",
-        "reasoning": "Agranulocytosis is a listed hematologic reaction with furosemide. While it may be unpredictable in some individuals, monitoring complete blood counts (CBC) could help detect early signs of agranulocytosis, allowing for dose reduction or discontinuation of the drug, potentially preventing severe outcomes. Also, the FDA USPI recommends dose reduction or therapy withdrawal if adverse reactions are moderate or severe.",
-        "fda_evidence": "Whenever adverse reactions are moderate or severe, furosemide dosage should be reduced or therapy withdrawn.",
+        "reasoning": "The FDA USPI for Metformin states that acute renal failure has been reported postmarketing, sometimes requiring dialysis and advises assessing renal function before initiating ZITUVIMET and at least annually thereafter. Therefore, renal failure as an ADR of Metformin can be potentially prevented through proactive monitoring of renal function and dose adjustments or discontinuation if necessary.",
+        "fda_evidence": "Acute Renal Failure: Has been reported postmarketing, sometimes requiring dialysis. Before initiating ZITUVIMET and at least annually thereafter, assess renal function.",
         "prevention_measures": [
-          "Baseline and periodic CBC monitoring",
-          "Dose adjustment based on CBC results",
-          "Early detection and reporting of symptoms such as fever, sore throat, or infections"
-        ]
-      },
-      "Furosemide - Aplastic Anemia": {
-        "medicine": "Furosemide",
-        "adr_name": "Aplastic Anemia",
-        "adr_type": "LT/Fatal ADR",
-        "classification": "Preventable ADR",
-        "reasoning": "While aplastic anemia is a serious ADR, the USPI mentions that it can occur. The USPI also states that \"Whenever adverse reactions are moderate or severe, furosemide dosage should be reduced or therapy withdrawn.\" This suggests that careful monitoring and dose adjustment based on clinical assessment and possibly hematologic parameters could potentially mitigate the severity or prevent the ADR from progressing. It falls under preventable because dose adjustment is mentioned as a reaction to moderate/severe ADRs.",
-        "fda_evidence": "Whenever adverse reactions are moderate or severe, furosemide dosage should be reduced or therapy withdrawn.",
-        "prevention_measures": [
-          "Baseline and periodic complete blood counts (CBC) with differential",
-          "Careful monitoring for signs and symptoms of anemia (fatigue, weakness, pallor)",
-          "Dose reduction or discontinuation upon early detection of hematologic abnormalities"
+          "Assess renal function before initiating metformin",
+          "Assess renal function at least annually",
+          "Dose adjustment based on renal function",
+          "Discontinuation of metformin if renal function declines significantly"
         ]
       }
     }

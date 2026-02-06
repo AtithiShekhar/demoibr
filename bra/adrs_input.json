@@ -1,14 +1,14 @@
 {
   "patient": {
-    "age": 58,
-    "gender": "Female",
-    "condition": "Shortness of breath on exertion",
-    "diagnosis": "Acute Decompensated Heart Failure",
-    "social_risk_factors": "sedentary lifestyle/poor diet",
+    "age": 64,
+    "gender": "Male",
+    "condition": "",
+    "diagnosis": "type 2 diabetes",
+    "social_risk_factors": "none",
     "date_of_assessment": "2026-02-07",
     "MedicalHistory": []
   },
   "prescription": [
-    "Furosemide"
+    "Metformin"
   ]
 }

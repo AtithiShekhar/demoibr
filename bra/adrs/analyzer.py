@@ -211,79 +211,46 @@ class Factor_3_2_3_3_Analyzer_Fixed:
         patient_data: Dict[str, Any]
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Factor 3.2.1: Identify Life-Threatening ADRs
+        Modified: Only returns LT ADRs where the patient has matching risk factors.
         """
-        
         if not fda_sections:
             return {'with_risk_factors': [], 'without_risk_factors': []}
         
         can_be_pregnant = self._can_patient_be_pregnant(patient_data)
         
-        # Search Section 6 Adverse Reactions first
+        # Extract text sections
         adverse_reactions = fda_sections.get('adverse_reactions', '')
         warnings = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
         boxed_warning = fda_sections.get('boxed_warning', '')
         
         all_lt_adrs = []
+        # Search all relevant sections
+        for text, section in [(adverse_reactions, 'Section 6'), (warnings, 'Section 5'), (boxed_warning, 'Boxed Warning')]:
+            if text:
+                all_lt_adrs.extend(self._search_for_lt_adrs(text, section, medicine_name, can_be_pregnant))
         
-        # Check Adverse Reactions section
-        if adverse_reactions:
-            lt_adrs_from_ar = self._search_for_lt_adrs(
-                adverse_reactions, 
-                'Section 6 Adverse Reactions',
-                medicine_name,
-                can_be_pregnant
-            )
-            all_lt_adrs.extend(lt_adrs_from_ar)
-        
-        # Check Warnings section
-        if warnings:
-            lt_adrs_from_warn = self._search_for_lt_adrs(
-                warnings,
-                'Section 5 Warnings and Precautions',
-                medicine_name,
-                can_be_pregnant
-            )
-            all_lt_adrs.extend(lt_adrs_from_warn)
-        
-        # Check Boxed Warning
-        if boxed_warning:
-            lt_adrs_from_boxed = self._search_for_lt_adrs(
-                boxed_warning,
-                'Boxed Warning',
-                medicine_name,
-                can_be_pregnant
-            )
-            all_lt_adrs.extend(lt_adrs_from_boxed)
-        
-        # Deduplicate
         unique_lt_adrs = self._deduplicate_adrs(all_lt_adrs)
         
-        # Match patient risk factors
         with_risk_factors = []
-        without_risk_factors = []
         
         for adr in unique_lt_adrs:
             risk_match = self._match_patient_risk_factors(adr, patient_data, fda_sections)
             
-            adr_result = {
-                'medicine': medicine_name,
-                'adr_name': adr['adr_name'],
-                'section': adr['section'],
-                'risk_factors': risk_match['matched_factors'],
-                'fda_context': adr['context']
-            }
-            
+            # CRITICAL CHANGE: Only append if patient has the specific risk factor
             if risk_match['has_risk_factors']:
-                with_risk_factors.append(adr_result)
-            else:
-                without_risk_factors.append(adr_result)
+                with_risk_factors.append({
+                    'medicine': medicine_name,
+                    'adr_name': adr['adr_name'],
+                    'section': adr['section'],
+                    'risk_factors': risk_match['matched_factors'],
+                    'fda_context': adr['context']
+                })
         
+        # Return only 'with_risk_factors' to keep output limited to relevant context
         return {
             'with_risk_factors': with_risk_factors,
-            'without_risk_factors': without_risk_factors
-        }
-    
+            'without_risk_factors': [] 
+        }   
     def _search_for_lt_adrs(
         self, 
         text: str, 
@@ -364,68 +331,41 @@ class Factor_3_2_3_3_Analyzer_Fixed:
         lt_adrs: Dict[str, List[Dict[str, Any]]]
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Factor 3.2.2: Identify Serious ADRs (excluding LT ADRs)
+        Modified: Only returns Serious ADRs relevant to the patient's medical history.
         """
-        
         if not fda_sections:
             return {'with_risk_factors': [], 'without_risk_factors': []}
         
-        # Get all LT ADR names to exclude
-        lt_adr_names = set()
-        for adr in lt_adrs['with_risk_factors'] + lt_adrs['without_risk_factors']:
-            lt_adr_names.add(adr['adr_name'].lower())
+        # Exclude LT ADRs already identified
+        lt_adr_names = {adr['adr_name'].lower() for adr in lt_adrs['with_risk_factors']}
         
-        # Search Section 6 Adverse Reactions
         adverse_reactions = fda_sections.get('adverse_reactions', '')
         warnings = fda_sections.get('warnings_and_cautions') or fda_sections.get('warnings', '')
         
         all_serious_adrs = []
+        for text, section in [(adverse_reactions, 'Section 6'), (warnings, 'Section 5')]:
+            if text:
+                all_serious_adrs.extend(self._search_for_serious_adrs(text, section, medicine_name, lt_adr_names))
         
-        # Look for the specific statement pattern
-        if adverse_reactions:
-            serious_adrs_from_ar = self._search_for_serious_adrs(
-                adverse_reactions,
-                'Section 6 Adverse Reactions',
-                medicine_name,
-                lt_adr_names
-            )
-            all_serious_adrs.extend(serious_adrs_from_ar)
-        
-        if warnings:
-            serious_adrs_from_warn = self._search_for_serious_adrs(
-                warnings,
-                'Section 5 Warnings and Precautions',
-                medicine_name,
-                lt_adr_names
-            )
-            all_serious_adrs.extend(serious_adrs_from_warn)
-        
-        # Deduplicate
         unique_serious_adrs = self._deduplicate_adrs(all_serious_adrs)
         
-        # Match patient risk factors
         with_risk_factors = []
-        without_risk_factors = []
-        
         for adr in unique_serious_adrs:
             risk_match = self._match_patient_risk_factors(adr, patient_data, fda_sections)
             
-            adr_result = {
-                'medicine': medicine_name,
-                'adr_name': adr['adr_name'],
-                'section': adr['section'],
-                'risk_factors': risk_match['matched_factors'],
-                'fda_context': adr['context']
-            }
-            
+            # CRITICAL CHANGE: Only include if patient matches clinical context
             if risk_match['has_risk_factors']:
-                with_risk_factors.append(adr_result)
-            else:
-                without_risk_factors.append(adr_result)
+                with_risk_factors.append({
+                    'medicine': medicine_name,
+                    'adr_name': adr['adr_name'],
+                    'section': adr['section'],
+                    'risk_factors': risk_match['matched_factors'],
+                    'fda_context': adr['context']
+                })
         
         return {
             'with_risk_factors': with_risk_factors,
-            'without_risk_factors': without_risk_factors
+            'without_risk_factors': []
         }
     
     def _search_for_serious_adrs(

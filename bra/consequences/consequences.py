@@ -18,13 +18,16 @@ class Factor_2_6_Consequences_Analyzer:
     
     def __init__(self):
         """Initialize with Gemini API"""
+        # 1. Get the API key
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
         
+        # 2. Validate the API key immediately
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables!")
         
-        # Configure new Gemini client
-            self.client = genai.Client(api_key=self.gemini_api_key)
+        # 3. FIX: Ensure this is correctly indented (not inside a sub-block)
+        # Initialize the Google GenAI client
+        self.client = genai.Client(api_key=self.gemini_api_key)
         
         print(f"✓ Gemini client initialized")
     
