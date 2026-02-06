@@ -3,15 +3,12 @@ iBR Report Generator
 Generates comprehensive Individual Benefit-Risk (iBR) Assessment reports in the exact UI format
 UPDATED: Enhanced monitoring protocol with categorized symptoms and detailed lab tests
 """
-
+from utils.gemini_patient_education import generate_gemini_monitoring_protocol
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import json
-
-
 class IBRReportGenerator:
-    """Generates iBR Assessment reports from analysis results"""
-    
+    """Generates iBR Assessment reports with Gemini AI integration for dynamic summaries and protocols"""
     @staticmethod
     def determine_ibr_outcome(brr: float, has_contraindication: bool, has_lt_adrs: bool, 
                              has_serious_adrs: bool, patient_has_risk_factors: bool) -> Dict[str, Any]:
@@ -56,6 +53,36 @@ class IBRReportGenerator:
             "score": brr if isinstance(brr, (int, float)) else 0
         }
     
+    def generate_patient_summary_ai(self, patient_info: Dict, meds_list: List[str]) -> str:
+        """Generates a professional clinical summary via Gemini API"""
+        prompt = f"""
+        Generate a professional clinical narrative for an iBR Report.
+        Patient Data: {json.dumps(patient_info)}
+        Medications Prescribed: {', '.join(meds_list)}
+        
+        Format: A single concise paragraph.
+        Content: Mention age, gender, hospitalization reason (chief complaints), and the current treatment regimen.
+        Tone: Professional medical report style.
+        """
+        response = self._call_gemini_api(prompt)
+        return response if "Error" not in response else "Clinical summary currently unavailable."
+
+    def generate_monitoring_protocol_ai(self, analysis_results: Dict, patient_info: Dict) -> str:
+        """Generates patient-specific monitoring protocol via Gemini API"""
+        prompt = f"""
+        Create a patient-friendly monitoring protocol based on these findings:
+        Patient: {json.dumps(patient_info)}
+        Analysis: {json.dumps(analysis_results)}
+
+        Instructions:
+        1. Categorize symptoms by system (e.g., Breathing, Heart, Kidney).
+        2. Tailor warnings to patient risk factors (e.g., emphasize kidney signs if the patient has renal history).
+        3. List specific lab tests (KFT, LFT, CBC) and suggested frequency.
+        4. Use the format: **[Category]**: [Symptoms]
+        5. No preamble. Start directly with '**Monitoring Protocol**'.
+        """
+        response = self._call_gemini_api(prompt)
+        return response if "Error" not in response else "Standard monitoring recommended. Contact provider for specific tests."    
     @staticmethod
     def generate_key_rationale(outcome_status: str, consequence_data: Dict, has_lt_adrs: bool,
                               lt_adrs_list: List, serious_adrs_list: List, is_acute: bool,
@@ -450,7 +477,8 @@ class IBRReportGenerator:
         age = patient_info.get("age", "Unknown")
         gender = patient_info.get("gender", "Unknown")
         full_name = patient_info.get("fullName", "Unknown")
-        
+        print("calling gemini to generate response")
+        summary=generate_gemini_monitoring_protocol(analysis_results=analysis_results,patient_info=patient_info)
         # Generate patient ID (initials + age)
         initials = "".join([word[0].upper() for word in full_name.split() if word])
         patient_id = f"{initials}{age}"
@@ -636,7 +664,7 @@ class IBRReportGenerator:
             "overall_clinical_recommendation": clinical_recommendation,
             
             "patient_education": {
-                "monitoring_protocol": monitoring_protocol,
+                "monitoring_protocol": summary,
                 "rmm_table": rmm_table
             },
             

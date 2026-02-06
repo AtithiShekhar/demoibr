@@ -1,0 +1,59 @@
+{
+  "date": "2026-02-07 00:04:19",
+  "patient": {
+    "age": 58,
+    "gender": "Female",
+    "condition": "Shortness of breath on exertion",
+    "diagnosis": "Acute Decompensated Heart Failure",
+    "social_risk_factors": "sedentary lifestyle/poor diet",
+    "date_of_assessment": "2026-02-07",
+    "MedicalHistory": []
+  },
+  "medications": [
+    "Furosemide"
+  ],
+  "patient_context_applied": false,
+  "rmm_table": [
+    {
+      "medicine": "Furosemide",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Stevens-Johnson Syndrome",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "[, \"Fever\", , \"Fatigue\", , \"Malaise\", , \"Sore throat\", , \"Burning eyes\", , \"Skin pain\", , \"Unexplained widespread rash\", , \"Blisters on skin\", , \"Mucosal inflammation (mouth, eyes, genitals)\", , \"Ulcers (mouth, eyes, genitals)\", , \"Skin detachment\", , \"Eye redness\", , \"Photosensitivity\", , \"Toxic epidermal necrolysis\", ]",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+      "immediate_actions_reasoning": "Stevens-Johnson Syndrome is a life-threatening emergency requiring immediate intervention as per FDA guidelines.",
+      "patient_context_applied": false
+    },
+    {
+      "medicine": "Furosemide",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Toxic Epidermal Necrolysis",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "{, \"Toxic Epidermal Necrolysis Symptoms\": \"Fever, Flu-like symptoms, Fatigue, Malaise, Burning sensation in eyes, Sore throat, Cough, Widespread erythema (redness of the skin), Rapidly spreading rash, Skin pain, Mucosal inflammation (mouth, eyes, genitals), Blisters (skin and mucous membranes), Skin detachment (sheets of skin peeling away), Positive Nikolsky's sign (separation of epidermis with slight pressure), Eye redness, Corneal damage, Photophobia (sensitivity to light), Dysuria (painful urination), Difficulty swallowing, Dehydration, Electrolyte imbalance, Secondary infections (skin), Sepsis\", }",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy AND/OR initiation of required supplementations",
+      "immediate_actions_reasoning": "Toxic Epidermal Necrolysis is a life-threatening emergency requiring immediate intervention as per FDA guidelines.",
+      "patient_context_applied": false
+    },
+    {
+      "medicine": "Furosemide",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Agranulocytosis",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "{, \"Agranulocytosis_Symptoms\": \"Fever, Chills, Sore throat, Weakness, Fatigue, Malaise, Mouth ulcers (stomatitis), Gingivitis (gum inflammation), Rapid heart rate (tachycardia), Rapid breathing (tachypnea), Hypotension, Septicemia, Localized infections (e.g., skin, respiratory tract), Pneumonia, Bacteremia\", }",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy",
+      "immediate_actions_reasoning": "Agranulocytosis is a life-threatening emergency requiring immediate intervention as per FDA guidelines.",
+      "patient_context_applied": false
+    },
+    {
+      "medicine": "Furosemide",
+      "risk_type": "LT/Fatal ADR",
+      "risk_description": "Aplastic Anemia",
+      "section_5_warnings_and_precautions_extract": "NA",
+      "proactive_actions_symptoms_to_monitor": "[, \"Fatigue\", , \"Weakness\", , \"Malaise\", , \"Pallor (paleness)\", , \"Easy bruising\", , \"Prolonged bleeding from cuts\", , \"Nosebleeds (epistaxis)\", , \"Bleeding gums\", , \"Petechiae (small, pinpoint red or purple spots on the skin)\", , \"Purpura (larger areas of bleeding under the skin)\", , \"Infections (frequent or severe)\", , \"Fever\", , \"Shortness of breath (dyspnea)\", , \"Tachycardia (rapid heart rate)\", , \"Headache\", , \"Dizziness\", , \"Thrombocytopenia (low platelet count)\", , \"Leukopenia (low white blood cell count)\", , \"Anemia (low red blood cell count)\", , \"Pancytopenia (deficiency of all three blood cell types)\", ]",
+      "immediate_actions_required": "Discontinuation with initiation of better alternatives in safety and efficacy",
+      "immediate_actions_reasoning": "Aplastic Anemia is a life-threatening emergency requiring immediate intervention as per FDA guidelines.",
+      "patient_context_applied": false
+    }
+  ],
+  "total_rmm_entries": 4
+}

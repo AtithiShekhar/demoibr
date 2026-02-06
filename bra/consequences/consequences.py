@@ -24,7 +24,7 @@ class Factor_2_6_Consequences_Analyzer:
             raise ValueError("GEMINI_API_KEY not found in environment variables!")
         
         # Configure new Gemini client
-        self.client = genai.Client(api_key=self.gemini_api_key)
+            self.client = genai.Client(api_key=self.gemini_api_key)
         
         print(f"✓ Gemini client initialized")
     
@@ -408,7 +408,7 @@ def start(scoring_system=None) -> Dict[str, Any]:
     
     # Analyze patient
     results = analyzer.analyze_patient(patient_data)
-    
+    print(f"result of consequences {results} ")
     # -------------------------------
     # Consequences scoring (if scoring_system provided)
     # -------------------------------

@@ -1,14 +1,18 @@
 {
+  "date": "2026-02-06 18:08:09",
   "patient": {
     "age": 58,
     "gender": "Female",
     "condition": "Shortness of breath on exertion",
     "diagnosis": "Acute Decompensated Heart Failure",
     "social_risk_factors": "sedentary lifestyle/poor diet",
-    "date_of_assessment": "2026-02-07",
+    "date_of_assessment": "2026-02-06",
     "MedicalHistory": []
   },
-  "prescription": [
-    "Furosemide"
-  ]
+  "medications": [
+    "Nitroglycerin"
+  ],
+  "patient_context_applied": false,
+  "rmm_table": [],
+  "total_rmm_entries": 0
 }

@@ -1,0 +1,122 @@
+{
+  "patientInfo": {
+    "age": 58,
+    "gender": "Female",
+    "diagnosis": "Type 2 Diabetes Mellitus with Chronic Kidney Disease Stage 3",
+    "social_risk_factors": "sedentary lifestyle/poor diet",
+    "date_of_assessment": "2026-02-02"
+  },
+  "chiefComplaints": [
+    {
+      "complaint": "Shortness of breath on exertion",
+      "duration": "5d",
+      "severity": "Severe"
+    }
+  ],
+  "currentDiagnoses": [
+    {
+      "diagnosisName": "Acute Decompensated Heart Failure",
+      "diagnosisDate": "2026-02-01",
+      "severity": "Severe",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Furosemide",
+            "dosage": "40mg",
+            "route": "IV",
+            "frequency": "BID",
+            "timing": "NA",
+            "startDate": "2026-02-01",
+            "status": "Active"
+          },
+          {
+            "name": "Nitroglycerin",
+            "dosage": "5 mcg/min",
+            "route": "IV infusion",
+            "frequency": "Continuous",
+            "timing": "NA",
+            "startDate": "2026-02-01",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "MedicalHistory": [
+    {
+      "diagnosisName": "Type 2 Diabetes Mellitus",
+      "diagnosisDate": "2015-06-10",
+      "severity": "Moderate",
+      "status": "Chronic",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Metformin",
+            "dosage": "500mg",
+            "route": "Oral",
+            "frequency": "BID",
+            "timing": "With meals",
+            "startDate": "2015-06-10",
+            "status": "Stopped"
+          },
+          {
+            "name": "Insulin Glargine",
+            "dosage": "20 units",
+            "route": "Subcutaneous",
+            "frequency": "Once daily",
+            "timing": "Night",
+            "startDate": "2023-01-12",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Chronic Kidney Disease Stage 3",
+      "diagnosisDate": "2022-09-18",
+      "severity": "Moderate",
+      "status": "Chronic",
+      "treatment": {
+        "treatmentType": "conservative",
+        "medications": [
+          {
+            "name": "Losartan",
+            "dosage": "50mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Morning",
+            "startDate": "2022-09-18",
+            "status": "Active"
+          }
+        ]
+      }
+    },
+    {
+      "diagnosisName": "Dyslipidemia",
+      "diagnosisDate": "2018-04-22",
+      "severity": "Mild",
+      "status": "Chronic",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Atorvastatin",
+            "dosage": "20mg",
+            "route": "Oral",
+            "frequency": "Once daily",
+            "timing": "Night",
+            "startDate": "2018-04-22",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "clinicalNotes": {
+    "physicianNotes": "Patient presented with worsening dyspnea, bilateral pedal edema, and basal lung crepitations. Echocardiography showed reduced ejection fraction. Renal function monitored closely due to underlying CKD. Managed with IV diuretics and vasodilators.",
+    "followUpDate": "2026-02-10"
+  }
+}

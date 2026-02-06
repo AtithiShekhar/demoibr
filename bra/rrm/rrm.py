@@ -866,18 +866,18 @@ def start(input_file: Optional[str] = None, scoring_system=None) -> List[Dict[st
         rmm_table_data = full_output.get("rmm_table", [])
         
         # 6. Persist the RMM results locally for the system log
-        output_save_path = "rmm_output.json"
+        output_save_path = "../rmm_output.json"
         with open(output_save_path, 'w') as f:
             json.dump(full_output, f, indent=2)
             
         print(f"✓ RMM data processed and saved to local log: {output_save_path}")
 
         # 7. Delete the original input file before returning
-        try:
-            # os.remove(file_path)
-            print(f"🗑️  Original file {file_path} deleted successfully.")
-        except Exception as e:
-            print(f"⚠️  Warning: Could not delete {file_path}: {str(e)}")
+        # try:
+        #     # os.remove(file_path)
+        #     print(f"🗑️  Original file {file_path} deleted successfully.")
+        # except Exception as e:
+        #     print(f"⚠️  Warning: Could not delete {file_path}: {str(e)}")
 
         # 8. Return specifically the rmm_table list
         return rmm_table_data
