@@ -7,6 +7,11 @@ Non-blocking database operations
 from flask import Flask, request, jsonify
 import os
 import time
+
+# Load environment variables from .env file FIRST
+from dotenv import load_dotenv
+load_dotenv()  # This must be called BEFORE importing queue_manager
+
 from utils.queue_manager.queue_manager import job_queue
 
 app = Flask(__name__)
