@@ -1,57 +1,42 @@
-
-# ================================
-# server.py (COMPLETE VERSION)
-# ================================
-
 """
-server.py
-Flask API server with queue-based job processing
-Updated for centralized scoring system v2.0
+server.py - UPDATED WITH DATABASE INTEGRATION
+Flask API server with PostgreSQL backend
+Non-blocking database operations
 """
 
 from flask import Flask, request, jsonify
 import os
 import time
 from utils.queue_manager.queue_manager import job_queue
+
 app = Flask(__name__)
 
 import json
 from datetime import datetime
-from datetime import datetime
-from datetime import datetime
+
+
 def simplify_medical_data(complex_data):
-    """
-    Simplifies EMR data while preserving the full MedicalHistory array 
-    for downstream processing.
-    """
+    """Simplifies EMR data while preserving full MedicalHistory array"""
     patient_info = complex_data.get("patientInfo", {})
     
-    # 1. Extract diagnoses and complaints as flattened strings for quick reference
     current_diagnoses = [d.get("diagnosisName") for d in complex_data.get("currentDiagnoses", [])]
     complaints_list = [c.get("complaint") for c in complex_data.get("chiefComplaints", [])]
-    
-    # 2. Correctly capture the MedicalHistory ARRAY from the root level
-    # We keep this as a list of objects to match your system's requirements
     medical_history_array = complex_data.get("MedicalHistory", [])
     
-    # 3. Extract unique medication names from ALL sources (Current + History)
     medication_names = set()
     
-    # Check Current Diagnoses
     for dx in complex_data.get("currentDiagnoses", []):
         meds = dx.get("treatment", {}).get("medications", [])
         for med in meds:
             if med.get("name"):
                 medication_names.add(med["name"])
                 
-    # Check Medical History
     for h_dx in medical_history_array:
         h_meds = h_dx.get("treatment", {}).get("medications", [])
         for h_med in h_meds:
             if h_med.get("name"):
                 medication_names.add(h_med["name"])
     
-    # 4. Construct the simplified object
     simplified = {
         "patient": {
             "age": patient_info.get("age"),
@@ -60,15 +45,14 @@ def simplify_medical_data(complex_data):
             "diagnosis": ", ".join(current_diagnoses),
             "social_risk_factors": patient_info.get('social_risk_factors'), 
             "date_of_assessment": datetime.now().strftime("%Y-%m-%d"),
-            # PRESERVED: The full array as requested
             "MedicalHistory": medical_history_array 
         },
         "prescription": list(medication_names)
     }
     
     return simplified
-# Example usage:
-# simplified_json = simplify_medical_data(complex_input_json)
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     """
@@ -80,7 +64,7 @@ def analyze():
     
     request_data = request.get_json()
     
-    # Validate required fields for NEW EMR schema
+    # Validate required fields
     if "patientInfo" not in request_data:
         return jsonify({"error": "Missing 'patientInfo' field"}), 400
     
@@ -97,8 +81,11 @@ def analyze():
     
     if not has_medications:
         return jsonify({"error": "No medications found in any diagnosis"}), 400
+    
+    # Save simplified input
     with open("adrs_input.json",'w') as f:
-        json.dump(simplify_medical_data(request_data),f, indent=2)
+        json.dump(simplify_medical_data(request_data), f, indent=2)
+    
     try:
         job_id = job_queue.submit_job(request_data)
         
@@ -116,28 +103,94 @@ def analyze():
 
 @app.route("/status/<job_id>", methods=["GET"])
 def get_status(job_id):
-    """Get status of a specific job"""
+    """
+    Get status of a specific job
+    Checks memory first, then database
+    """
     job_status = job_queue.get_job_status(job_id)
     
     if not job_status:
         return jsonify({"error": "Job not found", "job_id": job_id}), 404
     
+    # Add data source info
+    if job_status.get("source") == "database":
+        job_status["note"] = "Retrieved from database (analysis completed earlier)"
+    
     return jsonify(job_status), 200
-
 
 
 @app.route("/queue/stats", methods=["GET"])
 def queue_stats():
-    """Get queue statistics"""
+    """Get queue and database statistics"""
     return jsonify(job_queue.get_queue_stats()), 200
 
 
 @app.route("/queue/cleanup", methods=["POST"])
 def queue_cleanup():
-    """Clean up old completed jobs"""
+    """Clean up old completed jobs from memory"""
     max_age = request.json.get("max_age_hours", 24) if request.is_json else 24
     removed = job_queue.clear_completed_jobs(max_age)
     return jsonify({"removed_jobs": removed, "max_age_hours": max_age}), 200
+
+
+@app.route("/database/cleanup", methods=["POST"])
+def database_cleanup():
+    """
+    Clean up old jobs from database
+    Removes completed/failed jobs older than specified days
+    """
+    days = request.json.get("days", 30) if request.is_json else 30
+    
+    try:
+        from utils.database.db_handler import db_handler
+        removed = db_handler.cleanup_old_jobs(days)
+        return jsonify({
+            "status": "success",
+            "removed_jobs": removed,
+            "days": days
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/database/stats", methods=["GET"])
+def database_stats():
+    """Get database statistics"""
+    try:
+        from utils.database.db_handler import db_handler
+        stats = db_handler.get_database_stats()
+        return jsonify(stats), 200
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+
+@app.route("/database/recent", methods=["GET"])
+def recent_analyses():
+    """
+    Get recent analyses from database
+    Query parameters:
+    - limit: Number of results (default: 10)
+    - status: Filter by status (optional)
+    """
+    limit = int(request.args.get('limit', 10))
+    status = request.args.get('status')
+    
+    try:
+        from utils.database.db_handler import db_handler
+        results = db_handler.get_recent_analyses(limit=limit, status=status)
+        return jsonify({
+            "count": len(results),
+            "results": results
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @app.route("/scoring/config", methods=["GET"])
@@ -185,14 +238,30 @@ def scoring_config():
 
 @app.route("/health", methods=["GET"])
 def health():
-    """Health check"""
-    return jsonify({
+    """Health check with database status"""
+    health_data = {
         "status": "healthy",
         "service": "Drug Analysis API",
         "version": "2.0.0",
         "scoring_system": "Centralized Configuration",
         "queue_stats": job_queue.get_queue_stats()
-    }), 200
+    }
+    
+    # Check database connectivity
+    try:
+        from utils.database.db_handler import db_handler
+        db_stats = db_handler.get_database_stats()
+        health_data["database"] = {
+            "status": "connected",
+            "total_analyses": db_stats.get("total_analyses", 0)
+        }
+    except Exception as e:
+        health_data["database"] = {
+            "status": "disconnected",
+            "error": str(e)
+        }
+    
+    return jsonify(health_data), 200
 
 
 @app.route("/", methods=["GET"])
@@ -202,21 +271,27 @@ def index():
         "service": "Drug Analysis API",
         "version": "2.0.0",
         "scoring_system": "Centralized Configuration",
+        "database": "PostgreSQL",
         "endpoints": {
             "/analyze": "POST - Submit async job",
-            "/analyze/sync": "POST - Submit sync job",
-            "/status/<job_id>": "GET - Get job status",
+            "/status/<job_id>": "GET - Get job status (checks memory & database)",
             "/queue/stats": "GET - Queue statistics",
-            "/queue/cleanup": "POST - Clean old jobs",
+            "/queue/cleanup": "POST - Clean old jobs from memory",
+            "/database/stats": "GET - Database statistics",
+            "/database/recent": "GET - Recent analyses from database",
+            "/database/cleanup": "POST - Clean old jobs from database",
             "/scoring/config": "GET - View scoring matrices",
             "/health": "GET - Health check"
         },
         "features": [
             "Centralized scoring configuration",
             "Parallel analysis execution",
+            "PostgreSQL database persistence",
+            "Async database operations (non-blocking)",
             "Therapeutic duplication detection",
             "Alternative medication finder",
-            "Queue-based job processing"
+            "Queue-based job processing",
+            "iBR Report generation"
         ]
     }), 200
 
@@ -224,10 +299,11 @@ def index():
 if __name__ == "__main__":
     print("="*80)
     print("Drug Analysis API Server v2.0")
-    print("Centralized Scoring System")
+    print("With PostgreSQL Database Integration")
     print("="*80)
     print(f"Server: http://0.0.0.0:8000")
     print(f"Workers: {job_queue.num_workers}")
+    print(f"Database: {'Enabled' if job_queue.db_enabled else 'Disabled'}")
     print("="*80)
     
     try:
