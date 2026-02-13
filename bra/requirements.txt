@@ -1,8 +1,52 @@
+# =====================================================
+# Drug Analysis API - Requirements
+# Updated with PostgreSQL database support
+# =====================================================
+
+# Cloud Services
 boto3>=1.34.0
 botocore>=1.34.0
-requests
-python-dotenv
-flask
-dotenv
-pandas
+
+# Web Framework
+flask>=3.0.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Data Processing
+pandas>=2.0.0
+
+# AI/ML
 google-genai>=1.60.0
+
+# =====================================================
+# PostgreSQL Database Support (NEW)
+# =====================================================
+
+# PostgreSQL adapter for Python
+psycopg2-binary>=2.9.9
+
+# Alternative: Use psycopg2 if you want to compile from source
+# psycopg2>=2.9.9
+
+# =====================================================
+# Optional: Additional Database Tools
+# =====================================================
+
+# SQLAlchemy ORM (if you want advanced ORM features)
+# sqlalchemy>=2.0.0
+
+# Database migration tool (if you plan to version control schema changes)
+# alembic>=1.13.0
+
+# =====================================================
+# Development Dependencies (Optional)
+# =====================================================
+
+# pytest>=7.4.0        # Testing
+# black>=23.0.0        # Code formatting
+# flake8>=6.0.0        # Linting
+# mypy>=1.5.0          # Type checkingj
