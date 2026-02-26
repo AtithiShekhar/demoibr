@@ -1,5 +1,6 @@
 # ================================
 # contraindication/app.py (Patient-Context-Aware)
+# CORRECTED VERSION
 # ================================
 
 import requests
@@ -155,67 +156,96 @@ class ContraindicationAnalyzer:
             print(f"FDA API Error for {medicine_name}: {e}")
             return None
 
-    def extract_patient_conditions(self, patient_data: dict, current_diagnosis: str = None) -> Set[str]:
+    def extract_patient_conditions(self, patient_data: Dict[str, Any], exclude_diagnosis: str = None) -> Set[str]:
         """
-        Extract patient's medical conditions EXCLUDING the diagnosis being treated
-        Now supports both formats: new format with currentDiagnoses, and simple format with patient.diagnosis
+        Extract patient conditions from normalized data structure
+        UPDATED: Handles currentDiagnoses, MedicalHistory, and pregnancy
+        CORRECTED: Returns concepts as Set, excludes diagnosis being treated
         
         Args:
             patient_data: Full patient data
-            current_diagnosis: The diagnosis for which this drug is prescribed (to exclude)
+            exclude_diagnosis: Diagnosis being treated (to exclude from contraindication check)
+        
+        Returns:
+            Set of all patient condition concepts
         """
-        concepts = set()
-
-        # NEW FORMAT: From currentDiagnoses array
+        all_conditions = []
+        
+        patient = patient_data.get("patientInfo", {})
+        
+        # Basic demographics
+        age = patient.get("age", 0)
+        if age >= 65:
+            all_conditions.append("elderly")
+        elif age < 18:
+            all_conditions.append("pediatric")
+        
+        # Primary diagnosis
+        if patient.get("diagnosis"):
+            all_conditions.append(patient["diagnosis"].lower())
+        
+        # Pregnancy context
+        pregnancy_info = patient.get("pregnancy_info", {})
+        if pregnancy_info:
+            pregnancy_status = pregnancy_info.get("pregnancy_status", "Not Applicable")
+            if pregnancy_status == "Ongoing Pregnancy":
+                all_conditions.append("pregnancy")
+                all_conditions.append("pregnant")
+                trimester = pregnancy_info.get("Trimester")
+                if trimester:
+                    all_conditions.append(f"trimester {trimester}")
+            elif pregnancy_status == "Planning":
+                all_conditions.append("planning pregnancy")
+            
+            if pregnancy_info.get("lactation") == "Yes":
+                all_conditions.append("lactation")
+                all_conditions.append("breastfeeding")
+        
+        # Current diagnoses
         for diag in patient_data.get("currentDiagnoses", []):
-            diag_name = diag.get("diagnosisName", "")
-            
-            # Skip the diagnosis being treated - drug should be for this condition
-            if current_diagnosis and diag_name.lower() == current_diagnosis.lower():
-                continue
-                
-            concepts |= normalize_to_concepts(diag_name)
-
-        # NEW FORMAT: From chief complaints
-        for complaint in patient_data.get("chiefComplaints", []):
-            complaint_text = complaint.get("complaint", "")
-            concepts |= normalize_to_concepts(complaint_text)
-
-        # NEW FORMAT: From clinical notes
-        notes = patient_data.get("clinicalNotes", {}).get("physicianNotes", "")
-        concepts |= normalize_to_concepts(notes)
-
-        # SIMPLE FORMAT: From patient.diagnosis (if exists)
-        if "patient" in patient_data:
-            patient = patient_data["patient"]
-            diagnosis_text = patient.get("diagnosis", "")
-            
-            # Split by commas to handle multiple diagnoses
-            diagnoses = [d.strip() for d in diagnosis_text.split(',') if d.strip()]
-            for diag in diagnoses:
-                # Skip the diagnosis being treated
-                if current_diagnosis and diag.lower() == current_diagnosis.lower():
-                    continue
-                concepts |= normalize_to_concepts(diag)
-            
-            # Extract from social risk factors
-            social_risk = patient.get("social_risk_factors", "")
-            concepts |= normalize_to_concepts(social_risk)
-
-        return concepts
+            if diag.get("status") in ["Active", "Severe"]:
+                all_conditions.append(diag.get("diagnosisName", "").lower())
+        
+        # Medical history (active conditions only)
+        for history in patient_data.get("MedicalHistory", []):
+            if history.get("status") in ["Active", "Chronic"]:
+                all_conditions.append(history.get("diagnosisName", "").lower())
+        
+        # Social risk factors
+        if patient.get("social_risk_factors"):
+            all_conditions.append(patient["social_risk_factors"].lower())
+        
+        # Convert all conditions to concepts
+        all_concepts = set()
+        for condition in all_conditions:
+            all_concepts |= normalize_to_concepts(condition)
+        
+        # Exclude the diagnosis being treated
+        if exclude_diagnosis:
+            exclude_concepts = normalize_to_concepts(exclude_diagnosis)
+            all_concepts -= exclude_concepts
+        
+        return all_concepts
 
     def build_patient_context_string(self, patient_data: dict) -> str:
         """
         Build a patient context string for enhanced contraindication analysis
         """
-        if "patient" not in patient_data:
+        if "patientInfo" not in patient_data:
             return ""
         
-        patient = patient_data["patient"]
+        patient = patient_data["patientInfo"]
         age = patient.get("age", "unknown")
         gender = patient.get("gender", "unknown")
         diagnosis = patient.get("diagnosis", "")
         social_risk = patient.get("social_risk_factors", "")
+        
+        # Pregnancy context
+        pregnancy_info = patient.get("pregnancy_info", {})
+        pregnancy_status = pregnancy_info.get("pregnancy_status", "Not Applicable")
+        is_pregnant = pregnancy_status == "Ongoing Pregnancy"
+        trimester = pregnancy_info.get("Trimester")
+        is_lactating = pregnancy_info.get("lactation") == "Yes"
         
         # Extract medical history
         medical_history = patient_data.get("MedicalHistory", [])
@@ -254,6 +284,16 @@ class ContraindicationAnalyzer:
 - Social Risk Factors: {social_risk}
 - Post-Transplant: {'Yes' if is_post_transplant else 'No'}
 - Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}"""
+        
+        # Add pregnancy context
+        if gender.lower() == "female":
+            context += f"\n- Pregnancy Status: {pregnancy_status}"
+            if is_pregnant:
+                context += f"\n- Trimester: {trimester if trimester else 'Unknown'}"
+                context += "\n- ⚠️ PREGNANCY: Check teratogenic potential"
+            if is_lactating:
+                context += "\n- Lactation: Active"
+                context += "\n- ⚠️ LACTATION: Check breast milk excretion"
 
         if active_conditions:
             context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
@@ -320,6 +360,7 @@ class ContraindicationAnalyzer:
 def explain_with_gemini(drug: str, risk: str, diagnosis: str, fda_context: str, patient_context: str = "") -> str:
     """
     Generate clinical explanation using Gemini with patient context
+    CORRECTED: Fixed prompt template
     """
     if not gemini_client or not fda_context:
         return f"Based on FDA label documentation, {drug} is contraindicated in patients with {risk.replace('_', ' ').lower()}."
@@ -331,23 +372,22 @@ def explain_with_gemini(drug: str, risk: str, diagnosis: str, fda_context: str, 
 
     # Enhanced prompt with patient context
     patient_section = f"\n\nPATIENT CONTEXT:\n{patient_context}" if patient_context else ""
+    
+    prompt = f"""You are a clinical pharmacist explaining FDA contraindications.
 
-    prompt = f"""You are a clinical pharmacologist.
-TASK: Explain why {drug} (prescribed for {diagnosis}) is contraindicated in patients with {risk.replace('_', ' ').lower()}.
+Drug: {drug}
+Condition being treated: {diagnosis}
+Contraindication detected: {risk.replace('_', ' ').title()}
 
-SOURCE MATERIAL:
-{fda_context[:3500]}
+FDA Label Context:
+{fda_context[:500]}
 {patient_section}
 
-INSTRUCTIONS:
-1. Use ONLY the source material provided.
-2. Focus on the physiological mechanism or specific clinical risk.
-3. If patient context is provided, explain how their specific characteristics (age, immunosuppression, comorbidities) increase the contraindication risk.
-4. Be concise (2-4 sentences)."""
+Task: Explain in 2-3 sentences why {drug} is contraindicated for this patient, focusing on the {risk.replace('_', ' ').lower()} concern. Use clear clinical language."""
 
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.0-flash-exp",
             contents=prompt,
             config=config
         )

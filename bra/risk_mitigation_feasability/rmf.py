@@ -101,7 +101,11 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
         gender = patient.get("gender", "unknown")
         diagnosis = patient.get("diagnosis", "")
         social_risk = patient.get("social_risk_factors", "")
-        
+        # Pregnancy context
+        pregnancy_status = patient.get("pregnancy_status", "Not Applicable")
+        is_pregnant = patient.get("is_pregnant", False)
+        trimester = patient.get("trimester")
+        is_lactating = patient.get("is_lactating", False)
         # Extract medical history
         medical_history = patient_data.get("MedicalHistory", [])
         active_conditions = []
@@ -141,6 +145,14 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
 - Post-Transplant: {'Yes' if is_post_transplant else 'No'}
 - Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}
 - Hematologic Malignancy: {'Yes' if has_hematologic_malignancy else 'No'}"""
+        if gender.lower() == "female":
+            context += f"\n- Pregnancy Status: {pregnancy_status}"
+            if is_pregnant:
+                context += f"\n- Trimester: {trimester if trimester else 'Unknown'}"
+                context += "\n- ⚠️ PREGNANCY: ADR management options may be limited"
+            if is_lactating:
+                context += "\n- Lactation: Active"
+                context += "\n- ⚠️ LACTATION: Some treatments contraindicated"
 
         if active_conditions:
             context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
@@ -155,6 +167,11 @@ class Factor_3_4_Risk_Mitigation_Feasibility:
 
 PATIENT-SPECIFIC RISK FACTORS:
 """
+        # Pregnancy risks
+        if is_pregnant:
+            context += "- Pregnant: LIMITED treatment options for ADRs, fetal safety paramount, delayed recovery possible\n"
+        if is_lactating:
+            context += "- Lactating: Many ADR treatments contraindicated in breastfeeding\n"
         
         # Add age-related risks
         if age != "unknown" and age >= 65:

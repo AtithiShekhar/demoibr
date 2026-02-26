@@ -1,14 +1,35 @@
 {
   "patient": {
-    "age": 64,
-    "gender": "Male",
-    "condition": "",
-    "diagnosis": "type 2 diabetes",
-    "social_risk_factors": "none",
-    "date_of_assessment": "2026-02-07",
-    "MedicalHistory": []
+    "age": 62,
+    "gender": "Female",
+    "condition": "Chest pain, Fatigue",
+    "diagnosis": "Unstable Angina",
+    "social_risk_factors": "smoking/physical inactivity",
+    "date_of_assessment": "2026-02-26",
+    "MedicalHistory": [
+      {
+        "condition": "Type 2 Diabetes Mellitus",
+        "diagnosedDate": "2014-06-10",
+        "status": "Active",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Metformin",
+              "dosage": "500mg",
+              "route": "Oral",
+              "frequency": "BID",
+              "timing": "After meals",
+              "startDate": "2014-06-15",
+              "status": "Active"
+            }
+          ]
+        }
+      }
+    ]
   },
   "prescription": [
+    "Nitroglycerin",
     "Metformin"
   ]
 }

@@ -1,29 +1,39 @@
 {
-  "date": "2026-02-07 01:31:41",
+  "date": "2026-02-26 15:02:23",
   "patient": {
-    "age": 64,
-    "gender": "Male",
-    "condition": "",
-    "diagnosis": "type 2 diabetes",
-    "social_risk_factors": "none",
-    "date_of_assessment": "2026-02-07",
-    "MedicalHistory": []
+    "age": 62,
+    "gender": "Female",
+    "condition": "Chest pain, Fatigue",
+    "diagnosis": "Unstable Angina",
+    "social_risk_factors": "smoking/physical inactivity",
+    "date_of_assessment": "2026-02-26",
+    "MedicalHistory": [
+      {
+        "condition": "Type 2 Diabetes Mellitus",
+        "diagnosedDate": "2014-06-10",
+        "status": "Active",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Metformin",
+              "dosage": "500mg",
+              "route": "Oral",
+              "frequency": "BID",
+              "timing": "After meals",
+              "startDate": "2014-06-15",
+              "status": "Active"
+            }
+          ]
+        }
+      }
+    ]
   },
   "medications": [
+    "Nitroglycerin",
     "Metformin"
   ],
-  "patient_context_applied": false,
-  "rmm_table": [
-    {
-      "medicine": "Metformin",
-      "risk_type": "LT/Fatal ADR",
-      "risk_description": "Renal Failure",
-      "section_5_warnings_and_precautions_extract": "Monitor patients for signs and symptoms. Before initiating ZITUVIMET and at least annually thereafter, assess renal function",
-      "proactive_actions_symptoms_to_monitor": "{, \"renal_failure_symptoms\": \"Decreased urine output (oliguria), Swelling in legs, ankles, or feet (edema), Shortness of breath (dyspnea), Fatigue, Confusion, Nausea, Loss of appetite (anorexia), Chest pain or pressure, Irregular heartbeat (arrhythmia), Muscle weakness, Persistent itching (pruritus), Metallic taste in mouth, Seizures, Coma\", }",
-      "immediate_actions_required": "{",
-      "immediate_actions_reasoning": "\"ACTION\": \"Discontinuation with initiation of better alternatives in safety and efficacy\",",
-      "patient_context_applied": false
-    }
-  ],
-  "total_rmm_entries": 1
+  "patient_context_applied": true,
+  "rmm_table": [],
+  "total_rmm_entries": 0
 }

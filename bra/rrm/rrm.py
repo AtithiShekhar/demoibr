@@ -60,6 +60,11 @@ class Step4_RMM_Generator:
         gender = patient.get("gender", "unknown")
         diagnosis = patient.get("diagnosis", "")
         social_risk = patient.get("social_risk_factors", "")
+        # Pregnancy context
+        pregnancy_status = patient.get("pregnancy_status", "Not Applicable")
+        is_pregnant = patient.get("is_pregnant", False)
+        trimester = patient.get("trimester")
+        is_lactating = patient.get("is_lactating", False)
         
         # Extract medical history
         medical_history = patient_data.get("MedicalHistory", [])
@@ -101,6 +106,15 @@ class Step4_RMM_Generator:
 - Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}
 - Hematologic Malignancy: {'Yes' if has_hematologic_malignancy else 'No'}"""
 
+        if gender.lower() == "female":
+            context += f"\n- Pregnancy Status: {pregnancy_status}"
+            if is_pregnant:
+                context += f"\n- Trimester: {trimester if trimester else 'Unknown'}"
+                context += "\n- ⚠️ PREGNANCY: Tailor symptoms to include fetal monitoring, pregnancy-specific warnings"
+            if is_lactating:
+                context += "\n- Lactation: Active"
+                context += "\n- ⚠️ LACTATION: Include warnings about breastfeeding discontinuation if severe ADR"
+
         if active_conditions:
             context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"
         
@@ -120,7 +134,11 @@ PATIENT-SPECIFIC MONITORING CONSIDERATIONS:
             context += "- Elderly: Requires MORE FREQUENT monitoring (reduced organ reserve, polypharmacy)\n"
         elif age != "unknown" and age < 18:
             context += "- Pediatric: Age-appropriate dosing, developmental monitoring\n"
-        
+        # Pregnancy monitoring
+        if is_pregnant:
+            context += f"- Pregnant (Trimester {trimester}): Include fetal monitoring, watch for preterm labor signs, immediate OB consultation for severe ADRs\n"
+        if is_lactating:
+            context += "- Lactating: Monitor infant for signs of drug effects, consider breastfeeding interruption for severe ADRs\n"
         # Add immunosuppression monitoring needs
         if is_immunosuppressed:
             context += "- Immunosuppressed: Higher infection risk, impaired healing, closer monitoring needed\n"

@@ -88,7 +88,11 @@ class Factor_2_6_Consequences_Analyzer:
             gender = patient.get('gender', 'unknown')
             diagnosis = patient.get('diagnosis', '')
             social_risk = patient.get('social_risk_factors', '')
-            
+            # Pregnancy context
+            pregnancy_status = patient.get('pregnancy_status', 'Not Applicable')
+            is_pregnant = patient.get('is_pregnant', False)
+            trimester = patient.get('trimester')
+            is_lactating = patient.get('is_lactating', False)
             # Extract medical history
             medical_history = patient_data.get('MedicalHistory', [])
             active_conditions = []
@@ -117,6 +121,14 @@ PATIENT CONTEXT (consider for severity assessment):
 - Social Risk Factors: {social_risk}
 - Post-Transplant: {'Yes' if is_post_transplant else 'No'}
 - Immunosuppressed: {'Yes' if is_immunosuppressed else 'No'}"""
+
+            if gender.lower() == "female":
+                patient_context += f"\n- Pregnancy Status: {pregnancy_status}"
+                if is_pregnant:
+                    patient_context += f"\n- Trimester: {trimester if trimester else 'Unknown'}"
+                    patient_context += "\n- ⚠️ PREGNANCY: Disease consequences may affect both mother and fetus"
+                if is_lactating:
+                    patient_context += "\n- Lactation: Active"
 
             if active_conditions:
                 patient_context += f"\n- Active Comorbidities: {', '.join(active_conditions)}"

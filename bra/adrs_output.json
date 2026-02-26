@@ -1,35 +1,41 @@
 {
-  "date": "2026-02-07 01:31:32",
+  "date": "2026-02-26 15:02:07",
   "patient": {
-    "age": 64,
-    "gender": "Male",
-    "condition": "",
-    "diagnosis": "type 2 diabetes",
-    "social_risk_factors": "none",
-    "date_of_assessment": "2026-02-07",
-    "MedicalHistory": []
+    "age": 62,
+    "gender": "Female",
+    "condition": "Chest pain, Fatigue",
+    "diagnosis": "Unstable Angina",
+    "social_risk_factors": "smoking/physical inactivity",
+    "date_of_assessment": "2026-02-26",
+    "MedicalHistory": [
+      {
+        "condition": "Type 2 Diabetes Mellitus",
+        "diagnosedDate": "2014-06-10",
+        "status": "Active",
+        "treatment": {
+          "treatmentType": "medication",
+          "medications": [
+            {
+              "name": "Metformin",
+              "dosage": "500mg",
+              "route": "Oral",
+              "frequency": "BID",
+              "timing": "After meals",
+              "startDate": "2014-06-15",
+              "status": "Active"
+            }
+          ]
+        }
+      }
+    ]
   },
   "medications": [
+    "Nitroglycerin",
     "Metformin"
   ],
   "medical_history_analyzed": false,
   "factor_3_2": {
-    "LT_ADRs": {
-      "Metformin": {
-        "with_risk_factors": [
-          {
-            "medicine": "Metformin",
-            "adr_name": "Renal Failure",
-            "section": "Section 6",
-            "risk_factors": [
-              "metabolic condition (type 2 diabetes)"
-            ],
-            "fda_context": "...[see Warnings and Precautions ( 5.1 )] Pancreatitis [see Warnings and Precautions ( 5.2 )] Heart Failure [see Warnings and Precautions ( 5.3 )] Acute Renal Failure [see Warnings and Precautions ( 5.4 )] Vitamin B12 Deficiency [see Warnings and Precautions ( 5.5 )] Hypoglycemia with Concomitant Use w..."
-          }
-        ],
-        "without_risk_factors": []
-      }
-    },
+    "LT_ADRs": {},
     "Serious_ADRs": {}
   },
   "factor_3_3": {

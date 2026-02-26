@@ -1,5 +1,6 @@
 """
 Response Formatter - Comprehensive Clinical Decision Support
+UPDATED: Includes MedicalHistory medications analysis, original input, and pregnancy context
 Includes ALL analysis details: approval, MME, contraindication, alternatives, consequences, RRM, duplication, PubMed, BRR
 """
 
@@ -130,13 +131,15 @@ def extract_full_analysis_details(result_file_path: str) -> Optional[Dict]:
         return None
 
 
-def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None) -> Dict:
+def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None, is_historical: bool = False) -> Dict:
     """
-    Format primary medication with FULL analysis details
+    Format medication with FULL analysis details
+    UPDATED: Supports historical medications
     
     Args:
         result: Basic result from worker
         detailed_analysis: Full analysis details from JSON file
+        is_historical: Whether this is a historical medication
         
     Returns:
         Comprehensive medication analysis
@@ -147,7 +150,8 @@ def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None) -
             "indication": result.get("diagnosis", "Unknown"),
             "status": "❌ Analysis Failed",
             "message": "Unable to complete safety analysis",
-            "requires_manual_review": True
+            "requires_manual_review": True,
+            "is_historical": is_historical
         }
     
     brr = result.get("brr")
@@ -190,6 +194,7 @@ def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None) -
     formatted_result = {
         "medication_name": result.get("drug"),
         "indication": result.get("diagnosis"),
+        "is_historical": is_historical,
         "clinical_decision": clinical_decision,
         "safety_profile": {
             "outcome": brr_interpretation["outcome"],
@@ -214,6 +219,16 @@ def format_drug_result(result: Dict, detailed_analysis: Optional[Dict] = None) -
             "trial_count": result.get("rct_count", 0)
         }
     }
+    
+    # Add historical medication info if applicable
+    if is_historical and result.get("historical_medication_info"):
+        hist_info = result["historical_medication_info"]
+        formatted_result["historical_info"] = {
+            "medication_status": hist_info.get("medication_status"),
+            "condition": hist_info.get("condition"),
+            "condition_status": hist_info.get("condition_status"),
+            "analysis_reason": hist_info.get("analysis_reason")
+        }
     
     # Add detailed analysis if available
     if detailed_analysis:
@@ -367,7 +382,6 @@ def format_alternative_result(alt_result: Dict, detailed_analysis: Optional[Dict
     
     # Add detailed analysis if available
     if detailed_analysis:
-        # Add same detailed sections as primary drug
         formatted_alt.update({
             "regulatory_approval": detailed_analysis.get("regulatory_approval", {}),
             "market_experience": detailed_analysis.get("market_experience", {}),
@@ -378,23 +392,34 @@ def format_alternative_result(alt_result: Dict, detailed_analysis: Optional[Dict
     return formatted_alt
 
 
-def format_complete_response(results: List[Dict], rmm_table: List = None, consequences_data: Dict = None) -> Dict:
+def format_complete_response(
+    results: List[Dict], 
+    rmm_table: List = None, 
+    consequences_data: Dict = None,
+    original_input: Dict = None,
+    historical_results: List[Dict] = None
+) -> Dict:
     """
     Format complete analysis response with ALL details
+    UPDATED: Includes historical medications and original input
     
     Args:
-        results: List of analysis results from workers
+        results: List of analysis results from workers (current medications)
         rmm_table: Aggregated RRM table
         consequences_data: Consequences of non-treatment data
+        original_input: Original request data (returned as-is)
+        historical_results: List of historical medication analysis results
         
     Returns:
         Comprehensive clinical response with all analysis details
     """
     medications_analysis = []
+    historical_medications_analysis = []
     critical_alerts = []
     warnings = []
     safe_medications = []
     
+    # Process current medications
     for result in results:
         if not result.get("success"):
             medications_analysis.append({
@@ -409,7 +434,7 @@ def format_complete_response(results: List[Dict], rmm_table: List = None, conseq
         detailed_analysis = extract_full_analysis_details(output_file) if output_file else None
         
         # Format primary medication with full details
-        primary = format_drug_result(result, detailed_analysis)
+        primary = format_drug_result(result, detailed_analysis, is_historical=False)
         
         # Track alerts
         alert_level = primary["safety_profile"]["alert_level"]
@@ -451,16 +476,38 @@ def format_complete_response(results: List[Dict], rmm_table: List = None, conseq
             "alternatives": alternatives if alternatives else []
         })
     
+    # Process historical medications
+    if historical_results:
+        for hist_result in historical_results:
+            if not hist_result.get("success"):
+                continue
+            
+            output_file = hist_result.get("output_file")
+            detailed_analysis = extract_full_analysis_details(output_file) if output_file else None
+            
+            historical_med = format_drug_result(hist_result, detailed_analysis, is_historical=True)
+            historical_medications_analysis.append(historical_med)
+    
     # Calculate summary statistics
     successful = [r for r in results if r.get("success")]
     total_meds = len(results)
     
+    # Check for pregnancy context
+    has_pregnancy_context = False
+    if original_input:
+        patient_info = original_input.get("patientInfo", {})
+        pregnancy_info = patient_info.get("pregnancy_info", {})
+        pregnancy_status = pregnancy_info.get("pregnancy_status", "Not Applicable")
+        has_pregnancy_context = pregnancy_status in ["Planning", "Ongoing Pregnancy"]
+    
     # Build final response
     return {
+        "request_data": original_input if original_input else None,
         "clinical_summary": {
             "total_medications_reviewed": total_meds,
             "successful_analyses": len(successful),
             "failed_analyses": total_meds - len(successful),
+            "historical_medications_analyzed": len(historical_medications_analysis),
             "critical_alerts_count": len(critical_alerts),
             "warnings_count": len(warnings),
             "safe_medications_count": len(safe_medications),
@@ -477,9 +524,16 @@ def format_complete_response(results: List[Dict], rmm_table: List = None, conseq
             "safe_medications": safe_medications if safe_medications else None
         },
         "medication_analysis": medications_analysis,
+        "historical_medications_analysis": historical_medications_analysis if historical_medications_analysis else None,
         "action_items": generate_action_items(critical_alerts, warnings),
         "risk_mitigation_measures": rmm_table if rmm_table else [],
-        "consequences_of_non_treatment": consequences_data if consequences_data else {}
+        "consequences_of_non_treatment": consequences_data if consequences_data else {},
+        "metadata": {
+            "analysis_version": "2.0",
+            "includes_pregnancy_context": has_pregnancy_context,
+            "includes_medical_history": len(historical_medications_analysis) > 0,
+            "alternatives_analyzed_for_all_medications": True
+        }
     }
 
 

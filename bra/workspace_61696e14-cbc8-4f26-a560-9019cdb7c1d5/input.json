@@ -1,0 +1,73 @@
+{
+  "patientInfo": {
+    "age": 62,
+    "pregnancy_info": {
+      "pregnancy_status": "Not Pregnant",
+      "Trimester": null,
+      "lactation": null
+    },
+    "gender": "Female",
+    "diagnosis": "Hypertension with Chronic Kidney Disease Stage 2",
+    "social_risk_factors": "smoking/physical inactivity",
+    "date_of_assessment": "2026-02-15"
+  },
+  "MedicalHistory": [
+    {
+      "condition": "Type 2 Diabetes Mellitus",
+      "diagnosedDate": "2014-06-10",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Metformin",
+            "dosage": "500mg",
+            "route": "Oral",
+            "frequency": "BID",
+            "timing": "After meals",
+            "startDate": "2014-06-15",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "chiefComplaints": [
+    {
+      "complaint": "Chest pain",
+      "duration": "2d",
+      "severity": "Moderate"
+    },
+    {
+      "complaint": "Fatigue",
+      "duration": "1w",
+      "severity": "Mild"
+    }
+  ],
+  "currentDiagnoses": [
+    {
+      "diagnosisName": "Unstable Angina",
+      "diagnosisDate": "2026-02-14",
+      "severity": "Severe",
+      "status": "Active",
+      "treatment": {
+        "treatmentType": "medication",
+        "medications": [
+          {
+            "name": "Nitroglycerin",
+            "dosage": "5mg",
+            "route": "IV",
+            "frequency": "Continuous infusion",
+            "timing": "NA",
+            "startDate": "2026-02-14",
+            "status": "Active"
+          }
+        ]
+      }
+    }
+  ],
+  "clinicalNotes": {
+    "physicianNotes": "Patient presented with retrosternal chest pain radiating to left arm. ECG showed ST depression. Cardiac enzymes mildly elevated. Started on anti-anginal therapy and antiplatelets. Monitoring vitals and cardiac status closely.",
+    "followUpDate": "2026-02-22"
+  }
+}
